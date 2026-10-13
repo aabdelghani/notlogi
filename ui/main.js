@@ -2,6 +2,18 @@
 // Windows), keeps a tray indicator with battery levels and raises low battery notifications.
 const { app, globalShortcut } = require('electron');
 const plat = require('./platform');
+// Linux on Wayland: through XWayland, as up to 0.12.0 (Electron 33). Electron 38 and later choose
+// native Wayland by themselves, before this file runs, and there a window can be neither placed nor
+// kept on top, nor told where the pointer is: the action ring, the emoji picker and the notices opened
+// in the wrong place, behind other windows, or not at all. So the app starts once more, at once, on
+// X11. Native Wayland stays available: start it with --ozone-platform=wayland.
+const restarting = plat.IS_LINUX && !!process.env.DISPLAY && app.commandLine.getSwitchValue('ozone-platform') === 'wayland' &&
+  !process.argv.some(a => /^--ozone-platform(-hint)?(=|$)/.test(a));
+if (restarting) {
+  // an AppImage is unmounted when this process ends: start the AppImage itself again
+  app.relaunch(Object.assign({ args: process.argv.slice(1).concat(['--ozone-platform=x11']) }, process.env.APPIMAGE ? { execPath: process.env.APPIMAGE } : {}));
+  app.exit(0);
+}
 const flow = require('./flow');
 // People see NotLogi; settings stay in the folder earlier versions used (LogiMX), so an update keeps them
 app.setName('NotLogi');
@@ -19,7 +31,8 @@ const { applyLanguage, rpc, btSetMode, btStopScan, connect, createTray, createWi
 const sharedReady = Promise.all([import('./shared/ring.mjs'), import('./shared/battery.mjs'), import('./shared/i18n.mjs')]).then(([r, b, i]) => { state.Ring = r; state.Battery = b; state.I18n = i; });
 app.isQuitting = false;
 
-const single = app.requestSingleInstanceLock();
+// (a process restarting on X11 takes neither the lock nor anything else: the new one does)
+const single = !restarting && app.requestSingleInstanceLock();
 if (!single) {
   app.quit();
 } else {
