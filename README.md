@@ -34,7 +34,7 @@ manufacturer of these devices.
 
 Download from the [latest release](https://github.com/aabdelghani/notlogi/releases/latest).
 
-- **Ubuntu / Debian**: `sudo apt install ./logimx_0.12.3_amd64.deb`, then open NotLogi from the app grid.
+- **Ubuntu / Debian**: `sudo apt install ./logimx_0.12.4_amd64.deb`, then open NotLogi from the app grid.
 - **Any Linux**: make the AppImage executable and run it.
 - **Windows 10 and 11** (beta): run the setup. If SmartScreen asks, choose **More info**, then
   **Run anyway**.

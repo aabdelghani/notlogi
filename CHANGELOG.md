@@ -5,6 +5,8 @@ Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each 
 
 ## Unreleased
 
+## [0.12.4](https://github.com/aabdelghani/notlogi/releases/tag/v0.12.4) - 2026-10-13
+
 - Linux on Wayland: the action ring did not appear, and the window opened in the middle of the first screen. Since 0.12.3 (Electron 44) the app ran natively on Wayland, where a window can be neither placed nor kept on top; it runs through XWayland again, as up to 0.12.0. `--ozone-platform=wayland` still starts it on Wayland.
 - macOS with two displays: the action ring opened on the main display only. Its window now covers the display under the pointer.
 
