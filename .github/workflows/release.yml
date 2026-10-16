@@ -41,7 +41,7 @@ jobs:
           ARCH=x86_64 /tmp/appimagetool -u "gh-releases-zsync|aabdelghani|notlogi|latest|NotLogi-*-x86_64.AppImage.zsync" squashfs-root "$f"
           rm -rf squashfs-root
           "./$f" --appimage-updateinformation
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: |
@@ -83,7 +83,7 @@ jobs:
         run: cd ui && npm ci --no-audit --no-fund
       - name: Installer
         run: cd ui && npm run dist:win
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: ui/dist/*-Setup-*.exe
@@ -152,7 +152,7 @@ jobs:
             spctl -a -vv -t install "$app"
           done
           for dmg in ui/dist/*.dmg; do xcrun stapler validate "$dmg"; done
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: |
