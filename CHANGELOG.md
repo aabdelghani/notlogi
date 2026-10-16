@@ -5,6 +5,8 @@ Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each 
 
 ## Unreleased
 
+## [0.12.5](https://github.com/aabdelghani/notlogi/releases/tag/v0.12.5) - 2026-10-16
+
 - Linux on Wayland: 0.12.4 did not open at all on Ubuntu 24.04 and later (#16). The restart onto XWayland went through Electron's relauncher, which leaves the new process unable to use the setuid sandbox, the only sandbox those systems allow, so it died at once and silently. The app now starts itself as a plain child process.
 - The problem report names how the process was started (flags, display backend, a restart, sandbox state), the state of the windows and tray, Chromium and GPU details, and crashes or uncaught errors in the main process.
 

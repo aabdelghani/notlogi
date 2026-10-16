@@ -1,7 +1,7 @@
 {
   "name": "logimx-ui",
   "productName": "NotLogi",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "NotLogi: unofficial mouse & keyboard tools for Linux, Windows and macOS",
   "homepage": "https://github.com/aabdelghani/notlogi",
   "author": "aabdelghani",
