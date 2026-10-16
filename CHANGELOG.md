@@ -5,6 +5,9 @@ Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each 
 
 ## Unreleased
 
+- Linux on Wayland: 0.12.4 did not open at all on Ubuntu 24.04 and later (#16). The restart onto XWayland went through Electron's relauncher, which leaves the new process unable to use the setuid sandbox, the only sandbox those systems allow, so it died at once and silently. The app now starts itself as a plain child process.
+- The problem report names how the process was started (flags, display backend, a restart, sandbox state), the state of the windows and tray, Chromium and GPU details, and crashes or uncaught errors in the main process.
+
 ## [0.12.4](https://github.com/aabdelghani/notlogi/releases/tag/v0.12.4) - 2026-10-13
 
 - Linux on Wayland: the action ring did not appear, and the window opened in the middle of the first screen. Since 0.12.3 (Electron 44) the app ran natively on Wayland, where a window can be neither placed nor kept on top; it runs through XWayland again, as up to 0.12.0. `--ozone-platform=wayland` still starts it on Wayland.

@@ -10,8 +10,13 @@ const plat = require('./platform');
 const restarting = plat.IS_LINUX && !!process.env.DISPLAY && app.commandLine.getSwitchValue('ozone-platform') === 'wayland' &&
   !process.argv.some(a => /^--ozone-platform(-hint)?(=|$)/.test(a));
 if (restarting) {
-  // an AppImage is unmounted when this process ends: start the AppImage itself again
-  app.relaunch(Object.assign({ args: process.argv.slice(1).concat(['--ozone-platform=x11']) }, process.env.APPIMAGE ? { execPath: process.env.APPIMAGE } : {}));
+  // Not app.relaunch: Electron's relauncher starts the new process with no_new_privs set, which
+  // disarms the setuid sandbox helper, and where that helper is the only sandbox allowed (Ubuntu
+  // 24.04 and later keep unprivileged user namespaces from ordinary programs) the restarted app
+  // died at once, without a word (0.12.4, #16). A plain child process, left on its own, inherits
+  // nothing of the kind. An AppImage is unmounted when this process ends: it starts itself again.
+  const exe = process.env.APPIMAGE || process.execPath;
+  require('child_process').spawn(exe, process.argv.slice(1).concat(['--ozone-platform=x11']), { detached: true, stdio: 'ignore', env: Object.assign({}, process.env, { NOTLOGI_RESTARTED: 'wayland' }) }).unref();
   app.exit(0);
 }
 const flow = require('./flow');

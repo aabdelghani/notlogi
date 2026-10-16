@@ -229,4 +229,6 @@ ipcMain.on('ring-adjust', (_e, { path, dir }) => {
   rpc('run_action', params).catch(() => {});
 });
 
-exports.provide = { ringFor, RING_SCALE, ringSlotAt, ringRunDevice, RING_ADJUST, ringLog, RING_W, RING_H, ensureRing, warmRing, GNOME_ACCENTS, YARU_ACCENTS, gsetting, systemLook, releaseRing, RING_KEYS, ringKeysOn, ringKeysOff, moveRing, showRing, ringCue };
+// the ring window as it is now, for the problem report
+const ringState = () => !ringWin ? 'not made' : ringWin.isDestroyed() ? 'destroyed' : `${ringWin.isVisible() ? 'shown' : 'hidden'}${ringWarming ? ', warming up' : ''}${ringOpening ? ', opening' : ''}, ${ringWin.getBounds().width}x${ringWin.getBounds().height} at (${ringWin.getBounds().x}, ${ringWin.getBounds().y})`;
+exports.provide = { ringFor, RING_SCALE, ringSlotAt, ringRunDevice, RING_ADJUST, ringLog, ringState, RING_W, RING_H, ensureRing, warmRing, GNOME_ACCENTS, YARU_ACCENTS, gsetting, systemLook, releaseRing, RING_KEYS, ringKeysOn, ringKeysOff, moveRing, showRing, ringCue };
