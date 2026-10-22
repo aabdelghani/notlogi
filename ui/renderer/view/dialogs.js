@@ -99,6 +99,19 @@ function renderConfirm() {
     <div class="dlg-body"><div class="hint" style="font-size:14px">${esc(p.text)}</div></div>
     <div class="dlg-foot"><span></span><div class="r"><button class="btn" data-act="confirm-ok">${esc(p.ok)}</button><button class="btn primary" data-act="close-dlg" autofocus>${t('Cancel')}</button></div></div></div></div>`;
 }
+// Remove NotLogi: what goes is listed first (the main process looks), settings only when chosen
+function renderUninstall() {
+  const u = S.uninstall || {};
+  const ITEM = { agent: t('The agent and its login service'), autostart: t('Start at login'), launcher: t('The launcher and icons'), settings: t('Settings, profiles and backups'), package: t('The logimx package (asks for your password)'), appimage: t('The AppImage file'), udev: t('The udev rule (asks for your password)'), login: t('The login item'), permissions: t('Accessibility and Input Monitoring permissions'), app: IS_MAC() ? t('NotLogi goes to the Trash') : t('The Windows uninstaller runs next') };
+  const always = ['agent', 'login', 'permissions', 'package', 'app'];
+  const items = (u.steps || []).filter(s => s.n > 0 || always.includes(s.id)).map(s => `<li>${ITEM[s.id] || esc(s.id)}</li>`).join('');
+  return `<div class="scrim" data-act="close-dlg"><div class="dlg" style="width:480px" data-stop>
+    <div class="dlg-head">${t('Remove NotLogi')}<button class="hbtn close" data-act="close-dlg"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="dlg-body"><div class="hint" style="font-size:14px">${t('This takes away:')}</div>
+      <ul style="margin:6px 0 14px 18px;padding:0;font-size:14px;line-height:1.7">${items || `<li>${t('Gathering…')}</li>`}</ul>
+      ${card(row(t('Also remove my settings, profiles and backups'), u.settings ? '' : t('Kept, a later install finds them again'), `<button class="switch ${u.settings ? 'on' : ''}" data-act="uninstall-settings"></button>`))}</div>
+    <div class="dlg-foot"><span></span><div class="r"><button class="btn danger" data-act="uninstall-go" ${u.steps && !u.busy ? '' : 'disabled'}>${u.busy ? t('Removing…') : t('Remove')}</button><button class="btn primary" data-act="close-dlg" autofocus>${t('Cancel')}</button></div></div></div></div>`;
+}
 // Windows needs nothing granted; macOS needs Accessibility so LogiMX can press keys and buttons,
 // and Input Monitoring so it can open a keyboard
 function onboardPermissions() {
@@ -139,4 +152,4 @@ function renderOnboard() {
     <div class="ob-body">${body}<div class="ob-foot"><button class="btn" data-act="ob-prev" ${o.step === 1 ? 'disabled' : ''}>${t('Back')}</button><button class="btn primary" data-act="ob-next">${o.step === 3 ? t('Finish') : t('Continue')}</button></div></div></div></main></div>`;
 }
 
-export const provide = { btPairBody, renderPair, renderWish, renderReport, renderPrompt, renderConfirm, onboardPermissions, renderOnboard };
+export const provide = { btPairBody, renderPair, renderWish, renderReport, renderPrompt, renderConfirm, renderUninstall, onboardPermissions, renderOnboard };

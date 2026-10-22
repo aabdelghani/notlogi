@@ -27,7 +27,7 @@ app.setPath('userData', require('path').join(app.getPath('appData'), 'LogiMX'));
 if (plat.IS_WIN) app.setAppUserModelId('io.github.aabdelghani.logimx');
 // The main process in parts (main/), loaded once the app's name and settings folder are set;
 // each one gets what it uses from the others.
-const parts = ['env', 'settings', 'window', 'tray', 'agent', 'osd', 'battery', 'emoji', 'ring', 'media', 'bluetooth', 'system', 'autostart', 'i18n'].map(n => require('./main/' + n));
+const parts = ['env', 'settings', 'window', 'tray', 'agent', 'osd', 'battery', 'emoji', 'ring', 'media', 'bluetooth', 'system', 'autostart', 'uninstall', 'i18n'].map(n => require('./main/' + n));
 const state = require('./main/state');
 const ctx = Object.assign({}, ...parts.map(p => p.provide));
 parts.forEach(p => p.link(ctx));

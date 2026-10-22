@@ -43,6 +43,10 @@ Download from the [latest release](https://github.com/aabdelghani/notlogi/releas
 
 Quit Logi Options+, Solaar or logiops while NotLogi runs: they drive the same buttons.
 
+To remove NotLogi: **About → Remove NotLogi** in the app lists what goes and takes it away (settings
+stay unless you say so). On Linux, `logimx-uninstall [--all]` does the same from a terminal (installed
+by the .deb, and in the repository at `packaging/uninstall.sh`).
+
 ## Supported devices
 
 | Device | State |
