@@ -3,7 +3,7 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
-## Unreleased
+## [0.13.0](https://github.com/aabdelghani/notlogi/releases/tag/v0.13.0) - 2026-10-25
 
 - PRO X3 SUPERSTRIKE: the mouse with what G HUB offers for it (its online parts left out), on its LIGHTSPEED receiver or its cable. Sensitivity: G HUB's eleven presets and presets of one's own, five DPI slots with the default and DPI shift slots, X and Y apart, lift-off distance, report rate per link, HERO sensor calibration against another mouse, and a Sensitivity tool (an aiming game). HITS: each main button on its own or both, drawn as G HUB draws them, actuation point, rapid trigger and click haptics, presets, the HITS code G HUB shares, and the HITS latency test with the button's travel shown live. Assignments: G HUB's button names and System actions (DPI up, down, cycle, shift and default, scroll, battery level, onboard profile cycle), a G-Shift layer, and macros recorded in the window (played once, while held, or on and off). Scroll wheel: BHOP. Settings: Gaming surface mode, the onboard memory (use it, pick a profile, write NotLogi's settings into one, restore them all; backed up first), time left and power use from the mouse's power model, the receiver's firmware. An app profile can carry a sensitivity of its own.
 - Overlays for a DPI change (with its slot), the battery level and the onboard profile.
