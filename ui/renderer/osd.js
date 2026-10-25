@@ -7,6 +7,8 @@
     backlight: { icon: 'fa-sun', bg: 'var(--warn)' },
     host: { icon: 'fa-right-left', bg: 'var(--ok)' },
     dpi: { icon: 'fa-arrow-pointer', bg: 'var(--accbg)' },
+    battery: { icon: 'fa-battery-three-quarters', bg: 'var(--ok)' },
+    onboard_profile: { icon: 'fa-microchip', bg: 'var(--accbg)' },
   };
   let hideTimer = null;
   window.osd.onShow(msg => {
@@ -17,6 +19,8 @@
     $('#title').textContent = msg.title || '';
     $('#sub').textContent = msg.sub || '';
     const extra = $('#extra'); extra.innerHTML = '';
+    if (msg.kind === 'dpi' && msg.slot) extra.innerHTML = `<div class="hosts">${[1, 2, 3, 4, 5].map(i => `<span class="${i === msg.slot && !msg.shift ? 'on' : ''}">${i}</span>`).join('')}</div>`;
+    if (msg.kind === 'battery') { extra.innerHTML = `<div class="segs">${Array.from({ length: 10 }, (_, i) => `<span class="${i < msg.level ? 'on' : ''}"></span>`).join('')}</div>`; }
     if (msg.kind === 'backlight') { const n = msg.num_levels || 8; extra.innerHTML = `<div class="segs">${Array.from({ length: n }, (_, i) => `<span class="${i < msg.level ? 'on' : ''}"></span>`).join('')}</div>`; }
     if (msg.kind === 'host') extra.innerHTML = `<div class="hosts">${[0, 1, 2].map(i => `<span class="${i === msg.host ? 'on' : ''}">${i + 1}</span>`).join('')}</div>`;
     const t = $('#toast');

@@ -29,7 +29,8 @@ set(CORE_SOURCES
   src/actions/engine.cpp
   src/config.cpp
   src/ipc.cpp
-  src/platform/steam.cpp)
+  src/platform/steam.cpp
+  src/motion.cpp)
 
 if(WIN32)
   list(APPEND CORE_SOURCES
@@ -120,7 +121,7 @@ endif()
 # settings file, and the scroll smoothing. Not built when cross-compiling, where they could not run.
 include(CTest)
 if(BUILD_TESTING AND NOT CMAKE_CROSSCOMPILING)
-  add_executable(agent_tests tests/main.cpp tests/hidpp_test.cpp tests/device_test.cpp tests/config_test.cpp tests/smoother_test.cpp)
+  add_executable(agent_tests tests/main.cpp tests/hidpp_test.cpp tests/device_test.cpp tests/config_test.cpp tests/smoother_test.cpp tests/motion_test.cpp)
   target_include_directories(agent_tests PRIVATE tests)
   target_link_libraries(agent_tests PRIVATE oo_core)
   target_compile_options(agent_tests PRIVATE ${WARN})

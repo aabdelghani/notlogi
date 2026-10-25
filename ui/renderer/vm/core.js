@@ -6,8 +6,8 @@ import * as Act from '../../shared/actions.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let S, changed, fx;
-export function link(ctx) { ({ S, changed, fx } = ctx); }
+let S, changed, fx, loadOnboard;
+export function link(ctx) { ({ S, changed, fx, loadOnboard } = ctx); }
 
 const dev = () => S.devices.find(d => d.id === S.dev) || null;
 const profileOf = Prof.profileOf;
@@ -45,7 +45,11 @@ const devicePages = d => isGaming(d) ? ['dpi', 'assignments', 'wheel', 'hits', '
 // gestures, and the MX Master 4's haptics, folded into Settings) are reached from these
 const navPages = d => isGaming(d) ? ['dpi', 'assignments', 'wheel', 'hits'] : isMouse(d) ? ['buttons', 'pointer', 'easy', 'flow'] : ['keys', 'backlight', 'easy'];
 const generalPagesAll = ['apps', 'ring', 'notif', 'backup', 'settings', 'about', 'flow'];   // Flow opens without a device too
-function go(page, devId) { S.ringPath = []; if (devId !== undefined && devId !== S.dev) { S.editProfile = null; S.previewProfile = null; } if (page !== 'gestures') S.cfgFrom = null; S.page = page; if (devId !== undefined) S.dev = devId; S.dlg = null; S.menu = null; S.appDetail = null; changed(); }
+function go(page, devId) {
+  S.ringPath = []; if (devId !== undefined && devId !== S.dev) { S.editProfile = null; S.previewProfile = null; } if (page !== 'gestures') S.cfgFrom = null; S.page = page; if (devId !== undefined) S.dev = devId; S.dlg = null; S.menu = null; S.appDetail = null; changed();
+  // a gaming mouse's Settings show its onboard profiles, read from its memory as the page opens
+  const d = dev(); if (page === 'info' && d && isGaming(d) && (d.state || {}).onboard) loadOnboard(d);
+}
 
 
 function countOverrides(d, key) {

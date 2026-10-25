@@ -413,10 +413,12 @@ void Device::setDpi(int dpi) {
 std::optional<ExtendedDpiState> Device::extendedDpi() {
     if (!has(EXTENDED_DPI)) return std::nullopt;
     ExtendedDpiState s;
+    // fn5 getDpi(sensor): the X DPI and its default, the Y DPI and its default, the lift-off distance
     Bytes p = req(EXTENDED_DPI, 5, {0});
     if (p.size() < 10) return std::nullopt;
     s.dpi = be16(p, 1);
     s.def = be16(p, 3);
+    s.dpiY = be16(p, 5);
     s.lod = p[9];
     Bytes l = req(EXTENDED_DPI, 3, {0});
     for (size_t i = 2; i + 1 < l.size() && s.slots.size() < 5; i += 2) {
@@ -469,8 +471,9 @@ std::optional<ExtendedDpiState> Device::extendedDpi() {
     }
     return s;
 }
-void Device::setExtendedDpi(int dpi, int lod) {
-    uint8_t hi = static_cast<uint8_t>(dpi >> 8), lo = static_cast<uint8_t>(dpi);
+void Device::setExtendedDpi(int dpi, int lod) { setExtendedDpi(dpi, dpi, lod); }
+// fn6 setDpi(sensor, X, Y, lift-off): the lift-off distance 1 low, 2 medium, 3 high (0 keeps the one set)
+void Device::setExtendedDpi(int x, int y, int lod) {
     if (!lod) {
         try {
             Bytes p = req(EXTENDED_DPI, 5, {0});
@@ -478,7 +481,7 @@ void Device::setExtendedDpi(int dpi, int lod) {
         } catch (const std::exception&) {}
         if (!lod) lod = 2;
     }
-    req(EXTENDED_DPI, 6, {0, hi, lo, hi, lo, static_cast<uint8_t>(lod)});
+    req(EXTENDED_DPI, 6, {0, static_cast<uint8_t>(x >> 8), static_cast<uint8_t>(x), static_cast<uint8_t>(y >> 8), static_cast<uint8_t>(y), static_cast<uint8_t>(lod)});
 }
 
 // 0x8061 Extended report rate: fn0 getReportRateList(conn) -> bitmask of the rates a link offers (bit n
@@ -518,7 +521,9 @@ void Device::setReportRate(int index) { req(EXTENDED_REPORT_RATE, 3, {static_cas
 // 0x1B0C Analog buttons (HITS): fn0 getCapabilities (?, settings per button, max actuation, max rapid
 // trigger, max haptics, ?), fn1 setConfig(button, actuation, rapid, haptics), fn2 getConfig(button),
 // fn3 setMonitoringMode(options, timeout s), fn4 getMonitoringMode. Each value is the step times 4;
-// the rapid trigger's bit 0 is its switch. Button 0 is the left button, 1 the right one.
+// the rapid trigger's bit 0 is its switch. Button 0 is the left button, 1 the right one. With
+// monitoring on (G HUB's latency test sends 01 3C: travel reports for 60 s) event 0 reports how far
+// each button is pressed, the left one's step then the right one's, 0 (up) to 10 (the bottom).
 std::optional<AnalogCaps> Device::analogCaps() {
     if (!has(ANALOG_BUTTONS)) return std::nullopt;
     Bytes r = req(ANALOG_BUTTONS, 0);
@@ -556,6 +561,76 @@ std::optional<int> Device::onboardMode() {
     return r.empty() ? std::nullopt : std::optional<int>(r[0]);
 }
 void Device::setOnboardMode(int mode) { req(ONBOARD_PROFILES, 1, {static_cast<uint8_t>(mode)}); }
+// fn0 getInfo: memory model, profile format, macro format, profiles, profiles out of the box,
+// buttons, sectors, sector size (16 bit), ... (the PRO X3 SUPERSTRIKE: 01 08 01 05 01 05 10 00 FF,
+// format 8, five profiles and buttons, 16 sectors of 255 bytes); fn3/fn4 set/get the profile in
+// use (its sector, 16 bit); fn5 reads 16 bytes of a sector from an offset
+std::optional<OnboardInfo> Device::onboardInfo() {
+    if (!has(ONBOARD_PROFILES)) return std::nullopt;
+    Bytes r = req(ONBOARD_PROFILES, 0);
+    if (r.size() < 9) return std::nullopt;
+    OnboardInfo i;
+    i.format = r[1];
+    i.profiles = r[3];
+    i.buttons = r[5];
+    i.sectors = r[6];
+    i.sectorSize = be16(r, 7);
+    return i;
+}
+int Device::onboardProfile() {
+    Bytes r = req(ONBOARD_PROFILES, 4);
+    return r.size() >= 2 ? be16(r, 0) : 0;
+}
+void Device::setOnboardProfile(int sector) { req(ONBOARD_PROFILES, 3, {static_cast<uint8_t>(sector >> 8), static_cast<uint8_t>(sector)}); }
+Bytes Device::readSector(int sector, int size) {
+    Bytes out;
+    for (int off = 0; off < size; off += 16) {
+        // the last read of a sector starts 16 bytes before its end: a read past it is refused
+        int at = std::min(off, std::max(0, size - 16));
+        Bytes r = req(ONBOARD_PROFILES, 5, {static_cast<uint8_t>(sector >> 8), static_cast<uint8_t>(sector), static_cast<uint8_t>(at >> 8), static_cast<uint8_t>(at)});
+        r.resize(16);
+        out.resize(static_cast<size_t>(at));
+        out.insert(out.end(), r.begin(), r.end());
+    }
+    out.resize(static_cast<size_t>(size));
+    return out;
+}
+
+// fn6 begins a write (sector, offset, length, 16 bit each), fn7 takes 16 bytes at a time, fn8 ends
+// it; fn10 gives the CRC of a sector. A sector ends with its CRC-CCITT (from 0xFFFF), high byte first.
+void Device::writeSector(int sector, const Bytes& data) {
+    const size_t n = data.size();
+    req(ONBOARD_PROFILES, 6, {static_cast<uint8_t>(sector >> 8), static_cast<uint8_t>(sector), 0, 0, static_cast<uint8_t>(n >> 8), static_cast<uint8_t>(n)});
+    for (size_t off = 0; off < n; off += 16) {
+        Bytes chunk(data.begin() + static_cast<long>(off), data.begin() + static_cast<long>(std::min(n, off + 16)));
+        chunk.resize(16, 0);
+        req(ONBOARD_PROFILES, 7, chunk);
+    }
+    req(ONBOARD_PROFILES, 8);
+}
+uint16_t Device::sectorCrc(int sector) {
+    Bytes r = req(ONBOARD_PROFILES, 10, {static_cast<uint8_t>(sector >> 8), static_cast<uint8_t>(sector)});
+    return r.size() >= 2 ? static_cast<uint16_t>(be16(r, 0)) : 0;
+}
+uint16_t Device::crcCcitt(const Bytes& b, size_t n) {
+    uint16_t c = 0xFFFF;
+    for (size_t i = 0; i < n && i < b.size(); ++i) {
+        c ^= static_cast<uint16_t>(b[i] << 8);
+        for (int k = 0; k < 8; ++k) c = (c & 0x8000) ? static_cast<uint16_t>((c << 1) ^ 0x1021) : static_cast<uint16_t>(c << 1);
+    }
+    return c;
+}
+
+// 0x8090 Mode status: fn0 get (2 bytes), fn1 set (the 2 bytes and a 2-byte mask of the bits to
+// change), fn2 the capabilities. Byte 1 bits 1-2 hold the surface mode as G HUB's Gaming Surface
+// Mode sets it: 0 automatic, 1 on (tuned for a gaming surface), 2 off (any surface)
+std::optional<int> Device::surfaceMode() {
+    if (!has(MODE_STATUS)) return std::nullopt;
+    Bytes r = req(MODE_STATUS, 0);
+    if (r.size() < 2) return std::nullopt;
+    return (r[1] >> 1) & 0x03;
+}
+void Device::setSurfaceMode(int mode) { req(MODE_STATUS, 1, {0, static_cast<uint8_t>((mode & 0x03) << 1), 0, 0x06}); }
 
 // 0x80E0 Bunny hopping: fn0 getCapabilities, fn1 getTimeout, fn2 setTimeout. The timeout is in 10 ms
 // steps (G HUB offers 100..1000 ms); 0 turns it off
@@ -771,6 +846,12 @@ std::optional<Event> Device::classify(const Notification& n) const {
         case EXTENDED_REPORT_RATE:
             if (n.event == 0 && d.size() >= 2) return Event{"report_rate", {{"wireless", d[0] == 1}, {"index", d[1]}}};
             break;
+        case ANALOG_BUTTONS: {
+            // with monitoring on (fn3): the inductive buttons' travel as they move
+            json bytes = json::array();
+            for (auto b : d) bytes.push_back(b);
+            return Event{"analog", {{"event", n.event}, {"bytes", bytes}}};
+        }
         case FN_INVERSION_K375S:
             if (n.event == 0 && d.size() >= 2) return Event{"fn_swap", {{"host", d[0]}, {"on", d[1] != 0}}};
             break;

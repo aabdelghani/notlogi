@@ -35,6 +35,7 @@ static bool kernelScalesWheel(const std::string& id) {
 #include <cmath>
 #include <cstdarg>
 #include <deque>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -103,6 +104,39 @@ ManagedDevice::ManagedDevice(Daemon& d, hidpp::Transport& t, std::unique_ptr<hid
         // pointer keeps moving and the ring follows it
         daemon_.broadcast("action", {{"id", id()}, {"kind", k == "open" ? "ring" : "ring_release"}, {"device", dev_->name()}, {"raw", rawDiverted_.count(cid) > 0}});
     };
+    ops.dpiOp = [this](const std::string& op) { dpiOp(op); };
+    ops.gshift = [this](bool held) {
+        std::lock_guard<std::recursive_mutex> lk(m_);
+        gshiftHeld_ = held;
+        DEBUG("%s: G-Shift %s", dev_->name().c_str(), held ? "on" : "off");
+    };
+    ops.batteryLevel = [this]() {
+        if (battery_ && battery_->known)
+            daemon_.broadcast("action", {{"id", id()}, {"kind", "battery"}, {"percent", battery_->percent}, {"charging", battery_->charging}, {"device", dev_->name()}});
+    };
+    ops.onboardCycle = [this]() {
+        // only while the mouse runs on its onboard memory: the next profile that is switched on
+        std::lock_guard<std::recursive_mutex> lk(m_);
+        if (!onboardMemory()) return;
+        try {
+            auto info = dev_->onboardInfo();
+            if (!info) return;
+            hidpp::Bytes dir = dev_->readSector(0, 16 + 4 * info->profiles);
+            std::vector<int> on;
+            for (int i = 0; i < info->profiles; ++i) {
+                int sector = dir[i * 4] << 8 | dir[i * 4 + 1];
+                if (sector != 0xFFFF && dir[i * 4 + 2]) on.push_back(sector);
+            }
+            if (on.empty()) return;
+            int cur = dev_->onboardProfile();
+            auto it = std::find(on.begin(), on.end(), cur);
+            int next = (it == on.end() || std::next(it) == on.end()) ? on.front() : *std::next(it);
+            dev_->setOnboardProfile(next);
+            daemon_.broadcast("action", {{"id", id()}, {"kind", "onboard_profile"}, {"profile", next}, {"device", dev_->name()}});
+        } catch (const std::exception& e) {
+            WARN("%s: onboard profile cycle: %s", dev_->name().c_str(), e.what());
+        }
+    };
     engine_ = std::make_unique<actions::Engine>(daemon_.injector(), ops);
 }
 
@@ -115,7 +149,7 @@ void ManagedDevice::refreshConfig() {
         const json& p = profs[profileName_];
         for (auto& [k, v] : p.items()) {
             if (v.is_null()) continue;
-            if ((k == "buttons" || k == "keys") && v.is_object() && profile_.contains(k) && profile_[k].is_object()) profile_[k].update(v);
+            if ((k == "buttons" || k == "keys" || k == "buttons_gshift") && v.is_object() && profile_.contains(k) && profile_[k].is_object()) profile_[k].update(v);
             else profile_[k] = v;
         }
     }
@@ -156,8 +190,28 @@ json ManagedDevice::summary() {
         snprintf(b, sizeof(b), "%04X", id);
         feats.push_back(b);
     }
+    // the receiver's firmware, as G HUB shows it beside the mouse's: a LIGHTSPEED receiver answers
+    // HID++ 2.0 at index 0xFF; of its firmware entities (0x0003) the one flagged active with its own
+    // product id is the receiver's application ("AR 01.01.B0011", G HUB's 1.1.11)
+    if (receiverFw_.empty() && hidpp::kReceivers.count(t_.info().product)) {
+        receiverFw_ = "-";
+        try {
+            hidpp::Bytes f = t_.request(0xFF, 0x00, 0x0, {0x00, 0x03});
+            if (!f.empty() && f[0]) {
+                hidpp::Bytes c = t_.request(0xFF, f[0], 0x0, {});
+                for (int i = 0; !c.empty() && i < c[0]; ++i) {
+                    hidpp::Bytes e = t_.request(0xFF, f[0], 0x1, {static_cast<uint8_t>(i)});
+                    if (e.size() < 11 || !(e[8] & 0x01) || (e[9] << 8 | e[10]) != t_.info().product) continue;
+                    char v[40];
+                    snprintf(v, sizeof(v), "%.3s %02X.%02X.B%02X%02X", reinterpret_cast<const char*>(&e[1]), e[4], e[5], e[6], e[7]);
+                    receiverFw_ = v;
+                    break;
+                }
+            }
+        } catch (...) {}
+    }
     return {{"id", id()}, {"pid", pid_}, {"name", dev_->name()}, {"friendly_name", dev_->friendlyName()},
-        {"kind", kind_}, {"firmware", dev_->firmware()}, {"serial", dev_->serial().empty() ? serial_ : dev_->serial()},
+        {"kind", kind_}, {"firmware", dev_->firmware()}, {"receiver_firmware", receiverFw_ == "-" ? "" : receiverFw_}, {"serial", dev_->serial().empty() ? serial_ : dev_->serial()},
         {"transport", transportName()},
         {"index", dev_->index()}, {"online", online_.load()}, {"battery", batteryJson()},
         {"profile", profileName_}, {"features", feats}, {"controls", controls}, {"state", state_},
@@ -199,8 +253,12 @@ json ManagedDevice::readState(bool full) {
                     active = static_cast<int>(i);
                     break;
                 }
-            st["dpi"] = {{"dpi", xd->dpi}, {"default", xd->def}, {"levels", json::array({xd->min, xd->max, 50})}, {"stepped", true},
+            st["dpi"] = {{"dpi", xd->dpi}, {"dpi_y", xd->dpiY}, {"default", xd->def}, {"levels", json::array({xd->min, xd->max, 50})}, {"stepped", true},
                 {"slots", xd->slots}, {"lods", xd->lods}, {"lod", xd->lod}, {"active", active}, {"ranges", xd->ranges}};
+        }
+        if (auto sm = dev_->surfaceMode()) {
+            static const char* names[] = {"auto", "on", "off", "off"};
+            st["surface_mode"] = names[*sm & 3];
         }
         if (auto rr = dev_->reportRate()) {
             auto list = [](int mask) { json a = json::array(); for (int i = 0; i < 7; ++i) if (mask & (1 << i)) a.push_back(std::atoi(hidpp::Device::reportRateName(i))); return a; };
@@ -220,7 +278,14 @@ json ManagedDevice::readState(bool full) {
             bool on = *bh > 0 && *bh < 0xFF;
             st["bunny_hop"] = {{"enabled", on}, {"timeout", on ? json(*bh * 10) : json()}};
         }
-        if (auto om = dev_->onboardMode()) st["onboard_mode"] = *om;
+        if (auto om = dev_->onboardMode()) {
+            st["onboard_mode"] = *om;
+            if (auto oi = dev_->onboardInfo()) {
+                int cur = 0;
+                try { cur = dev_->onboardProfile(); } catch (...) {}
+                st["onboard"] = {{"format", oi->format}, {"profiles", oi->profiles}, {"buttons", oi->buttons}, {"current", cur}};
+            }
+        }
         if (auto bl = dev_->backlight())
             st["backlight"] = {{"enabled", bl->enabled}, {"mode", bl->mode()}, {"level", bl->level}, {"num_levels", bl->numLevels},
                                {"current_level", bl->currentLevel}, {"status", bl->status}, {"auto_supported", bl->autoSupported()},
@@ -238,6 +303,11 @@ json ManagedDevice::readState(bool full) {
         if (auto pf = dev_->platform()) st["platform"] = {{"platform", pf->platform}, {"source", pf->source}, {"auto", pf->autoPlatform}};
     } catch (const std::exception& e) {
         WARN("%s: readState: %s", dev_->name().c_str(), e.what());
+        // a read cut short (the mouse fell asleep): what it did not get to stays as last read, so
+        // the window keeps showing the device's settings instead of losing them until it wakes
+        if (state_.is_object())
+            for (auto& [k, v] : state_.items())
+                if (!st.contains(k)) st[k] = v;
     }
     state_ = st;
     return st;
@@ -282,16 +352,31 @@ void ManagedDevice::applySettings(const std::string& only) {
     auto want = [&](const char* k) { return s.contains(k) && (only.empty() || only == k); };
     try {
         // a gaming mouse runs its own onboard profile until a host takes over; the settings below
-        // only apply in host mode (G HUB does the same while it runs)
-        if (dev_->has(hidpp::ONBOARD_PROFILES) && only.empty()) {
+        // only apply in host mode (G HUB does the same while it runs). With its onboard memory
+        // chosen (G HUB's Onboard Mode) the mouse keeps its own profiles and NotLogi sets nothing.
+        const bool onboard = onboardMemory();
+        if (dev_->has(hidpp::ONBOARD_PROFILES) && (only.empty() || only == "onboard_memory" || only == "onboard_profile")) {
             auto m = dev_->onboardMode();
-            if (m && *m != 2) {
-                dev_->setOnboardMode(2);
-                INFO("%s: onboard profiles -> host mode", dev_->name().c_str());
+            int wantMode = onboard ? 1 : 2;
+            if (m && *m != wantMode) {
+                dev_->setOnboardMode(wantMode);
+                INFO("%s: onboard profiles -> %s mode", dev_->name().c_str(), onboard ? "onboard" : "host");
+            }
+            if (onboard && s.contains("onboard_profile") && s["onboard_profile"].is_number()) dev_->setOnboardProfile(s["onboard_profile"].get<int>());
+            if (!onboard && only == "onboard_memory") {
+                // back from the onboard memory: everything NotLogi sets, again
+                applySettings();
+                return;
             }
         }
-        // a gaming mouse: the DPI slot in use is what the sensor gets, and "dpi" keeps that value too
-        if (s.contains("dpi_slots") && s["dpi_slots"].is_object() && (want("dpi_slots") || want("dpi_active"))) {
+        if (onboard) return;
+        // a gaming mouse: the slot in use with its X, Y and lift-off distance (applyDpi)
+        static const char* dpiKeys[] = {"dpi_slots", "dpi_slots_y", "dpi_lod", "dpi_active", "dpi_advanced", "dpi_shift", "dpi_correction", "sensor_corrections"};
+        bool dpiWanted = false;
+        for (auto k : dpiKeys) dpiWanted = dpiWanted || want(k);
+        if (dev_->has(hidpp::EXTENDED_DPI) && s.contains("dpi_slots") && s["dpi_slots"].is_object() && dpiWanted) applyDpi();
+        // the DPI slot in use is what the sensor gets, and "dpi" keeps that value too
+        else if (s.contains("dpi_slots") && s["dpi_slots"].is_object() && (want("dpi_slots") || want("dpi_active"))) {
             const std::string slot = std::to_string(s.value("dpi_active", 1));
             if (s["dpi_slots"].contains(slot) && s["dpi_slots"][slot].is_number()) {
                 const int dpi = s["dpi_slots"][slot].get<int>();
@@ -323,14 +408,24 @@ void ManagedDevice::applySettings(const std::string& only) {
             else apply("report_rate", true);
         }
         if (dev_->has(hidpp::ANALOG_BUTTONS) && want("hits") && s["hits"].is_object()) {
-            // the same three values for both inductive buttons, as G HUB's "All (L+R)" does
+            // each inductive button its own values (hits.left, hits.right); values straight under
+            // hits are for both, as G HUB's "All (L+R)" sets them (and as NotLogi kept them up to 0.12)
             const json& h = s["hits"];
-            hidpp::AnalogButton b;
-            b.actuation = h.value("actuation", 5);
-            b.rapidTrigger = h.value("rapid_trigger", 2);
-            b.rapidTriggerOn = h.value("rapid_trigger_on", false);
-            b.haptics = h.value("haptics", 3);
-            for (int btn = 0; btn < 2; ++btn) dev_->setAnalogButton(btn, b);
+            for (int btn = 0; btn < 2; ++btn) {
+                const char* side = btn ? "right" : "left";
+                const json own = h.contains(side) && h[side].is_object() ? h[side] : json::object();
+                auto pick = [&](const char* k, const json& def) { return own.contains(k) ? own[k] : h.contains(k) && !h[k].is_object() ? h[k] : def; };
+                hidpp::AnalogButton b;
+                b.actuation = pick("actuation", 5).get<int>();
+                b.rapidTrigger = pick("rapid_trigger", 2).get<int>();
+                b.rapidTriggerOn = pick("rapid_trigger_on", false).get<bool>();
+                b.haptics = pick("haptics", 3).get<int>();
+                dev_->setAnalogButton(btn, b);
+            }
+        }
+        if (dev_->has(hidpp::MODE_STATUS) && want("surface_mode") && s["surface_mode"].is_string()) {
+            const std::string m = s["surface_mode"].get<std::string>();
+            dev_->setSurfaceMode(m == "auto" ? 0 : m == "off" ? 2 : 1);
         }
         if (dev_->has(hidpp::BUNNY_HOPPING) && want("bunny_hop") && s["bunny_hop"].is_object()) {
             const json& b = s["bunny_hop"];
@@ -399,6 +494,343 @@ void ManagedDevice::applySettings(const std::string& only) {
     }
 }
 
+bool ManagedDevice::onboardMemory() const {
+    return gaming() && dev_->has(hidpp::ONBOARD_PROFILES) && cfg_.value("settings", json::object()).value("onboard_memory", false);
+}
+
+// the nearest value the sensor takes (1 under 200 ... 200 above 32000)
+int ManagedDevice::snapDpi(int dpi) const {
+    if (!state_.contains("dpi") || !state_["dpi"].contains("ranges")) return dpi;
+    const json& rs = state_["dpi"]["ranges"];
+    if (rs.empty()) return dpi;
+    dpi = std::max(rs.front()[0].get<int>(), std::min(rs.back()[2].get<int>(), dpi));
+    for (auto& r : rs) {
+        int from = r[0], step = r[1], to = r[2];
+        if (dpi < from || dpi > to || step <= 0) continue;
+        return std::min(to, from + (dpi - from + step / 2) / step * step);
+    }
+    return dpi;
+}
+
+void ManagedDevice::applyDpi() {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    const json& s = cfg_.value("settings", json::object());
+    if (!dev_->has(hidpp::EXTENDED_DPI)) return;
+    // an app profile with a sensitivity of its own (a preset picked for it): its slots while that app is in front
+    const json sens = profile_.value("sensitivity", json());
+    const bool app = sens.is_object() && sens.contains("slots") && sens["slots"].is_array() && sens["slots"].size() == 5;
+    if (!app && (!s.contains("dpi_slots") || !s["dpi_slots"].is_object())) return;
+    int slot, x, y, lod;
+    if (app) {
+        slot = std::max(0, std::min(4, shiftHeld_ ? sens.value("shift", 0) : appSlot_ >= 0 ? appSlot_ : sens.value("def", 0)));
+        const json& sl = sens["slots"][slot];
+        x = sl.value("x", 800);
+        y = sens.value("advanced", false) ? sl.value("y", x) : x;
+        lod = sl.value("lod", 2);
+    } else {
+        slot = shiftHeld_ ? s.value("dpi_shift", 0) : s.value("dpi_active", 0);
+        const std::string key = std::to_string(slot);
+        auto num = [&](const char* k, int def) { return s.contains(k) && s[k].is_object() && s[k].contains(key) && s[k][key].is_number() ? s[k][key].get<int>() : def; };
+        x = num("dpi_slots", 800);
+        y = s.value("dpi_advanced", false) ? num("dpi_slots_y", x) : x;
+        lod = num("dpi_lod", 2);
+    }
+    // HERO sensor calibration: the chosen correction scales what the sensor is given, so the mouse
+    // moves as far per DPI as the one it was calibrated against
+    double f = 1.0;
+    const std::string corr = s.value("dpi_correction", "");
+    if (!corr.empty() && s.contains("sensor_corrections") && s["sensor_corrections"].is_array())
+        for (auto& c : s["sensor_corrections"])
+            if (c.is_object() && c.value("id", "") == corr) f = c.value("factor", 1.0);
+    const int sx = snapDpi(static_cast<int>(std::lround(x * f))), sy = snapDpi(static_cast<int>(std::lround(y * f)));
+    dev_->setExtendedDpi(sx, sy, lod);
+    // what the sensor now has, without reading the whole device again (a DPI button in a game)
+    if (state_.contains("dpi") && state_["dpi"].is_object()) {
+        state_["dpi"]["dpi"] = sx;
+        state_["dpi"]["dpi_y"] = sy;
+        state_["dpi"]["lod"] = lod;
+    }
+    if (!shiftHeld_ && !app && s.value("dpi", 0) != x) daemon_.config().setSetting(pid_, {"dpi"}, x);
+    DEBUG("%s: DPI slot %d%s%s: %dx%d (sensor %dx%d) lift-off %d", dev_->name().c_str(), slot + 1, shiftHeld_ ? " (shift)" : "", app ? " of the app's own" : "", x, y, sx, sy, lod);
+}
+
+// DPI up / down stop at the last switched-on slot; cycle goes round; default and goto_shift jump
+// to that slot; shift_on / shift_off while DPI shift is held (the slot in use is kept)
+void ManagedDevice::dpiOp(const std::string& op) {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    if (!gaming() || !dev_->has(hidpp::EXTENDED_DPI) || onboardMemory()) return;
+    const json s = cfg_.value("settings", json::object());
+    const json en = s.value("dpi_enabled", json::object());
+    // within an app profile's own sensitivity the slot is kept here, not in the settings
+    const json sens = profile_.value("sensitivity", json());
+    const bool app = sens.is_object() && sens.contains("slots") && sens["slots"].is_array() && sens["slots"].size() == 5;
+    auto on = [&](int i) {
+        if (app) return sens["slots"][i].value("on", true);
+        const std::string k = std::to_string(i);
+        return !(en.contains(k) && en[k].is_boolean() && !en[k].get<bool>());
+    };
+    const int cur = app ? (appSlot_ >= 0 ? appSlot_ : sens.value("def", 0)) : s.value("dpi_active", 0);
+    int next = cur;
+    if (op == "shift_on" || op == "shift_off") shiftHeld_ = op == "shift_on";
+    else if (op == "up") { for (int i = cur + 1; i < 5; ++i) if (on(i)) { next = i; break; } }
+    else if (op == "down") { for (int i = cur - 1; i >= 0; --i) if (on(i)) { next = i; break; } }
+    else if (op == "cycle") { for (int k = 1; k <= 5; ++k) if (on((cur + k) % 5)) { next = (cur + k) % 5; break; } }
+    else if (op == "default") next = app ? sens.value("def", 0) : s.value("dpi_default", 0);
+    else if (op == "goto_shift") next = app ? sens.value("shift", 0) : s.value("dpi_shift", 0);
+    try {
+        if (next != cur && app) appSlot_ = next;
+        else if (next != cur) {
+            daemon_.config().setSetting(pid_, {"dpi_active"}, next);
+            refreshConfig();
+        }
+        applyDpi();
+        daemon_.broadcast("device", summary());
+        const json& ns = cfg_.value("settings", json::object());
+        const int slot = shiftHeld_ ? (app ? sens.value("shift", 0) : ns.value("dpi_shift", 0)) : app ? next : ns.value("dpi_active", 0);
+        const std::string k = std::to_string(slot);
+        const json sl = ns.value("dpi_slots", json::object());
+        json dpi = app ? json(sens["slots"][std::max(0, std::min(4, slot))].value("x", 0)) : sl.contains(k) ? sl[k] : json();
+        daemon_.broadcast("action", {{"id", id()}, {"kind", "dpi"}, {"dpi", dpi}, {"slot", slot + 1}, {"shift", shiftHeld_}, {"device", dev_->name()}});
+    } catch (const std::exception& e) {
+        WARN("%s: DPI %s: %s", dev_->name().c_str(), op.c_str(), e.what());
+    }
+}
+
+// The onboard profiles as the PRO X3 SUPERSTRIKE keeps them (format 8): a directory in sector 0
+// (sector, switched on, 0xFF per profile), then one sector each: the wireless and wired report
+// rate (125 << index), the default and shift slots, five DPI slots of X, Y (16 bit, low byte first)
+// and lift-off distance, ..., the five buttons as 80 01 00 <mask>
+json ManagedDevice::onboardProfiles() {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    json out = json::array();
+    auto info = dev_->onboardInfo();
+    if (!info) return out;
+    hidpp::Bytes dir = dev_->readSector(0, std::min(info->sectorSize, 4 * info->profiles + 4));
+    int cur = 0;
+    try { cur = dev_->onboardProfile(); } catch (...) {}
+    static const int rates[] = {125, 250, 500, 1000, 2000, 4000, 8000};
+    auto rate = [](int i) { return i >= 0 && i < 7 ? json(rates[i]) : json(); };
+    for (int i = 0; i < info->profiles; ++i) {
+        int sector = dir[i * 4] << 8 | dir[i * 4 + 1];
+        json p = {{"index", i + 1}, {"sector", sector}, {"enabled", sector != 0xFFFF && dir[i * 4 + 2] != 0}, {"current", sector == cur}};
+        if (sector != 0xFFFF && info->format == 8) {
+            try {
+                hidpp::Bytes b = dev_->readSector(sector, 0x50);
+                json slots = json::array();
+                for (int s = 0; s < 5; ++s) {
+                    int o = 4 + s * 5;
+                    slots.push_back({{"x", b[o] | b[o + 1] << 8}, {"y", b[o + 2] | b[o + 3] << 8}, {"lod", b[o + 4]}});
+                }
+                p["report_rate"] = rate(b[0]);
+                p["report_rate_wired"] = rate(b[1]);
+                p["default"] = b[2];
+                p["shift"] = b[3];
+                p["slots"] = slots;
+            } catch (const std::exception& e) {
+                p["error"] = e.what();
+            }
+        }
+        out.push_back(p);
+    }
+    return out;
+}
+
+// a sector whose CRC holds (the last two bytes, high first)
+static bool sectorOk(const hidpp::Bytes& b) {
+    return b.size() > 2 && hidpp::Device::crcCcitt(b, b.size() - 2) == static_cast<uint16_t>(b[b.size() - 2] << 8 | b[b.size() - 1]);
+}
+static void sealSector(hidpp::Bytes& b) {
+    uint16_t c = hidpp::Device::crcCcitt(b, b.size() - 2);
+    b[b.size() - 2] = static_cast<uint8_t>(c >> 8);
+    b[b.size() - 1] = static_cast<uint8_t>(c);
+}
+static std::string hexOf(const hidpp::Bytes& b) {
+    std::string s;
+    char h[3];
+    for (auto x : b) { snprintf(h, sizeof(h), "%02x", x); s += h; }
+    return s;
+}
+
+// the sectors about to be written, kept in NotLogi's folder (onboard-backups/<id>-<time>.json)
+static void backupSectors(const std::string& dir, const std::string& id, const std::map<int, hidpp::Bytes>& sectors) {
+    try {
+        namespace fs = std::filesystem;
+        fs::path d = fs::path(dir) / "onboard-backups";
+        fs::create_directories(d);
+        json j = {{"device", id}, {"time", static_cast<long long>(std::time(nullptr))}, {"sectors", json::object()}};
+        for (auto& [s, b] : sectors) j["sectors"][std::to_string(s)] = hexOf(b);
+        std::ofstream f(d / (id + "-" + std::to_string(std::time(nullptr)) + ".json"));
+        f << j.dump(1);
+    } catch (...) {}
+}
+
+json ManagedDevice::onboardSave(int index) {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    auto info = dev_->onboardInfo();
+    if (!info || info->format != 8) throw std::runtime_error("this mouse's onboard memory is not one NotLogi can write");
+    if (index < 1 || index > info->profiles) throw std::runtime_error("no onboard profile " + std::to_string(index));
+    const int size = info->sectorSize;
+    hidpp::Bytes dir = dev_->readSector(0, size);
+    if (!sectorOk(dir)) throw std::runtime_error("the onboard directory does not read back whole; nothing was written");
+    const int i = index - 1;
+    int sector = dir[i * 4] << 8 | dir[i * 4 + 1];
+    if (sector == 0xFFFF || sector == 0) sector = index;
+    hidpp::Bytes prof = dev_->readSector(sector, size);
+    if (!sectorOk(prof)) prof = dev_->readSector(0x0101, size);   // a broken profile starts from the factory one
+    if (!sectorOk(prof)) throw std::runtime_error("no profile to start from reads back whole; nothing was written");
+    backupSectors(std::filesystem::path(daemon_.config().path()).parent_path().string(), id(), {{0, dir}, {sector, prof}});
+
+    const json s = cfg_.value("settings", json::object());
+    static const int rates[] = {125, 250, 500, 1000, 2000, 4000, 8000};
+    auto rateIdx = [&](const char* k, int keep) { int hz = s.value(k, 0); for (int r = 0; r < 7; ++r) if (rates[r] == hz) return r; return keep; };
+    prof[0] = static_cast<uint8_t>(rateIdx("report_rate", prof[0]));
+    prof[1] = static_cast<uint8_t>(rateIdx("report_rate_wired", prof[1]));
+    prof[2] = static_cast<uint8_t>(std::max(0, std::min(4, s.value("dpi_default", 0))));
+    prof[3] = static_cast<uint8_t>(std::max(0, std::min(4, s.value("dpi_shift", 0))));
+    // the five slots: X, Y (low byte first) and lift-off, with the sensor calibration in them as
+    // G HUB writes it; a slot switched off keeps its value (this mouse has no DPI button to cycle them)
+    double f = 1.0;
+    const std::string corr = s.value("dpi_correction", "");
+    for (auto& c : s.value("sensor_corrections", json::array()))
+        if (c.is_object() && !corr.empty() && c.value("id", "") == corr) f = c.value("factor", 1.0);
+    const json xs = s.value("dpi_slots", json::object()), ys = s.value("dpi_slots_y", json::object()), ls = s.value("dpi_lod", json::object());
+    const bool adv = s.value("dpi_advanced", false);
+    for (int k = 0; k < 5; ++k) {
+        const std::string key = std::to_string(k);
+        const int o = 4 + k * 5;
+        int x = xs.contains(key) && xs[key].is_number() ? xs[key].get<int>() : (prof[o] | prof[o + 1] << 8);
+        int y = adv && ys.contains(key) && ys[key].is_number() ? ys[key].get<int>() : x;
+        x = snapDpi(static_cast<int>(std::lround(x * f)));
+        y = snapDpi(static_cast<int>(std::lround(y * f)));
+        prof[o] = static_cast<uint8_t>(x);
+        prof[o + 1] = static_cast<uint8_t>(x >> 8);
+        prof[o + 2] = static_cast<uint8_t>(y);
+        prof[o + 3] = static_cast<uint8_t>(y >> 8);
+        if (ls.contains(key) && ls[key].is_number()) prof[o + 4] = static_cast<uint8_t>(std::max(1, std::min(3, ls[key].get<int>())));
+    }
+    // HITS at 0x26: left then right, each actuation, rapid trigger (bit 0 its switch) and haptics, × 4
+    if (s.contains("hits") && s["hits"].is_object()) {
+        const json& h = s["hits"];
+        for (int b = 0; b < 2; ++b) {
+            const char* side = b ? "right" : "left";
+            const json own = h.contains(side) && h[side].is_object() ? h[side] : json::object();
+            auto val = [&](const char* k, int def) { return own.contains(k) ? own[k].get<int>() : h.contains(k) && h[k].is_number() ? h[k].get<int>() : def; };
+            bool rtOn = own.contains("rapid_trigger_on") ? own["rapid_trigger_on"].get<bool>() : h.value("rapid_trigger_on", false);
+            const int o = 0x26 + b * 3;
+            prof[o] = static_cast<uint8_t>(std::max(1, std::min(10, val("actuation", 5))) * 4);
+            prof[o + 1] = static_cast<uint8_t>(std::max(1, std::min(5, val("rapid_trigger", 2))) * 4 | (rtOn ? 1 : 0));
+            prof[o + 2] = static_cast<uint8_t>(std::max(0, std::min(5, val("haptics", 3))) * 4);
+        }
+    }
+    sealSector(prof);
+    const uint16_t want = static_cast<uint16_t>(prof[size - 2] << 8 | prof[size - 1]);
+    dev_->writeSector(sector, prof);
+    if (dev_->sectorCrc(sector) != want || dev_->readSector(sector, size) != prof) throw std::runtime_error("the profile did not read back as written (a backup of it is in onboard-backups)");
+    // switched on in the directory
+    if (dir[i * 4] != (sector >> 8) || dir[i * 4 + 1] != (sector & 0xFF) || !dir[i * 4 + 2]) {
+        dir[i * 4] = static_cast<uint8_t>(sector >> 8);
+        dir[i * 4 + 1] = static_cast<uint8_t>(sector);
+        dir[i * 4 + 2] = 1;
+        sealSector(dir);
+        dev_->writeSector(0, dir);
+        if (!sectorOk(dev_->readSector(0, size))) throw std::runtime_error("the onboard directory did not read back whole (a backup of it is in onboard-backups)");
+    }
+    INFO("%s: NotLogi's settings written to onboard profile %d (sector %d)", dev_->name().c_str(), index, sector);
+    return {{"ok", true}, {"profile", index}, {"sector", sector}};
+}
+
+json ManagedDevice::onboardRestore() {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    auto info = dev_->onboardInfo();
+    if (!info || info->format != 8) throw std::runtime_error("this mouse's onboard memory is not one NotLogi can write");
+    const int size = info->sectorSize;
+    hidpp::Bytes oob = dev_->readSector(0x0101, size), dir = dev_->readSector(0, size);
+    if (!sectorOk(oob)) throw std::runtime_error("the factory profile does not read back whole; nothing was written");
+    std::map<int, hidpp::Bytes> before = {{0, dir}};
+    for (int k = 1; k <= info->profiles; ++k) before[k] = dev_->readSector(k, size);
+    backupSectors(std::filesystem::path(daemon_.config().path()).parent_path().string(), id(), before);
+    for (int k = 1; k <= info->profiles; ++k) {
+        dev_->writeSector(k, oob);
+        if (dev_->sectorCrc(k) != static_cast<uint16_t>(oob[size - 2] << 8 | oob[size - 1])) throw std::runtime_error("profile " + std::to_string(k) + " did not read back as written");
+    }
+    // the directory as it comes from the factory: every profile in its own sector, the first one on
+    std::fill(dir.begin(), dir.end(), 0xFF);
+    for (int k = 0; k < info->profiles; ++k) {
+        dir[k * 4] = 0;
+        dir[k * 4 + 1] = static_cast<uint8_t>(k + 1);
+        dir[k * 4 + 2] = k == 0 ? 1 : 0;
+        dir[k * 4 + 3] = 0xFF;
+    }
+    sealSector(dir);
+    dev_->writeSector(0, dir);
+    if (!sectorOk(dev_->readSector(0, size))) throw std::runtime_error("the onboard directory did not read back whole (a backup is in onboard-backups)");
+    INFO("%s: onboard profiles restored to the factory one", dev_->name().c_str());
+    return {{"ok", true}};
+}
+
+json ManagedDevice::hitsTest(const std::string& op, const json& p) {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    if (!dev_->has(hidpp::ANALOG_BUTTONS)) throw std::runtime_error("this mouse has no HITS switches");
+    using clock = std::chrono::steady_clock;
+    if (op == "open") {
+        // the buttons' travel reported while the test is open (G HUB's 01 3C: for 60 s, so the window
+        // asks again before that runs out); a second open only renews it
+        hitsOpen_ = true;
+        dev_->setAnalogMonitoring(true, 60);
+        // G HUB holds the report rate at 1000 Hz while its test is open, and puts it back after
+        if (auto rr = dev_->reportRate()) {
+            int cur = transportName() == "usb" ? rr->wired : rr->wireless;
+            if (cur >= 0 && cur != 3) {
+                hitsRate_ = cur;
+                dev_->setReportRate(3);
+            }
+        }
+        return {{"ok", true}};
+    }
+    if (op == "start") {
+        hitsButton_ = p.value("button", 0);
+        hitsLog_.clear();
+        hitsBlue_ = {};
+        hitsTest_ = true;
+        dev_->setAnalogMonitoring(true, 60);   // as G HUB's test asks: travel reports for 60 s
+        return {{"ok", true}};
+    }
+    if (op == "blue") {
+        hitsBlue_ = clock::now();
+        return {{"ok", true}};
+    }
+    if (op == "stop" || op == "close" || op == "result") {
+        hitsTest_ = false;
+        // travel reports stay on for the live bar until the test closes
+        if (op == "close" || !hitsOpen_) {
+            hitsOpen_ = false;
+            try { dev_->setAnalogMonitoring(false, 0); } catch (...) {}
+        }
+        if (op == "close" && hitsRate_ >= 0) {
+            try { dev_->setReportRate(hitsRate_); } catch (...) {}
+            hitsRate_ = -1;
+        }
+        if (op != "result") return {{"ok", true}};
+        // Each travel report (event 0) holds how far each button is pressed, the left one's step then
+        // the right one's (0 up .. 10 at the bottom), as read from G HUB's test. A step the report
+        // jumps past (a fast press) is reached when the report says so. Only the press after blue counts.
+        json steps = json::object(), raw = json::array();
+        for (auto& [at, e] : hitsLog_) {
+            if (hitsBlue_ == clock::time_point{} || at < hitsBlue_) continue;
+            double ms = std::chrono::duration<double, std::milli>(at - hitsBlue_).count();
+            raw.push_back({{"ms", ms}, {"event", e["event"]}, {"bytes", e["bytes"]}});
+            const json& b = e["bytes"];
+            if (e["event"] != 0 || static_cast<int>(b.size()) <= hitsButton_) continue;
+            int step = std::min(10, b[hitsButton_].get<int>());
+            for (int s = 1; s <= step; ++s)
+                if (!steps.contains(std::to_string(s))) steps[std::to_string(s)] = ms;
+        }
+        INFO("%s: HITS test: %zu travel events", dev_->name().c_str(), hitsLog_.size());
+        return {{"steps", steps}, {"raw", raw}};
+    }
+    throw std::runtime_error("unknown HITS test step " + op);
+}
+
 // OS-side pointer speed (-1..1)
 void ManagedDevice::applyPointerSpeed(double v) {
     if (v < -1) v = -1;
@@ -409,15 +841,19 @@ void ManagedDevice::applyPointerSpeed(double v) {
 void ManagedDevice::applyAssignments() {
     std::lock_guard<std::recursive_mutex> lk(m_);
     std::map<int, json> wanted;
-    for (const char* section : {"buttons", "keys"}) {
-        if (!profile_.contains(section)) continue;
+    // the G-Shift layer (a gaming mouse): a button with an action there is taken over too, and does
+    // its own click itself while G-Shift is not held
+    for (const char* section : {"buttons", "keys", "buttons_gshift"}) {
+        if (!profile_.contains(section) || (std::string(section) == "buttons_gshift" && !gaming())) continue;
         for (auto& [cidS, action] : profile_[section].items()) {
             int cid;
             try { cid = std::stoi(cidS); } catch (...) { continue; }
             json a = actions::resolve(action);
-            if (a.is_object() && a.value("type", "native") != "native") wanted[cid] = a;
+            if (a.is_object() && a.value("type", "native") != "native" && !wanted.count(cid)) wanted[cid] = a;
         }
     }
+    // the mouse on its own onboard memory: every button back to it
+    if (onboardMemory()) wanted.clear();
     if (!dev_->has(hidpp::SPECIAL_KEYS) && dev_->has(hidpp::MOUSE_BUTTON_SPY)) {
         // no 0x1B04: a button with an action of its own stops sending its HID button (remapped to
         // none) and the button spy reports every press; everything else keeps its own button
@@ -539,15 +975,57 @@ void ManagedDevice::setProfile(const std::string& appClass) {
         refreshConfig();   // the app's changes laid over the default profile
         INFO("%s: profile -> %s (%s)", dev_->name().c_str(), name.c_str(), appClass.c_str());
         applyAssignments();
+        // a gaming mouse follows the app's own sensitivity, starting on its default slot (or its own again)
+        appSlot_ = -1;
+        if (gaming() && !onboardMemory()) {
+            try { applyDpi(); } catch (const std::exception& e) { WARN("%s: DPI for %s: %s", dev_->name().c_str(), name.c_str(), e.what()); }
+        }
         daemon_.broadcast("profile", {{"id", id()}, {"profile", name}, {"app", appClass}});
     }
 }
 
 json ManagedDevice::actionFor(int cid) {
     std::string k = std::to_string(cid);
+    // while G-Shift is held a button does what the G-Shift layer gives it, if anything
+    if (gshiftHeld_ && profile_.contains("buttons_gshift") && profile_["buttons_gshift"].contains(k)) {
+        const json& a = profile_["buttons_gshift"][k];
+        if (!(a.is_string() && a.get<std::string>() == "native")) return a;
+    }
     for (const char* section : {"buttons", "keys"})
         if (profile_.contains(section) && profile_[section].contains(k)) return profile_[section][k];
     return "native";
+}
+
+// A macro is assigned by its id: its steps and how it repeats come from the device's saved macros,
+// so changing a macro changes it on every button that has it
+json ManagedDevice::withMacro(const json& action) {
+    if (!action.is_object() || action.value("type", "") != "macro") return action;
+    const json ms = cfg_.value("settings", json::object()).value("macros", json::array());
+    for (auto& m : ms)
+        if (m.is_object() && m.value("id", "") == action.value("macro", "")) {
+            json a = action;
+            a["steps"] = m.value("steps", json::array());
+            a["repeat"] = m.value("repeat", "once");
+            a["label"] = m.value("name", "Macro");
+            return a;
+        }
+    return action;
+}
+
+// A gaming mouse's taken-over button acts while it is held, as in a game: a key or a click goes
+// down with the button and up with it (a double-click still clicks twice). A button taken over
+// only for the G-Shift layer clicks its own button that way.
+static json heldForGaming(int cid, const json& action) {
+    json a = actions::resolve(action);
+    std::string t = a.value("type", "native");
+    if (t == "keystroke") return {{"type", "hold"}, {"keys", a.value("keys", json::array())}};
+    if (t == "button" && a.value("count", 1) <= 1) return {{"type", "hold"}, {"keys", json::array({a.value("button", "BTN_LEFT")})}};
+    if (t == "native") {
+        static const std::map<int, const char*> own = {{80, "BTN_LEFT"}, {81, "BTN_RIGHT"}, {82, "BTN_MIDDLE"}, {83, "BTN_SIDE"}, {86, "BTN_EXTRA"}};
+        auto it = own.find(cid);
+        if (it != own.end()) return {{"type", "hold"}, {"keys", json::array({it->second})}};
+    }
+    return action;
 }
 
 void ManagedDevice::handle(const hidpp::Event& ev) {
@@ -557,16 +1035,30 @@ void ManagedDevice::handle(const hidpp::Event& ev) {
         for (auto& c : ev.data["down"]) now.insert(c.get<int>());
         for (int c : now)
             if (!down_.count(c)) {
-                INFO("%s: control 0x%x pressed -> %s", dev_->name().c_str(), c, actions::resolve(actionFor(c)).value("label", actionFor(c).is_string() ? actionFor(c).get<std::string>() : "custom").c_str());
-                engine_->buttonDown(c, actionFor(c));
+                json a = actionFor(c);
+                INFO("%s: control 0x%x pressed -> %s", dev_->name().c_str(), c, actions::resolve(a).value("label", a.is_string() ? a.get<std::string>() : "custom").c_str());
+                a = withMacro(a);
+                if (gaming()) a = heldForGaming(c, a);
+                pressed_[c] = a;   // its release ends this action, even if G-Shift let go in between
+                engine_->buttonDown(c, a);
             }
         for (int c : down_)
             if (!now.count(c)) {
-                json a = actions::resolve(actionFor(c));
-                engine_->buttonUp(c, actionFor(c));
-                announce(a);
+                auto it = pressed_.find(c);
+                json a = it != pressed_.end() ? it->second : actionFor(c);
+                if (it != pressed_.end()) pressed_.erase(it);
+                engine_->buttonUp(c, a);
+                announce(actions::resolve(a));
             }
         down_ = now;
+    } else if (ev.kind == "analog") {
+        // the inductive buttons' travel (monitoring on): kept while the HITS test runs
+        DEBUG("%s: analog event %d %s", dev_->name().c_str(), ev.data["event"].get<int>(), ev.data["bytes"].dump().c_str());
+        std::lock_guard<std::recursive_mutex> lk(m_);
+        if (hitsTest_) hitsLog_.emplace_back(std::chrono::steady_clock::now(), ev.data);
+        // the test open: how far each button is pressed, live, for its travel bar
+        const json& b = ev.data["bytes"];
+        if (hitsOpen_ && ev.data["event"] == 0 && b.size() >= 2) daemon_.broadcast("hits_travel", {{"id", id()}, {"left", b[0]}, {"right", b[1]}});
     } else if (ev.kind == "raw_xy") {
         engine_->rawXY(ev.data["dx"].get<int>(), ev.data["dy"].get<int>());
     } else if (ev.kind == "thumbwheel") {
@@ -910,6 +1402,13 @@ bool Daemon::attach(hidpp::Transport& t, uint8_t idx, const hidpp::Node& node) {
             DEBUG("%s/%d: no pairing info and no device info", t.path().c_str(), idx);
             return false;
         }
+    } else if (node.isWiredMouse()) {
+        // a gaming mouse on its cable: the model id it reports, so its settings are the ones it has
+        // over its receiver
+        if (auto di = dev->deviceInfo()) {
+            pid = di->first;
+            serial = di->second;
+        }
     }
     if (pid == 0) return false;
     std::string key = Config::key(pid);
@@ -1237,11 +1736,61 @@ static json validateSetting(const json& summary, const std::vector<std::string>&
             if (std::abs(r - want) < std::abs(best - want)) best = r;
         return json(best);
     }
-    if (k == "hits" && path.size() == 2) {
-        if (path[1] == "actuation") return clampInt(1, 10);
-        if (path[1] == "rapid_trigger") return clampInt(1, 5);
-        if (path[1] == "rapid_trigger_on") return boolean();
-        if (path[1] == "haptics") return clampInt(0, 5);
+    // the HITS values for both buttons (hits.x) or one of them (hits.left.x, hits.right.x)
+    if (k == "hits" && (path.size() == 2 || (path.size() == 3 && (path[1] == "left" || path[1] == "right")))) {
+        const std::string& f = path.back();
+        if (f == "actuation") return clampInt(1, 10);
+        if (f == "rapid_trigger") return clampInt(1, 5);
+        if (f == "rapid_trigger_on") return boolean();
+        if (f == "haptics") return clampInt(0, 5);
+    }
+    // a gaming mouse's slots: Y when X and Y differ, lift-off distance (1 low, 2 medium, 3 high),
+    // the default and DPI shift slots, the X/Y view, surface mode, its onboard memory
+    if (k == "dpi_slots_y" && path.size() == 2) return validateSetting(summary, {"dpi_slots", path[1]}, v);
+    if (k == "dpi_lod" && path.size() == 2) return clampInt(1, 3);
+    if (k == "dpi_default" || k == "dpi_shift") return clampInt(0, 4);
+    if (k == "dpi_advanced" || k == "onboard_memory") return boolean();
+    if (k == "onboard_profile") return clampInt(1, 0xFFFF);
+    if (k == "surface_mode") return oneOf({"on", "auto", "off"});
+    // the preset in use (an id), a correction from the sensor calibration (an id, "" for none)
+    if (k == "dpi_preset" || k == "hits_preset" || k == "dpi_correction") {
+        if (!v.is_string() || v.get<std::string>().size() > 64) throw std::runtime_error(k + " must be a short string");
+        return v;
+    }
+    // macros: a name, how they repeat, and their steps (a key or mouse button down or up after a delay)
+    if (k == "macros") {
+        if (!v.is_array() || v.size() > 100) throw std::runtime_error("macros must be a list of at most 100");
+        for (auto& m : v) {
+            if (!m.is_object() || !m.contains("id") || !m["id"].is_string() || !m.value("name", json()).is_string()) throw std::runtime_error("a macro needs an id and a name");
+            std::string rep = m.value("repeat", "once");
+            if (rep != "once" && rep != "while_held" && rep != "toggle") throw std::runtime_error("a macro repeats once, while_held or toggle");
+            const json& st = m.value("steps", json::array());
+            if (!st.is_array() || st.size() > 1000) throw std::runtime_error("a macro has at most 1000 steps");
+            for (auto& x : st) {
+                std::string key = x.value("key", "");
+                if (key.rfind("KEY_", 0) != 0 && key.rfind("BTN_", 0) != 0) throw std::runtime_error("a macro step presses a KEY_ or BTN_ code");
+                int d = x.value("delay", 0);
+                if (d < 0 || d > 10000) throw std::runtime_error("a macro delay is 0 to 10000 ms");
+            }
+        }
+        if (v.dump().size() > 262144) throw std::runtime_error("macros are too large");
+        return v;
+    }
+    // presets of one's own and the sensor calibrations: lists of objects with an id and a name
+    if (k == "dpi_presets" || k == "hits_presets" || k == "sensor_corrections") {
+        if (!v.is_array() || v.size() > 64) throw std::runtime_error(k + " must be a list of at most 64");
+        json out = json::array();
+        for (auto& e : v) {
+            if (!e.is_object() || !e.contains("id") || !e["id"].is_string() || e["id"].get<std::string>().size() > 64) throw std::runtime_error(k + ": every entry needs an id");
+            if (e.contains("name") && (!e["name"].is_string() || e["name"].get<std::string>().size() > 80)) throw std::runtime_error(k + ": a name is a short string");
+            if (k == "sensor_corrections") {
+                double f = e.value("factor", 1.0);
+                if (!(f >= 0.2 && f <= 5.0)) throw std::runtime_error("a correction's factor must be between 0.2 and 5");
+            }
+            out.push_back(e);
+        }
+        if (out.dump().size() > 65536) throw std::runtime_error(k + " is too large");
+        return out;
     }
     if (k == "smartshift" && path.size() == 2) {
         if (path[1] == "mode") return oneOf({"ratchet", "freespin"});
@@ -1585,6 +2134,8 @@ json Daemon::rpc(const std::string& method, const json& p) {
         }
         std::string t = a.value("type", "");
         if (t.empty() || t == "gesture" || t == "native" || t == "adapter" || t == "hold") throw std::runtime_error("cannot run an action of type " + t);
+        if (t == "macro" && p.contains("id"))
+            if (auto md = find(p["id"].get<std::string>())) a = md->withMacro(a);
         if (p.contains("id") && p["id"].is_string()) {
             try { need(p)->play(a); return json{{"ok", true}}; } catch (const std::exception&) { /* device gone: run without it */ }
         }
@@ -1632,17 +2183,78 @@ json Daemon::rpc(const std::string& method, const json& p) {
         md->refreshConfig();
         md->applySettings(path[0]);
         long tApply = ms();
-        if (path[0] == "thumbwheel") md->applyAssignments();
+        // the thumb wheel's settings and the onboard memory (the mouse's buttons back to it, or to NotLogi) change the assignments too
+        if (path[0] == "thumbwheel" || path[0] == "onboard_memory") md->applyAssignments();
         json st = md->readState(false);
         long tRead = ms();
         broadcast("device", md->summary());
         DEBUG("set_setting %s: save %ld ms, apply %ld ms, read %ld ms, total %ld ms", path[0].c_str(), tSave, tApply - tSave, tRead - tApply, ms());
         return st;
     }
+    if (method == "set_settings") {
+        // several settings at once (a preset): all checked first, then saved, then applied once each
+        auto md = need(p);
+        const json& items = p.value("items", json::array());
+        if (!items.is_array() || items.empty() || items.size() > 64) throw std::runtime_error("items must be a list of 1 to 64 {path, value}");
+        std::vector<std::pair<std::vector<std::string>, json>> ok;
+        const json summary = md->summary();
+        for (auto& it : items) ok.emplace_back(it.at("path").get<std::vector<std::string>>(), validateSetting(summary, it.at("path").get<std::vector<std::string>>(), it.at("value")));
+        std::set<std::string> tops;
+        for (auto& [path, value] : ok) {
+            config_.setSetting(md->pid(), path, value);
+            tops.insert(path[0]);
+        }
+        md->refreshConfig();
+        // the DPI keys go through one apply (applyDpi), the others one each
+        bool dpiDone = false;
+        for (auto& k : tops) {
+            bool dpi = k.rfind("dpi", 0) == 0 || k == "sensor_corrections";
+            if (dpi && dpiDone) continue;
+            dpiDone = dpiDone || dpi;
+            md->applySettings(k);
+        }
+        if (tops.count("onboard_memory") || tops.count("thumbwheel")) md->applyAssignments();
+        json st = md->readState(false);
+        broadcast("device", md->summary());
+        return st;
+    }
+    if (method == "hits_test") {
+        auto md = need(p);
+        return md->hitsTest(p.value("op", ""), p);
+    }
+    if (method == "motion_count") {
+        // HERO sensor calibration: count the raw movement of the mice given (start), read it, stop
+        std::string op = p.value("op", "");
+        if (op == "start") {
+            std::map<std::string, std::string> nodes;
+            for (auto& id : p.value("ids", json::array())) {
+                auto md = find(id.get<std::string>());
+                if (!md) throw std::runtime_error("no device " + id.get<std::string>());
+                nodes[md->id()] = md->transport().path();
+            }
+            motion_.start(nodes);
+            return {{"ok", true}};
+        }
+        if (op == "read") return motion_.read();
+        motion_.stop();
+        return {{"ok", true}};
+    }
+    if (method == "onboard_save") {
+        auto md = need(p);
+        return md->onboardSave(p.value("profile", 1));
+    }
+    if (method == "onboard_restore") {
+        auto md = need(p);
+        return md->onboardRestore();
+    }
+    if (method == "onboard_profiles") {
+        auto md = need(p);
+        return md->onboardProfiles();
+    }
     if (method == "set_assignment") {
         auto md = need(p);
         std::string section = p["section"].get<std::string>();
-        if (section != "buttons" && section != "keys" && section != "thumbwheel") throw std::runtime_error("section must be buttons, keys or thumbwheel");
+        if (section != "buttons" && section != "keys" && section != "thumbwheel" && section != "buttons_gshift") throw std::runtime_error("section must be buttons, keys, thumbwheel or buttons_gshift");
         std::string control = p.value("control", "");
         if (section != "thumbwheel") {
             int cid = -1;
@@ -1668,6 +2280,7 @@ json Daemon::rpc(const std::string& method, const json& p) {
         md->refreshConfig();
         md->setProfile(appClass_);
         md->applyAssignments();
+        if (md->gaming()) md->applyDpi();   // the profile in front may have a sensitivity of its own now
         json s = md->summary();
         broadcast("device", s);
         return s;

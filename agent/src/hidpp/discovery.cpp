@@ -13,7 +13,7 @@ std::vector<Node> scan() {
 std::vector<Node> usable(const std::vector<Node>& nodes) {
     std::vector<Node> out;
     for (auto& n : nodes)
-        if (n.isReceiver() || n.isBluetooth()) out.push_back(n);
+        if (n.isReceiver() || n.isBluetooth() || n.isWiredMouse()) out.push_back(n);
     return out;
 }
 

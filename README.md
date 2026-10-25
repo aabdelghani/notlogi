@@ -12,7 +12,7 @@
 [![Latest release](https://img.shields.io/github/v/release/aabdelghani/notlogi?color=2dd4bf&label=release)](https://github.com/aabdelghani/notlogi/releases/latest)
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-2dd4bf.svg)](LICENSE)
 [![Platforms: Linux, Windows, macOS](https://img.shields.io/badge/platforms-Linux%20%C2%B7%20Windows%20beta%20%C2%B7%20macOS%20beta-2dd4bf.svg)](#install)
-[![Devices: MX Master 4 and 3S, MX Keys family](https://img.shields.io/badge/devices-MX%20Master%204%20%2F%203S%20%C2%B7%20MX%20Keys%20family-2dd4bf.svg)](#supported-devices)
+[![Devices: MX Master 4 and 3S, MX Keys family, PRO X3 SUPERSTRIKE](https://img.shields.io/badge/devices-MX%20Master%204%20%2F%203S%20%C2%B7%20MX%20Keys%20family%20%C2%B7%20PRO%20X3%20SUPERSTRIKE-2dd4bf.svg)](#supported-devices)
 [![Action ring](https://img.shields.io/badge/action%20ring-yes-2dd4bf.svg)](#action-ring)
 [![Flow](https://img.shields.io/badge/flow-several%20computers-2dd4bf.svg)](#flow)
 
@@ -54,11 +54,12 @@ by the .deb, and in the repository at `packaging/uninstall.sh`).
 | MX Master 4 | Tested |
 | MX Master 3S | Tested |
 | MX Keys S | Tested |
+| PRO X3 SUPERSTRIKE | Tested on its LIGHTSPEED receiver |
 | MX Keys, MX Keys for Mac, MX Keys for Business | Working, reported by users |
 | MX Anywhere 3S | Included, not yet tested |
 | MX Keys Mini, Mini for Mac, Mini for Business | Included, not yet tested |
 
-Through a Bolt or Unifying receiver, or over Bluetooth.
+Through a Bolt, Unifying or LIGHTSPEED receiver, or over Bluetooth.
 
 ## Features
 
@@ -106,6 +107,24 @@ Hold a button, flick toward an action, let go. Up to eight actions around the po
 | Buttons and the haptic panel | Easy-Switch |
 |---|---|
 | ![MX Master 4 buttons](screenshots/mx4-buttons.png) | ![MX Master 4 Easy-Switch](screenshots/mx4-easy-switch.png) |
+
+### PRO X3 SUPERSTRIKE
+
+What G HUB offers for the mouse, without its online parts:
+
+- Sensitivity: G HUB's presets and your own, five DPI slots with the default and DPI shift slots, X and Y apart, lift-off distance, report rate, HERO sensor calibration and a Sensitivity tool
+- HITS: actuation point, rapid trigger and click haptics for each main button, presets, the HITS code, and the latency test with the button's travel shown live
+- Assignments: G HUB's System actions, a G-Shift layer, and macros
+- Gaming surface mode, the onboard memory (use it, or write your settings into a profile), BHOP, time left from the mouse's power model
+- A sensitivity of its own for each app profile
+
+| Sensitivity | HITS |
+|---|---|
+| ![PRO X3 sensitivity](screenshots/x3-sensitivity.png) | ![PRO X3 HITS](screenshots/x3-hits.png) |
+
+| Assignments | Settings |
+|---|---|
+| ![PRO X3 assignments](screenshots/x3-assignments.png) | ![PRO X3 settings](screenshots/x3-settings.png) |
 
 ### Home
 

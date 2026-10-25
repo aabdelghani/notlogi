@@ -15,6 +15,10 @@ Types:
   adapter     continuous: x/y sub-actions fired every `step` units of movement
   change_host host: 0..2                               Easy-Switch
   dpi_cycle   levels: [..]
+  dpi         op: up | down | cycle | default | goto_shift | shift   a gaming mouse's DPI slots (shift: while held)
+  gshift      while held, the buttons do what the G-Shift layer gives them
+  battery_level                                        show the battery on screen
+  onboard_cycle                                        the next profile in the mouse's onboard memory
 """
 from __future__ import annotations
 
@@ -26,6 +30,22 @@ PRESETS: dict[str, dict] = {
     "double_click":      {"label": "Double-click", "icon": "mouse", "type": "button", "button": "BTN_LEFT", "count": 2},
     "back":              {"label": "Back", "icon": "arrow-left", "type": "button", "button": "BTN_SIDE"},
     "forward":           {"label": "Forward", "icon": "arrow-right", "type": "button", "button": "BTN_EXTRA"},
+    "primary_click":     {"label": "Primary click", "icon": "mouse", "type": "button", "button": "BTN_LEFT"},
+    "secondary_click":   {"label": "Secondary click", "icon": "mouse", "type": "button", "button": "BTN_RIGHT"},
+    "scroll_up":         {"label": "Scroll up", "icon": "scroll-v", "type": "scroll", "axis": "y", "amount": 120},
+    "scroll_down":       {"label": "Scroll down", "icon": "scroll-v", "type": "scroll", "axis": "y", "amount": -120},
+    "scroll_left":       {"label": "Scroll left", "icon": "scroll-h", "type": "scroll", "axis": "x", "amount": -120},
+    "scroll_right":      {"label": "Scroll right", "icon": "scroll-h", "type": "scroll", "axis": "x", "amount": 120},
+    # a gaming mouse's DPI slots and layers (G HUB's System > Mouse and Device)
+    "dpi_up":            {"label": "DPI up", "icon": "speed", "type": "dpi", "op": "up"},
+    "dpi_down":          {"label": "DPI down", "icon": "speed", "type": "dpi", "op": "down"},
+    "dpi_slot_cycle":    {"label": "DPI cycle", "icon": "speed", "type": "dpi", "op": "cycle"},
+    "dpi_shift":         {"label": "DPI shift (while held)", "icon": "speed", "type": "dpi", "op": "shift"},
+    "dpi_default":       {"label": "Default DPI", "icon": "speed", "type": "dpi", "op": "default"},
+    "dpi_goto_shift":    {"label": "Go to DPI shift", "icon": "speed", "type": "dpi", "op": "goto_shift"},
+    "gshift":            {"label": "G-Shift (while held)", "icon": "layers", "type": "gshift"},
+    "battery_level":     {"label": "Battery level", "icon": "battery", "type": "battery_level"},
+    "onboard_profile_cycle": {"label": "Onboard profile cycle", "icon": "chip", "type": "onboard_cycle"},
     "overview":          {"label": "Activities / Overview", "icon": "grid", "type": "keystroke", "keys": ["KEY_LEFTMETA"]},
     "show_desktop":      {"label": "Show desktop", "icon": "desktop", "type": "keystroke", "keys": ["KEY_LEFTMETA", "KEY_D"]},
     "app_switcher":      {"label": "Switch application", "icon": "windows", "type": "keystroke", "keys": ["KEY_LEFTALT", "KEY_TAB"]},
@@ -116,8 +136,10 @@ PRESETS: dict[str, dict] = {
 }
 
 # Which presets make sense for which control class
-BUTTON_PRESETS = [k for k, v in PRESETS.items() if v["type"] in ("native", "nothing", "button", "keystroke", "command", "change_host", "dpi_cycle", "gesture", "smartshift_toggle", "open", "ui")]
-WHEEL_PRESETS = [k for k, v in PRESETS.items() if v["type"] in ("native", "nothing", "scroll", "adapter")]
+BUTTON_PRESETS = [k for k, v in PRESETS.items() if v["type"] in ("native", "nothing", "button", "keystroke", "command", "change_host", "dpi_cycle", "gesture", "smartshift_toggle", "open", "ui",
+                                                                 "dpi", "gshift", "battery_level", "onboard_cycle") or (v["type"] == "scroll" and "amount" in v)]
+# a wheel scrolls by its own movement: the one-notch scroll actions are for buttons
+WHEEL_PRESETS = [k for k, v in PRESETS.items() if v["type"] in ("native", "nothing", "adapter") or (v["type"] == "scroll" and "amount" not in v)]
 KEY_PRESETS = [k for k, v in PRESETS.items() if v["type"] in ("native", "nothing", "keystroke", "command", "change_host", "open", "ui")]
 
 

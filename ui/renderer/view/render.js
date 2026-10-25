@@ -5,8 +5,8 @@ import { toolName } from '../../shared/actions.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let PAGES, S, VERSION, appIcon, armRecorder, assignTyped, backlightPanel, bindBarHover, dev, devicePages, dialogClosed, drawerUp, easyView, flowPanel, flowWizard, esc, fmtOut, gestureDrag, go, greeting, homeFit, icons, navBattery, navPages, onAction, openPicker, pageAbout, pageAppDetail, pageApps, pageBacklight, pageBackup, pageButtons, pageDeviceSettings, pageEasy, pageFlow, pageGestures, pageGuard, pageHaptics, pageHome, pageInfo, pageKeys, pageNotif, pagePointer, pageRing, pageSettings, profileBar, recorderActive, renderAddPanel, renderAppList, renderBacklightPanel, renderConfirm, renderEasyPanel, renderEmpty, renderOnboard, renderPair, renderPicker, renderPickerList, renderPointerPanel, renderPrompt, renderReport, renderUninstall, renderWish, ringDrag, ringFolder, ringProfileBar, ringState, ringTop, root, saveFolderName, setChord, setField, sidePanelClosed, stopRecorder, pageDpi, pageWheel, pageHits;
-export function link(ctx) { ({ PAGES, S, VERSION, appIcon, armRecorder, assignTyped, backlightPanel, bindBarHover, dev, devicePages, dialogClosed, drawerUp, easyView, flowPanel, flowWizard, esc, fmtOut, gestureDrag, go, greeting, homeFit, icons, navBattery, navPages, onAction, openPicker, pageAbout, pageAppDetail, pageApps, pageBacklight, pageBackup, pageButtons, pageDeviceSettings, pageEasy, pageFlow, pageGestures, pageGuard, pageHaptics, pageHome, pageInfo, pageKeys, pageNotif, pagePointer, pageRing, pageSettings, profileBar, recorderActive, renderAddPanel, renderAppList, renderBacklightPanel, renderConfirm, renderEasyPanel, renderEmpty, renderOnboard, renderPair, renderPicker, renderPickerList, renderPointerPanel, renderPrompt, renderReport, renderUninstall, renderWish, ringDrag, ringFolder, ringProfileBar, ringState, ringTop, root, saveFolderName, setChord, setField, sidePanelClosed, stopRecorder, pageDpi, pageWheel, pageHits } = ctx); }
+let PAGES, S, VERSION, appIcon, armRecorder, assignTyped, backlightPanel, bindBarHover, dev, devicePages, dialogClosed, drawerUp, easyView, flowPanel, flowWizard, esc, fmtOut, gestureDrag, go, greeting, homeFit, icons, navBattery, navPages, onAction, openPicker, pageAbout, pageAppDetail, pageApps, pageBacklight, pageBackup, pageButtons, pageDeviceSettings, pageEasy, pageFlow, pageGestures, pageGuard, pageHaptics, pageHome, pageInfo, pageKeys, pageNotif, pagePointer, pageRing, pageSettings, profileBar, recorderActive, renderAddPanel, renderAppList, renderBacklightPanel, renderConfirm, renderEasyPanel, renderEmpty, renderOnboard, renderPair, renderPicker, renderPickerList, renderPointerPanel, renderPrompt, renderReport, renderUninstall, renderWish, ringDrag, ringFolder, ringProfileBar, ringState, ringTop, root, saveFolderName, setChord, setField, sidePanelClosed, stopRecorder, pageDpi, pageWheel, pageHits, renderGamingDialog, hitsTestClick, dpiTestClick, macroKey, renderHitsPanel;
+export function link(ctx) { ({ PAGES, S, VERSION, appIcon, armRecorder, assignTyped, backlightPanel, bindBarHover, dev, devicePages, dialogClosed, drawerUp, easyView, flowPanel, flowWizard, esc, fmtOut, gestureDrag, go, greeting, homeFit, icons, navBattery, navPages, onAction, openPicker, pageAbout, pageAppDetail, pageApps, pageBacklight, pageBackup, pageButtons, pageDeviceSettings, pageEasy, pageFlow, pageGestures, pageGuard, pageHaptics, pageHome, pageInfo, pageKeys, pageNotif, pagePointer, pageRing, pageSettings, profileBar, recorderActive, renderAddPanel, renderAppList, renderBacklightPanel, renderConfirm, renderEasyPanel, renderEmpty, renderOnboard, renderPair, renderPicker, renderPickerList, renderPointerPanel, renderPrompt, renderReport, renderUninstall, renderWish, ringDrag, ringFolder, ringProfileBar, ringState, ringTop, root, saveFolderName, setChord, setField, sidePanelClosed, stopRecorder, pageDpi, pageWheel, pageHits, renderGamingDialog, hitsTestClick, dpiTestClick, macroKey, renderHitsPanel } = ctx); }
 
 // ============================================================ render
 // Animations run when something new appears, not on every refresh: the page when it is
@@ -232,7 +232,7 @@ function renderWindow() {
     const items = navPages(d).map(p => p === 'easy' && !easyView(d) ? `<button class="dnav-item soon" disabled title="${t('Coming soon')}"><i class="fa-solid ${PAGES[p][1]}"></i>${PAGES[p][0]}<span class="soon-tag">${t('Soon')}</span></button>` : `<button class="dnav-item ${S.page === p || (p === 'buttons' && ['thumb', 'gestures'].includes(S.page)) ? 'on' : ''}" data-act="home-page" data-key="${esc(d.id)}" data-page="${p}"><i class="fa-solid ${PAGES[p][1]}"></i>${PAGES[p][0]}</button>`).join('');
     const flowSide = S.page === 'flow' && !!S.flowPanel && !!S.flow;   // Flow's settings, in the same side panel as the other pages
     const drawer = drawerUp(), blp = !drawer && (flowSide || S.addPanel || backlightPanel(d));
-    body = `<div class="devview2 ${drawer || blp ? 'drawer-open' : ''} ${blp ? 'panel-open' : ''}"><aside class="dnav"><div class="cfg-back"><button class="hbtn icon" data-act="go-home" title="${t('Home')}"><i class="fa-solid fa-arrow-left"></i></button>${(S.page === 'gestures' && S.cfgKind === 'ring' && folderNameField()) || `<span class="cfg-name">${esc(d.name)}</span>`}</div><nav>${items}<button class="dnav-item ${S.page === 'info' ? 'on' : ''}" data-act="home-page" data-key="${esc(d.id)}" data-page="info"><i class="fa-solid fa-sliders"></i>${t('Settings')}</button></nav>${navBattery(d)}</aside><section class="dev-config solo ${S.page === 'info' ? 'full' : ''}"><div class="cfg-top">${controls}</div><div class="content"><div class="page">${renderPage(d)}</div></div></section>${drawer ? renderPicker() : blp ? (flowSide ? flowPanel(S.flow) : S.addPanel ? renderAddPanel(d) : S.page === 'pointer' ? renderPointerPanel(d) : S.page === 'easy' ? renderEasyPanel(d) : renderBacklightPanel(d)) : ''}</div>`;
+    body = `<div class="devview2 ${drawer || blp ? 'drawer-open' : ''} ${blp ? 'panel-open' : ''}"><aside class="dnav"><div class="cfg-back"><button class="hbtn icon" data-act="go-home" title="${t('Home')}"><i class="fa-solid fa-arrow-left"></i></button>${(S.page === 'gestures' && S.cfgKind === 'ring' && folderNameField()) || `<span class="cfg-name">${esc(d.name)}</span>`}</div><nav>${items}<button class="dnav-item ${S.page === 'info' ? 'on' : ''}" data-act="home-page" data-key="${esc(d.id)}" data-page="info"><i class="fa-solid fa-sliders"></i>${t('Settings')}</button></nav>${navBattery(d)}</aside><section class="dev-config solo ${S.page === 'info' ? 'full' : ''}"><div class="cfg-top">${controls}</div><div class="content"><div class="page">${renderPage(d)}</div></div></section>${drawer ? renderPicker() : blp ? (flowSide ? flowPanel(S.flow) : S.addPanel ? renderAddPanel(d) : S.page === 'hits' ? renderHitsPanel(d) : S.page === 'pointer' ? renderPointerPanel(d) : S.page === 'easy' ? renderEasyPanel(d) : renderBacklightPanel(d)) : ''}</div>`;
   } else {
     body = `<div class="content ${mode === 'home' ? 'landing' : ''}"><div class="page">${renderPage(d)}</div></div>${mode === 'home' ? `<div class="wish-line"><button class="btn primary" data-act="wish"><i class="fa-solid fa-wand-magic-sparkles"></i>${t('Make a wish')}</button><button class="btn" data-act="report"><i class="fa-solid fa-bug"></i>${t('Report an issue')}</button></div><footer class="agent-line ${S.connected ? '' : 'off'}"><i class="fa-solid fa-circle"></i>${S.connected ? t('Agent connected') : t('Agent not running')} · v${S.status.version || VERSION}</footer>` : ''}`;
   }
@@ -292,6 +292,7 @@ function renderDialog() {
   if (S.dlg === 'report') return renderReport();
   if (S.dlg === 'wish') return renderWish();
   if (S.dlg === 'uninstall') return renderUninstall();
+  if (S.dlg === 'gaming') return renderGamingDialog(dev());
   return '';
 }
 
@@ -357,6 +358,19 @@ function bind() {
     };
     i.onkeydown = e => { if (e.key === 'Enter' && S.dlg === 'prompt') { e.preventDefault(); onAction('prompt-ok'); } if (e.key === 'Enter' && S.dlg === 'picker' && S.picker && S.picker.drawer && ['cmd', 'text', 'open'].includes(i.dataset.field)) { e.preventDefault(); assignTyped(); } };
   });
+  // a gaming mouse's tools: the HITS test box takes the press and the release of the button tested,
+  // the Sensitivity tool's arena each click with where it landed
+  const ha = root.querySelector('[data-hits-area]');
+  if (ha) { ha.onmousedown = e => { e.preventDefault(); hitsTestClick(dev(), 'down'); }; ha.onmouseup = () => hitsTestClick(dev(), 'up'); ha.oncontextmenu = e => e.preventDefault(); }
+  // a macro being recorded: the keys pressed while its box has the focus
+  const mr = root.querySelector('[data-macro-rec]');
+  if (mr) {
+    mr.onkeydown = e => { e.preventDefault(); e.stopPropagation(); macroKey(e.code, true, e.repeat); };
+    mr.onkeyup = e => { e.preventDefault(); e.stopPropagation(); macroKey(e.code, false, false); };
+    if (mr.classList.contains('on')) mr.focus();
+  }
+  const da = root.querySelector('[data-dpi-arena]');
+  if (da) da.onmousedown = e => { const r = da.getBoundingClientRect(); dpiTestClick(dev(), e.clientX - r.left, e.clientY - r.top, r.width, r.height); };
   if (S.dlg === 'picker' && S.picker.cat === 'key' && S.picker.recording && !recorderActive()) armRecorder();
   const typed = root.querySelector('[data-field="typed"]');
   if (typed) {

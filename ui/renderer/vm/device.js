@@ -1,6 +1,5 @@
 // View model: a device's own settings: pointer speed, SmartShift, haptics, backlight, Easy-Switch.
 import { t } from '../../shared/i18n.mjs';
-import { dpiFromPos } from '../../shared/dpi.mjs';
 
 // from the rest of the window, filled in by link()
 let S, api, assignment, call, changed, merge, prompt, setAssign, setSetting, toast;
@@ -12,9 +11,7 @@ export const commands = {
   'dpi': async (it, e, d, key) => { await setSetting(d, ['dpi'], Number(it.value)); return; },
   'pspeed': async (it, e, d, key) => { await setSetting(d, ['pointer_speed'], Number((Number(it.value) / 50 - 1).toFixed(2))); return; },
   'setting': async (it, e, d, key) => { const on = !it.on; const path = it.data.path.split('.'); let v = it.data.on ? (on ? it.data.on : it.data.off) : on; if (v === 'true') v = true; else if (v === 'false') v = false; else if (/^\d+$/.test(v)) v = Number(v); await setSetting(d, path, v); changed(); return; },
-  'hits-reset': async (it, e, d, key) => { for (const [k, v] of [['actuation', 5], ['rapid_trigger_on', false], ['rapid_trigger', 2], ['haptics', 3]]) await setSetting(d, ['hits', k], v); changed(); return; },
   'setting-val': async (it, e, d, key) => { const v = it.data.val; await setSetting(d, it.data.path.split('.'), /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : v); changed(); return; },
-  'dpi-slot': async (it, e, d, key) => { const [lo, hi] = ((d.state || {}).dpi || {}).levels || [100, 48000]; await setSetting(d, it.data.path.split('.'), dpiFromPos(Number(it.value), lo, hi)); changed(); return; },
   'setting-range': async (it, e, d, key) => { await setSetting(d, it.data.path.split('.'), Number(it.value)); return; },
   'haptic-level': async (it, e, d, key) => { await setSetting(d, ['haptic', 'level'], Number(it.value)); api.quiet('haptic_play', { id: d.id, waveform: 4 }).catch(() => {}); return; },
   'haptic-play': async (it, e, d, key) => { api.quiet('haptic_play', { id: d.id, waveform: Number(key) }).catch(e => toast(e.message, true)); return; },

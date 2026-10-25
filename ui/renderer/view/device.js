@@ -4,8 +4,8 @@ import { batIcon, known, pctText, isLow } from '../../shared/battery.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let ALT, KEYBOARD_PHOTOS, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw;
-export function link(ctx) { ({ ALT, KEYBOARD_PHOTOS, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw } = ctx); }
+let ALT, KEYBOARD_PHOTOS, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw, isGaming, gamingBattery, gamingSettings;
+export function link(ctx) { ({ ALT, KEYBOARD_PHOTOS, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw, isGaming, gamingBattery, gamingSettings } = ctx); }
 
 // a computer slot: its name, whether it is the one in use, and how it is linked
 function hostInfo(h, i) {
@@ -85,12 +85,13 @@ function pageEasy(d) {
 function pageInfo(d) {
   const b = d.battery || { percent: 0 }; const hist = S.history[d.id] || [];
   const bars = (hist.length ? hist : known(b) ? [b.percent] : []).slice(-14);
-  const rows = [[t('Model'), d.name], [t('Connection'), ({ bolt: t('Bolt receiver'), lightspeed: t('LIGHTSPEED receiver'), usb: t('USB cable') }[d.transport] || t('Bluetooth')) + (((d.state || {}).hosts || {}).count ? ` · ${t('host {n}', { n: d.state.hosts.current + 1 || 1 })}` : '')], [t('Firmware'), d.firmware || t('n/a')], [t('Serial'), d.serial || t('n/a')], [t('Protocol'), 'HID++ 2.0'], [t('Wireless PID'), d.id.toUpperCase()]];
+  const rows = [[t('Model'), d.name], [t('Connection'), ({ bolt: t('Bolt receiver'), lightspeed: t('LIGHTSPEED receiver'), usb: t('USB cable') }[d.transport] || t('Bluetooth')) + (((d.state || {}).hosts || {}).count ? ` · ${t('host {n}', { n: d.state.hosts.current + 1 || 1 })}` : '')], [t('Firmware'), d.firmware || t('n/a')]].concat(d.receiver_firmware ? [[t('Receiver firmware'), d.receiver_firmware]] : [], [ [t('Serial'), d.serial || t('n/a')], [t('Protocol'), 'HID++ 2.0'], [t('Wireless PID'), d.id.toUpperCase()]]);
   const est = b.charging ? t('Charging over USB-C') : b.level ? t('Level: {level}', { level: b.level }) : '';
   const thr = S.general.notify_low_threshold ?? 20;
   return `<div class="grid2">
     <div class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="sec-title"><span>${t('Battery')}</span><span class="meta" style="color:var(--ok)">${b.charging ? t('Charging') : t('Discharging')}</span></div><div class="big">${known(b) ? b.percent + '%' : b.charging ? t('Charging') : t('n/a')}</div>${known(b) ? `<div class="meter ${isLow(b, 10) ? 'crit' : isLow(b) ? 'low' : ''}"><i style="width:${b.percent}%"></i></div>` : ''}<div class="hint">${esc(est)}</div></div>
     <div class="card pad" style="display:flex;flex-direction:column;gap:8px"><div class="sec-title"><span>${t('Last 7 days')}</span></div><div class="hist">${bars.map(v => `<span style="height:${v}%" title="${v}%"></span>`).join('')}</div><div style="display:flex;justify-content:space-between" class="hint"><span>${hist.length > 1 ? t('Earlier') : ''}</span><span>${t('Today')}</span></div></div></div>` +
+    (isGaming(d) ? gamingBattery(d) + gamingSettings(d) : '') +
     sec(t('Device'), card(rows.map(([k, v]) => `<div class="row"><span class="grow lbl">${k}</span><span class="val">${esc(v)}</span></div>`).join(''))) +
     sec(t('Alerts'), card(`<div class="row"><div class="grow"><div class="lbl">${t('Low battery warning')}</div><div class="sub">${t('Notify at')}</div></div>${range('data-act="general-range" data-key="notify_low_threshold" data-out="thr"', thr, 5, 50, 5)}<span class="val" data-out="thr" style="width:32px;text-align:right">${thr}%</span></div>`));
 }
@@ -132,5 +133,5 @@ function pageDeviceSettings(d) {
 }
 
 const easyView = d => !!(d && (d.state || {}).hosts && (isMouse(d) ? MOUSE_BOTTOMS[d.id] : (KEYBOARD_PHOTOS[d.id] || {}).hosts));
-const backlightPanel = d => !!(d && !S.blClosed && !S.appDetail && !S.previewProfile && ((S.page === 'backlight' && !isMouse(d) && (d.state || {}).backlight && KEYBOARD_PHOTOS[d.id]) || (S.page === 'pointer' && isMouse(d) && MOUSE_PHOTOS[d.id]) || (S.page === 'easy' && easyView(d))));
+const backlightPanel = d => !!(d && !S.blClosed && !S.appDetail && !S.previewProfile && ((S.page === 'backlight' && !isMouse(d) && (d.state || {}).backlight && KEYBOARD_PHOTOS[d.id]) || (S.page === 'pointer' && isMouse(d) && MOUSE_PHOTOS[d.id]) || (S.page === 'easy' && easyView(d)) || (S.page === 'hits' && isGaming(d) && S.hitsPanel)));
 export const provide = { hostInfo, easyPhoto, keyboardEasyPhoto, renderEasyPanel, pageEasy, pageInfo, devicePhotoSrc, TOP_VIEWS, homePhotoSrc, navBattery, batteryState, DISABLE_KEYS, pageDeviceSettings, easyView, backlightPanel };

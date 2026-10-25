@@ -42,6 +42,7 @@ enum Feature : uint16_t {
     ANALOG_BUTTONS = 0x1B0C,
     EXTENDED_REPORT_RATE = 0x8061,
     BUNNY_HOPPING = 0x80E0,
+    MODE_STATUS = 0x8090,
     ONBOARD_PROFILES = 0x8100,
     MOUSE_BUTTON_SPY = 0x8110,
 };
@@ -79,7 +80,7 @@ struct ThumbWheelState { bool diverted = false, invert = false; int nativeRes = 
 struct DpiState { int dpi = 0, def = 0; std::vector<int> levels; bool stepped = false; };
 // 0x2202: the sensor's five onboard DPI slots and the one in use (host mode: what the sensor gets)
 struct ExtendedDpiState {
-    int dpi = 0, def = 0, lod = 0, min = 100, max = 48000;
+    int dpi = 0, def = 0, dpiY = 0, lod = 0, min = 100, max = 48000;
     std::vector<int> slots, lods;
     std::vector<std::array<int, 3>> ranges;   // {from, step, to}: the values the sensor takes
 };
@@ -94,6 +95,10 @@ struct AnalogButton {
 };
 struct AnalogCaps {
     int buttons = 0, maxActuation = 0, maxRapidTrigger = 0, maxHaptics = 0;
+};
+// 0x8100: how the mouse keeps its profiles
+struct OnboardInfo {
+    int format = 0, profiles = 0, buttons = 0, sectors = 0, sectorSize = 0;
 };
 struct BacklightState {
     bool enabled = false;
@@ -150,6 +155,16 @@ class Device {
     void setDpi(int dpi);
     std::optional<ExtendedDpiState> extendedDpi();
     void setExtendedDpi(int dpi, int lod = 0);
+    void setExtendedDpi(int x, int y, int lod);
+    std::optional<int> surfaceMode();   // 0x8090: 0 automatic, 1 gaming surface, 2 any surface
+    void setSurfaceMode(int mode);
+    std::optional<OnboardInfo> onboardInfo();
+    int onboardProfile();               // the sector of the onboard profile in use
+    void setOnboardProfile(int sector);
+    Bytes readSector(int sector, int size);
+    void writeSector(int sector, const Bytes& data);
+    uint16_t sectorCrc(int sector);   // the CRC the mouse works out over a sector it holds
+    static uint16_t crcCcitt(const Bytes& b, size_t n);
     std::optional<ReportRateState> reportRate();
     void setReportRate(int index);   // the link the device is on
     std::optional<AnalogCaps> analogCaps();

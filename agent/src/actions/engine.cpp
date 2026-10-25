@@ -76,7 +76,64 @@ void Engine::play(const json& action, double delta) {
                 if (lv > cur) { nxt = lv; break; }
             ops_.setDpi(nxt);
         }
+    } else if (t == "dpi") {
+        if (ops_.dpiOp && action.value("op", "") != "shift") ops_.dpiOp(action.value("op", "cycle"));
+    } else if (t == "macro") {
+        startMacro(-1, action, false);
+    } else if (t == "battery_level") {
+        if (ops_.batteryLevel) ops_.batteryLevel();
+    } else if (t == "onboard_cycle") {
+        if (ops_.onboardCycle) ops_.onboardCycle();
     }
+}
+
+// A macro's steps, played on their own thread: each a key or mouse button going down or up after its
+// delay (ms). Looping, it starts again until stopped; stopped, whatever it holds goes up.
+void Engine::startMacro(int cid, const json& macro, bool loop) {
+    auto stop = std::make_shared<std::atomic<bool>>(false);
+    {
+        std::lock_guard<std::mutex> lk(m_);
+        auto it = macros_.find(cid);
+        if (it != macros_.end()) it->second->store(true);   // a press while it plays starts it over
+        if (cid >= 0) macros_[cid] = stop;
+    }
+    json steps = macro.value("steps", json::array());
+    if (!steps.is_array() || steps.empty()) return;
+    // the injector, not the engine: the device (and its engine) may go while a macro still plays
+    std::thread([&inj = inj_, steps, loop, stop] {
+        std::set<std::string> down;
+        auto wait = [&](int ms) {
+            for (int left = ms; left > 0 && !stop->load(); left -= 10) std::this_thread::sleep_for(std::chrono::milliseconds(std::min(10, left)));
+        };
+        do {
+            for (auto& st : steps) {
+                if (stop->load()) break;
+                wait(std::max(0, std::min(10000, st.value("delay", 0))));
+                if (stop->load()) break;
+                std::string k = st.value("key", "");
+                if (k.empty()) continue;
+                if (st.value("down", true)) { inj.press({k}); down.insert(k); }
+                else { inj.release({k}); down.erase(k); }
+            }
+            // a loop with no pause of its own still lets other input through between rounds
+            if (loop && !stop->load()) wait(15);
+        } while (loop && !stop->load());
+        if (!down.empty()) inj.release(std::vector<std::string>(down.begin(), down.end()));
+        stop->store(true);
+    }).detach();
+}
+
+void Engine::stopMacro(int cid) {
+    std::lock_guard<std::mutex> lk(m_);
+    auto it = macros_.find(cid);
+    if (it == macros_.end()) return;
+    it->second->store(true);
+    macros_.erase(it);
+}
+
+Engine::~Engine() {
+    std::lock_guard<std::mutex> lk(m_);
+    for (auto& [cid, stop] : macros_) stop->store(true);
 }
 
 std::string Engine::dir(int dx, int dy) {
@@ -97,6 +154,28 @@ void Engine::buttonDown(int cid, const json& action) {
         else if (ops_.uiEvent) ops_.uiEvent("ring");
         return;
     }
+    // DPI shift and G-Shift last as long as the button is held
+    if (t == "dpi" && a.value("op", "") == "shift") {
+        if (ops_.dpiOp) ops_.dpiOp("shift_on");
+        return;
+    }
+    if (t == "gshift") {
+        if (ops_.gshift) ops_.gshift(true);
+        return;
+    }
+    // a macro starts with the press: once, over and over while held, or on and off with each press
+    if (t == "macro") {
+        std::string rep = a.value("repeat", "once");
+        bool running;
+        {
+            std::lock_guard<std::mutex> lk(m_);
+            auto it = macros_.find(cid);
+            running = it != macros_.end() && !it->second->load();
+        }
+        if (rep == "toggle" && running) stopMacro(cid);
+        else startMacro(cid, a, rep != "once");
+        return;
+    }
     if (t == "gesture") {
         std::lock_guard<std::mutex> lk(m_);
         gestures_[cid] = Gesture{a};
@@ -113,6 +192,18 @@ void Engine::buttonUp(int cid, const json& action) {
     if (ringHeld_.erase(cid) || isRing(a)) {
         if (ops_.ringEvent) ops_.ringEvent("release", cid, 0, 0);
         else if (ops_.uiEvent) ops_.uiEvent("ring_release");
+        return;
+    }
+    if (t == "dpi" && a.value("op", "") == "shift") {
+        if (ops_.dpiOp) ops_.dpiOp("shift_off");
+        return;
+    }
+    if (t == "gshift") {
+        if (ops_.gshift) ops_.gshift(false);
+        return;
+    }
+    if (t == "macro") {
+        if (a.value("repeat", "once") == "while_held") stopMacro(cid);
         return;
     }
     if (t == "gesture") {

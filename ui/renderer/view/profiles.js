@@ -3,8 +3,8 @@ import { isMouse } from '../../shared/profiles.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let PHYS, S, addLabel, appIcon, card, countOverrides, dev, deviceProfiles, drop, esc, keyLayout, onAction, presetLabel, previewProfile, profileOf, render, root, sec;
-export function link(ctx) { ({ PHYS, S, addLabel, appIcon, card, countOverrides, dev, deviceProfiles, drop, esc, keyLayout, onAction, presetLabel, previewProfile, profileOf, render, root, sec } = ctx); }
+let PHYS, S, addLabel, appIcon, buttonRows, card, countOverrides, dev, deviceProfiles, drop, esc, isGaming, keyLayout, onAction, presetLabel, previewProfile, profileOf, render, root, sec, sensitivityRow;
+export function link(ctx) { ({ PHYS, S, addLabel, appIcon, buttonRows, card, countOverrides, dev, deviceProfiles, drop, esc, isGaming, keyLayout, onAction, presetLabel, previewProfile, profileOf, render, root, sec, sensitivityRow } = ctx); }
 
 // the applications' icons, as the main process found them (null: none, or still looking)
 const icons = { byKey: {}, byId: {} };
@@ -52,13 +52,15 @@ function pageAppDetail(ad) {
   const groups = S.devices.map(d => {
     const def = profileOf(d, 'default'), p = profileOf(d, key);
     const items = [];
-    const ctls = isMouse(d) ? PHYS.filter(([cid]) => d.controls.some(c => c.cid === cid)).map(([cid, l]) => ['buttons', cid, l]) : (l => l.frow.concat(l.special).map(({ cid, label }) => ['keys', cid, label]))(keyLayout(d));
+    // a gaming mouse: its own buttons by G HUB's names (every one can be set per app), and a sensitivity of the app's own
+    const ctls = isMouse(d) ? (isGaming(d) ? buttonRows(d) : PHYS.filter(([cid]) => d.controls.some(c => c.cid === cid))).map(([cid, l]) => ['buttons', cid, l]) : (l => l.frow.concat(l.special).map(({ cid, label }) => ['keys', cid, label]))(keyLayout(d));
+    if (isGaming(d)) items.push(sensitivityRow(d, key));
     for (const [secn, cid, label] of ctls) {
       const dv = (def[secn] || {})[String(cid)], v = (p[secn] || {})[String(cid)];
       const ov = !isDef && v !== undefined && JSON.stringify(v) !== JSON.stringify(dv);
       items.push(`<div class="row"><span class="ov-dot ${ov ? 'on' : ''}"></span><span class="grow lbl" style="${ov ? '' : 'color:var(--dim)'}">${esc(label)}</span>${ov ? `<span class="val">${esc(presetLabel(dv))}</span>` : ''}${drop(v !== undefined ? v : dv, `data-act="pick" data-dev="${d.id}" data-section="${secn}" data-cid="${cid}" data-label="${esc(label)}" data-profile="${esc(key)}"`)}${ov ? `<button class="btn sm flat" data-act="ov-reset" data-dev="${d.id}" data-section="${secn}" data-cid="${cid}" data-profile="${esc(key)}" title="${t('Reset to default')}"><i class="fa-solid fa-rotate-left"></i></button>` : ''}</div>`);
     }
-    if (isMouse(d)) { const dv = def.thumbwheel, v = p.thumbwheel; const ov = !isDef && v !== undefined && JSON.stringify(v) !== JSON.stringify(dv); items.push(`<div class="row"><span class="ov-dot ${ov ? 'on' : ''}"></span><span class="grow lbl" style="${ov ? '' : 'color:var(--dim)'}">${t('Thumb wheel')}</span>${ov ? `<span class="val">${esc(presetLabel(dv))}</span>` : ''}${drop(v !== undefined ? v : dv, `data-act="pick" data-dev="${d.id}" data-section="thumbwheel" data-cid="thumb" data-label="${t('Thumb wheel')}" data-profile="${esc(key)}"`)}</div>`); }
+    if (isMouse(d) && !isGaming(d)) { const dv = def.thumbwheel, v = p.thumbwheel; const ov = !isDef && v !== undefined && JSON.stringify(v) !== JSON.stringify(dv); items.push(`<div class="row"><span class="ov-dot ${ov ? 'on' : ''}"></span><span class="grow lbl" style="${ov ? '' : 'color:var(--dim)'}">${t('Thumb wheel')}</span>${ov ? `<span class="val">${esc(presetLabel(dv))}</span>` : ''}${drop(v !== undefined ? v : dv, `data-act="pick" data-dev="${d.id}" data-section="thumbwheel" data-cid="thumb" data-label="${t('Thumb wheel')}" data-profile="${esc(key)}"`)}</div>`); }
     return sec(d.name, card(items.join('')));
   }).join('');
   const prof = isDef ? { name: t('Default'), match: [] } : (allProfiles().find(p => p.key === key) || { name: key, match: [] });

@@ -36,7 +36,8 @@ import * as deviceVM from './vm/device.js';
 import * as settingsVM from './vm/settings.js';
 import * as pairVM from './vm/pair.js';
 import * as dialogsVM from './vm/dialogs.js';
-const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mouseView, keyboardView, deviceView, profilesView, ringView, homeView, settingsView, ringVM, flowVM, pickerVM, pickerView, dialogsView, dispatchView, profilesVM, shellVM, gesturesVM, deviceVM, settingsVM, pairVM, dialogsVM, gamingView];
+import * as gamingVM from './vm/gaming.js';
+const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mouseView, keyboardView, deviceView, profilesView, ringView, homeView, settingsView, ringVM, flowVM, pickerVM, pickerView, dialogsView, dispatchView, profilesVM, shellVM, gesturesVM, deviceVM, settingsVM, pairVM, dialogsVM, gamingView, gamingVM];
 (() => {
   const $ = s => document.querySelector(s);
   const root = $('#root');
@@ -92,14 +93,14 @@ const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mo
   const ctx = Object.assign({ commands, changed, $, root, api, store, S, VERSION, call, toast, merge, setSetting, setGeneral, setAssign, loadLogs, refresh }, ...MODULES.map(m => m.provide));
   MODULES.forEach(m => m.link(ctx));
   fxView.linkViews(ctx);
-  const { IS_LINUX, IS_MAC, IS_WIN, alignToNav, devicePages, flowEvent, generalPagesAll, go, onAction, onRecordEvent, recording, pairCheck, render, ringEditorOn, ringState, updateCheckAtStart, saveRing, seedProfiles, schedule, homeFit, unhideIfBack } = ctx;
+  const { IS_LINUX, IS_MAC, IS_WIN, alignToNav, devicePages, flowEvent, generalPagesAll, go, hitsTravel, onAction, onRecordEvent, recording, pairCheck, render, ringEditorOn, ringState, updateCheckAtStart, saveRing, seedProfiles, schedule, homeFit, unhideIfBack } = ctx;
   document.addEventListener('click', () => { if (S.menu) { S.menu = null; changed(); } });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !recording() && ringEditorOn() && (S.ringPath || []).length && S.dlg !== 'prompt' && !/input/i.test((e.target || {}).tagName || '')) { e.stopImmediatePropagation(); onAction('go-home', { dataset: {} }); }
   }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !S.dlg && S.flowPanel && !root.querySelector('.flow-wiz')) { onAction('flow-panel-close', { dataset: {} }); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !S.dlg && root.querySelector('.flow-wiz')) { onAction('flow-wiz-cancel', { dataset: {} }); } });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.dlg && !recording()) { S.dlg = S.dlg === 'prompt' && S.prompt && S.prompt.back ? S.prompt.back : null; changed(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.dlg && !recording()) { if (S.dlg === 'gaming') { onAction('close-dlg', { dataset: {} }); return; } S.dlg = S.dlg === 'prompt' && S.prompt && S.prompt.back ? S.prompt.back : null; changed(); } });
   // the mouse's Back and Forward buttons move through the window as its back arrow does: Back closes
   // the sheet, dialog or panel on top first, else steps back; Forward returns to where Back left
   document.addEventListener('mouseup', e => {
@@ -151,6 +152,7 @@ const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mo
       else if (event === 'profile') { if (S.dev === data.id && S.page !== 'home') changed(); }
       else if (event === 'backlight') { if (S.page === 'backlight') changed(); }
     }
+    if (event === 'hits_travel') { hitsTravel(data); return; }
     if (event === 'record') onRecordEvent(data);
     else if (event === 'pair') { if (S.dlg === 'pair') { if (data.status === 'discovering' || data.status === 'found') S.pair.passkey = null; if (data.found) S.pair.found = data.found; if (data.error) S.pair.error = data.error; if (data.passkey) S.pair.passkey = data.passkey; if (data.done) { S.pair.step = 3; S.pair.done = data.done; } if (data.timeout !== undefined) S.pair.timeout = data.timeout; if (data.status === 'cancelled') S.pair.error = S.pair.error || t('Cancelled'); changed(); } }
   });

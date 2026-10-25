@@ -17,7 +17,7 @@ let osdTimer = null;
 // --------------------------------------------------------------------- OSD
 function osdEnabled(kind) {
   if (state.general.osd_enabled === false) return false;
-  const ev = Object.assign({ mic: true, smartshift: true, backlight: true, host: true, dpi: false }, state.general.osd_events || {});
+  const ev = Object.assign({ mic: true, smartshift: true, backlight: true, host: true, dpi: true, battery: true, onboard_profile: true }, state.general.osd_events || {});
   return ev[kind] !== false;
 }
 function ensureOsd() {
@@ -52,12 +52,14 @@ async function showOsd(data) {
   else if (data.kind === 'backlight' && !(data.num_levels >= 2 && data.level >= 0 && data.level < data.num_levels)) return;   // not a level: nothing to show
   else if (data.kind === 'backlight') { msg.title = t('Backlight'); msg.sub = t('Level {level} of {max}', { level: data.level, max: (data.num_levels || 8) - 1 }); msg.level = data.level; msg.num_levels = (data.num_levels || 8) - 1; }
   else if (data.kind === 'host') { const d = state.devices.find(x => x.id === data.id); const name = d && d.state && d.state.hosts && d.state.hosts.names[data.host] ? d.state.hosts.names[data.host].name : ''; msg.title = name ? t('Switched to {name}', { name }) : t('Switched to host {n}', { n: data.host + 1 }); msg.sub = `${data.device || ''} · ${t('host {n}', { n: data.host + 1 })}`; msg.host = data.host; }
-  else if (data.kind === 'dpi') { msg.title = t('{dpi} DPI', { dpi: data.dpi }); msg.sub = data.device || ''; }
+  else if (data.kind === 'dpi') { msg.title = t('{dpi} DPI', { dpi: data.dpi }); msg.sub = data.shift ? `${data.device || ''} · ${t('DPI shift')}` : data.slot ? `${data.device || ''} · ${t('slot {n}', { n: data.slot })}` : data.device || ''; msg.slot = data.slot; msg.shift = !!data.shift; }
+  else if (data.kind === 'battery') { msg.title = t('{n}% battery', { n: data.percent }); msg.sub = `${data.device || ''}${data.charging ? ' · ' + t('Charging') : ''}`; msg.level = Math.round((data.percent || 0) / 10); msg.num_levels = 10; }
+  else if (data.kind === 'onboard_profile') { msg.title = t('Onboard profile {n}', { n: data.profile }); msg.sub = data.device || ''; }
   const w = ensureOsd();
   const send = () => { positionOsd(); w.showInactive(); w.webContents.send('osd-show', msg); clearTimeout(osdTimer); osdTimer = setTimeout(() => { if (w && !w.isDestroyed()) w.hide(); }, (msg.duration || 1500) + 400); };
   if (w.webContents.isLoading()) w.webContents.once('did-finish-load', send); else send();
 }
 ipcMain.on('osd-hidden', () => { if (osdWin && !osdWin.isDestroyed()) osdWin.hide(); });
-ipcMain.handle('osd-test', (_e, kind) => kind === 'emoji' ? showEmoji(t('Preview')) : showOsd({ kind, mode: 'freespin', level: 5, num_levels: 8, host: 1, dpi: 1600, device: 'MX Master 3S' }));
+ipcMain.handle('osd-test', (_e, kind) => kind === 'emoji' ? showEmoji(t('Preview')) : showOsd({ kind, mode: 'freespin', level: 5, num_levels: 8, host: 1, dpi: 1600, slot: 3, percent: 72, device: kind === 'dpi' || kind === 'battery' ? 'PRO X3 SUPERSTRIKE' : 'MX Master 3S' }));
 
 exports.provide = { osdEnabled, ensureOsd, positionOsd, micMuted, showOsd };

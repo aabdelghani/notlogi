@@ -18,6 +18,7 @@
 #include "hidpp/protocol.h"
 #include "hidpp/transport.h"
 #include "ipc.h"
+#include "motion.h"
 
 class Daemon;
 
@@ -61,9 +62,29 @@ class ManagedDevice : public std::enable_shared_from_this<ManagedDevice> {
     bool online() const { return online_.load(); }
     void setOnline(bool on) { online_.store(on); }
 
+    // a G-series gaming mouse: buttons through the button spy (0x8110), no 0x1B04
+    bool gaming() const { return !dev_->has(hidpp::SPECIAL_KEYS) && dev_->has(hidpp::MOUSE_BUTTON_SPY); }
+    // what the mouse keeps in its onboard memory, profile by profile (read on request: slow)
+    json onboardProfiles();
+    json withMacro(const json& action);   // a macro's steps and repeat, from the saved macros
+    // the onboard memory written: NotLogi's settings into one profile (1..5), or every profile back to
+    // the factory one; what was there is backed up first
+    json onboardSave(int index);
+    json onboardRestore();
+    // a gaming mouse's DPI: the slot in use (or the shift slot while DPI shift is held), its X and Y,
+    // lift-off distance and the sensor calibration, onto the sensor's own steps; the slots of the
+    // app profile in front when it has a sensitivity of its own
+    void applyDpi();
+    // the HITS latency test (G HUB's): open / close (report rate held at 1000 Hz meanwhile), start
+    // (the button's travel reported), blue (the moment to react from), result, stop
+    json hitsTest(const std::string& op, const json& p);
+
   private:
     json actionFor(int cid);
     void announce(const json& action);
+    void dpiOp(const std::string& op);
+    int snapDpi(int dpi) const;
+    bool onboardMemory() const;   // the mouse runs its own profiles; NotLogi leaves it alone
     Daemon& daemon_;
     hidpp::Transport& t_;
     std::unique_ptr<hidpp::Device> dev_;
@@ -78,12 +99,22 @@ class ManagedDevice : public std::enable_shared_from_this<ManagedDevice> {
     std::set<int> rawDiverted_;   // controls whose raw XY is diverted as well (gesture assignments)
     hidpp::Bytes spyMap_;         // 0x8110: the HID button each physical button sends (empty = not read yet)
     bool spying_ = false;
+    bool shiftHeld_ = false, gshiftHeld_ = false;   // DPI shift, G-Shift held down
+    int appSlot_ = -1;   // the slot in use within an app profile's own sensitivity (-1: its default)
+    std::map<int, json> pressed_;   // the action each held control started, so its release ends the same one
+    // the HITS test: the travel events since it started, the moment the target turned blue, the
+    // report rate to put back
+    bool hitsTest_ = false, hitsOpen_ = false;   // a round running; the test open (travel shown live)
+    int hitsButton_ = 0, hitsRate_ = -1;
+    std::chrono::steady_clock::time_point hitsBlue_{};
+    std::vector<std::pair<std::chrono::steady_clock::time_point, json>> hitsLog_;
     // the wheels taken over by the agent for their speed or smooth scrolling (as Options+ does)
     bool wheelTaken_ = false, wheelSmooth_ = false, wheelInvert_ = false, thumbTuned_ = false, thumbSmooth_ = false;
     double wheelSpeed_ = 1.0, thumbSpeed_ = 1.0;
     int wheelMult_ = 8;   // hi-res steps per notch
     json state_;
     json hostsCache_;
+    std::string receiverFw_;   // the receiver's own firmware (read once)
     std::unique_ptr<actions::Engine> engine_;
     std::recursive_mutex m_;
 };
@@ -147,6 +178,7 @@ class Daemon {
     std::atomic<bool> stop_{false};
     std::atomic<bool> paused_{false};
     PairingSession pair_;
+    MotionCounter motion_;   // HERO sensor calibration: raw movement of the mice being compared
     std::mutex pairMutex_;
     std::chrono::steady_clock::time_point lastRetry_{};
     // Flow: devices are on their way here; scan every 150 ms until then (steady clock, ms)

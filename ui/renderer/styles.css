@@ -1170,3 +1170,144 @@ html.rounded #root::after { content: ""; position: absolute; inset: 0; border-ra
 .dpi-slot .slot-pick { width: 30px; height: 30px; flex: none; color: var(--dim); }
 .dpi-slot.on { background: color-mix(in srgb, var(--accbg) 7%, transparent); }
 .dpi-slot.on .slot-pick { color: var(--accbg); }
+
+/* ---------------------------------------------------------------- a gaming mouse (G HUB's pages)
+   presets: the one in use on a drop-down with what can be done with it */
+.preset-bar { gap: 10px; }
+.preset-bar .preset-ic { color: var(--dim); width: 18px; text-align: center; }
+.preset-drop { color: var(--fg); font-weight: 600; padding: 6px 8px; }
+.preset-drop .pname { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pchg { font: 600 11px var(--font); color: var(--warn); background: color-mix(in srgb, var(--warnbg) 45%, transparent); padding: 2px 7px; border-radius: 999px; }
+.preset-bar .hbtn[disabled], .dpi-slot .hbtn[disabled] { opacity: .35; pointer-events: none; }
+.menu.preset-menu { left: 0; right: auto; top: 40px; width: 280px; max-height: 500px; overflow: auto; }
+/* DPI slots: the default (crosshair) and DPI shift (diamond) marks, the value typed in, X and Y */
+.dpi-slot .marks { width: 34px; display: flex; gap: 4px; flex: none; }
+.mk { font-size: 12px; }
+.mk.def { color: var(--accbg); }
+.mk.shf { color: #f28c28; font-size: 10px; }
+.dpi-slot input[type=range] { flex: 1; width: auto !important; min-width: 120px; }
+.dpi-num { width: 78px; background: var(--win); border: 1px solid var(--brd); border-radius: 7px; padding: 5px 8px; color: var(--fg); font: 600 14px var(--font); text-align: right; outline: none; }
+.dpi-num:focus { border-color: var(--accbg); }
+.dpi-num::-webkit-inner-spin-button { opacity: .5; }
+.dpi-slot.disabled .slot-bar, .dpi-slot.disabled .num, .dpi-slot.disabled .dpi-num, .dpi-slot.disabled input[type=range] { opacity: .4; }
+.dpi-xy { display: flex; align-items: center; gap: 4px; flex: 1; }
+.dpi-link { color: var(--dim); }
+.seg.lod button { padding: 5px 9px; font-size: 12px; }
+.seg.lod.off { opacity: .45; }
+.seg button[disabled] { pointer-events: none; }
+.menu.slot-menu { width: 250px; right: 0; top: 34px; }
+.menu button[disabled] { opacity: .4; pointer-events: none; }
+.dpi-legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.xy-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.cal-ctl { display: flex; align-items: center; gap: 8px; }
+.cal-details .sub { font-size: 13px; }
+/* Scroll wheel: the mouse beside its one setting */
+.wheel-page { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; }
+.wheel-photo { width: 100%; max-height: 360px; object-fit: contain; object-position: top; }
+/* HITS: the mouse with each main button's values, the settings beside it */
+.hits-page { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.hits-page .hits-pic { width: min(100%, 560px); }
+.hits-intro { display: flex; align-items: center; gap: 12px; }
+.hits-panel .hits-row { padding: 12px 16px; border-top: 1px solid var(--brd); display: flex; flex-direction: column; gap: 6px; }
+.hits-panel .hits-row.disabled { opacity: .5; }
+.hr-head { display: flex; align-items: center; gap: 8px; } .hr-head > div { flex: 1; }
+.hr-slider input { width: 100% !important; }
+.hr-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); }
+.hits-panel .sec { margin-top: 14px; }
+.hits-side { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.hits-pic { position: relative; width: 100%; }
+.hits-pic svg { width: 100%; height: auto; display: block; }
+.hits-pic .hb { cursor: pointer; }
+.hits-pic .hb > path:first-of-type { fill: transparent; stroke: transparent; stroke-width: 10; transition: fill .15s, stroke .15s; }
+.hits-pic .hb:hover > path:first-of-type { stroke: color-mix(in srgb, #2f7de1 70%, transparent); }
+.hits-pic .hb.on > path:first-of-type { fill: color-mix(in srgb, #2f7de1 42%, transparent); stroke: #2f7de1; }
+.hits-pic .hb-mark { fill: rgba(255,255,255,.12); stroke: rgba(255,255,255,.75); stroke-width: 5; }
+.hits-pic .hb.on .hb-mark { fill: #2f7de1; stroke: #fff; }
+.hits-pic .hb-check { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.hits-row .end { font-size: 11px; width: 54px; text-align: center; flex: none; }
+.hits-row.disabled .lbl, .hits-row.disabled input { opacity: .45; }
+.hits-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+/* a row picked like a radio button (surface mode, onboard profiles) */
+.radio-row { border: 0; background: transparent; width: 100%; text-align: left; font: inherit; color: inherit; }
+.radio-row .rb { color: var(--dim); font-size: 15px; width: 18px; }
+.radio-row.on .rb { color: var(--accbg); }
+.radio-row.disabled { opacity: .5; cursor: default; }
+.radio-row.disabled:hover { background: transparent; }
+/* Assignments: the default layer or G-Shift */
+.layer-bar { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 4px; }
+.ms-photo.gshift .ms-lab .k { color: #f28c28; }
+/* the tools' dialogs */
+.gdlg { max-width: calc(100vw - 32px); }
+.code-row { display: flex; gap: 8px; align-items: center; }
+code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: var(--btn); padding: 9px 12px; border-radius: 8px; user-select: text; letter-spacing: .5px; }
+.hint.ok { color: var(--ok); } .hint.err, .hint .err { color: var(--err); }
+.hits-test { display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; min-height: 380px; }
+.ht-left { display: flex; flex-direction: column; gap: 10px; }
+.ht-area { position: relative; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font: 700 26px var(--font); color: #fff; cursor: pointer; user-select: none; padding: 18px; transition: background .12s, border-color .12s; background: #222733; border: 2px solid #2f7de1; }
+.ht-area.wait { background: #e8742a; border-color: #e8742a; } .ht-area.go, .ht-area.measuring { background: #2f7de1; border-color: #2f7de1; } .ht-area.soon, .ht-area.sleep, .ht-area.none { background: #a6303f; border-color: #e0475a; }
+.ht-again { position: absolute; bottom: 22px; font: 600 13px var(--font); opacity: .9; } .ht-area.done { background: var(--card); color: var(--fg); box-shadow: 0 0 0 1px var(--brd); cursor: default; }
+.lat { width: 100%; display: flex; flex-direction: column; gap: 10px; font-size: 14px; font-weight: 400; }
+.lat-big { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.lat-big .k { font-size: 13px; color: var(--dim); } .lat-big .v { font: 700 40px var(--font); } .lat-big.ok .v { color: var(--ok); } .lat-big.err .v { color: var(--err); } .lat-big .m { font-size: 13px; }
+.lat-row { display: flex; justify-content: space-between; } .lat-row i { margin-right: 6px; font-size: 11px; }
+.lat-scale { display: flex; align-items: flex-end; gap: 4px; height: 70px; }
+.lat-scale span { flex: 1; background: var(--trk); border-radius: 3px 3px 0 0; }
+.lat-scale span.hits { background: var(--accbg); } .lat-scale span.trad { background: var(--dim); }
+.cal-meter { height: 12px; } .cal-meter i { background: var(--accbg); transition: width .1s linear; }
+.dpi-test { display: grid; grid-template-columns: 280px 1fr; gap: 18px; min-height: 420px; }
+.dt-side { display: flex; flex-direction: column; gap: 12px; }
+.dt-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dt-stats div { background: var(--btn); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; }
+.dt-stats .k { font-size: 12px; color: var(--dim); } .dt-stats b { font-size: 18px; }
+.dt-arena { position: relative; border-radius: 14px; background: radial-gradient(circle at 50% 50%, #2b3140, #161a22); display: flex; align-items: center; justify-content: center; cursor: crosshair; overflow: hidden; }
+.dt-arena .hint { color: rgba(255,255,255,.7); }
+.dt-target { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: radial-gradient(circle, #fff 0 18%, #e95420 19% 45%, #fff 46% 58%, #e95420 59%); box-shadow: 0 0 18px rgba(233,84,32,.6); pointer-events: none; }
+.dt-count { position: absolute; top: 10px; right: 14px; color: #fff; font: 700 14px var(--font); opacity: .8; }
+/* a menu opened from inside a card (a preset, a slot) shows past its edge; the rows keep the card's corners */
+.card:has(.menu) { overflow: visible; }
+.card:has(.menu) > .row:first-child { border-radius: 11px 11px 0 0; }
+.card:has(.menu) > .row:last-child { border-radius: 0 0 11px 11px; }
+.dpi-slot.disabled .seg.lod { opacity: .4; }
+/* a macro's steps, as recorded */
+.mrec { min-height: 120px; max-height: 220px; overflow: auto; border: 1px dashed var(--brd); border-radius: 10px; padding: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; align-items: center; outline: none; }
+.mrec.on { border-color: var(--err); border-style: solid; box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 18%, transparent); }
+.mstep { border: 0; border-radius: 6px; padding: 4px 8px; font: 600 12px ui-monospace, monospace; display: inline-flex; gap: 5px; align-items: center; background: var(--btn); color: var(--fg); }
+.mstep.dn i { color: var(--accbg); } .mstep.up i { color: var(--dim); }
+.mstep:hover { background: color-mix(in srgb, var(--err) 18%, var(--btn)); }
+.mstep-d { font: 11px var(--font); color: var(--dim); }
+.macros-below { max-width: 620px; margin: 8px auto 0; }
+/* a page's own note (not the window's banners): rounded, above the page */
+.banner.info { background: color-mix(in srgb, var(--accbg) 12%, var(--card)); color: var(--fg); border-radius: 10px; margin-bottom: 12px; }
+.banner.info i { color: var(--accbg); }
+/* with the layer switch above it, the mouse photo stays below it */
+.dev-config .layer-bar + .ms-photo { translate: 0 0; margin-top: 6px; }
+.layer-bar { position: relative; z-index: 2; }
+.ht-ap { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; }
+.ht-ap-h { display: flex; justify-content: space-between; }
+.ht-slider { display: flex; align-items: center; gap: 10px; }
+.ht-slider input { flex: 1; width: auto !important; }
+.ht-left .row { padding-left: 0; padding-right: 0; }
+.btn[disabled], .btn:disabled { opacity: .45; pointer-events: none; }
+.onb-row { gap: 10px; }
+.radio-pick { flex: 1; display: flex; align-items: center; gap: 12px; border: 0; background: transparent; text-align: left; font: inherit; color: inherit; padding: 0; cursor: pointer; }
+.radio-pick .rb { color: var(--dim); font-size: 15px; width: 18px; }
+.radio-pick.on .rb { color: var(--accbg); }
+.onb-row.disabled .radio-pick { opacity: .5; cursor: default; }
+
+.lat-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-top: -4px; }
+.lat-scale span.none { background: var(--btn); }
+/* the HITS test's travel bar: how far the button is pressed now, the actuation point marked */
+.ht-travel { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-top: 4px; }
+.ht-travel span { position: relative; height: 10px; border-radius: 3px; background: var(--trk); transition: background .04s; }
+.ht-travel span.fill { background: #2f7de1; }
+.ht-travel span.ap::after { content: ''; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 5px solid transparent; border-bottom-color: var(--accbg); }
+.ht-travel span.trad::before { content: ''; position: absolute; left: 50%; top: -8px; transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--dim); }
+/* the HITS picture: the buttons lit as G HUB lights them, each one's values in a box beside it */
+.hits-pic .hb.on .hb-hatch { fill: url(#hb-stripes); }
+.hits-pic .hb-hatch { fill: none; pointer-events: none; }
+.hb-box line { stroke: var(--dim); stroke-width: 5; }
+.hb-box.dim { opacity: .4; }
+.hits-badge { box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 0 44px; border-radius: 40px; background: var(--card); box-shadow: 0 0 0 5px var(--brd); font: 600 76px var(--font); color: var(--dim); }
+.hits-badge span { display: flex; align-items: center; gap: 30px; }
+.hits-badge span i { width: 60px; font-size: 56px; text-align: center; }
+.hits-badge span.lit { color: #2f7de1; }

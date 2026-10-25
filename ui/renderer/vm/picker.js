@@ -6,8 +6,8 @@ import { PRESET_ICON, ICON } from '../../shared/actions.mjs';
 import { en, inEnglish, t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let ALT, META, S, SLOTS, actionIcon, api, assignment, call, changed, dev, deviceProfiles, fx, gestureCapable, gestureControl, gestureObject, go, keyName, merge, presetLabel, prompt, ringSelectAdd, ringSlots, ringTidyFolders, saveRingSlots, setAssign, toast, ringEditorOn;
-export function link(ctx) { ({ ALT, META, S, SLOTS, actionIcon, api, assignment, call, changed, dev, deviceProfiles, fx, gestureCapable, gestureControl, gestureObject, go, keyName, merge, presetLabel, prompt, ringSelectAdd, ringSlots, ringTidyFolders, saveRingSlots, setAssign, toast, ringEditorOn } = ctx); }
+let ALT, META, S, SLOTS, actionIcon, api, assignment, call, changed, dev, deviceProfiles, fx, gestureCapable, gestureControl, gestureObject, go, keyName, merge, presetLabel, prompt, ringSelectAdd, ringSlots, ringTidyFolders, saveRingSlots, setAssign, toast, ringEditorOn, isGaming, openMacro;
+export function link(ctx) { ({ ALT, META, S, SLOTS, actionIcon, api, assignment, call, changed, dev, deviceProfiles, fx, gestureCapable, gestureControl, gestureObject, go, keyName, merge, presetLabel, prompt, ringSelectAdd, ringSlots, ringTidyFolders, saveRingSlots, setAssign, toast, ringEditorOn, isGaming, openMacro } = ctx); }
 
 // the screen state this view model owns: the action picker open (null: none)
 export const state = {
@@ -19,11 +19,12 @@ const PICKER_CATS = [['all', t('All'), 'fa-list'], ['key', t('Keystroke'), 'fa-k
 const CAT_OF = { media: ['volume_up', 'volume_down', 'mute', 'mic_mute', 'play_pause', 'next_track', 'prev_track', 'brightness_up', 'brightness_down'],
   window: ['close_window', 'maximize', 'minimize', 'tile_left', 'tile_right', 'show_desktop', 'app_switcher', 'screenshot', 'screenshot_area', 'lock', 'terminal', 'calculator', 'emoji_picker', 'action_ring', 'emoji', 'context_menu', 'copy', 'paste', 'undo', 'redo', 'zoom_in', 'zoom_out', 'tab_next', 'tab_prev'],
   ws: ['overview', 'workspace_next', 'workspace_prev'],
-  device: ['native', 'nothing', 'middle_click', 'double_click', 'back', 'forward', 'easy_switch_1', 'easy_switch_2', 'easy_switch_3', 'dpi_cycle', 'smartshift_toggle', 'open_home', 'gesture_navigation', 'gesture_windows', 'gesture_volume', 'gesture_pan', 'hscroll', 'vscroll', 'zoom_wheel', 'volume_wheel', 'tabs_wheel', 'workspaces_wheel', 'brightness_wheel'] };
+  device: ['native', 'nothing', 'primary_click', 'secondary_click', 'middle_click', 'double_click', 'back', 'forward', 'scroll_up', 'scroll_down', 'scroll_left', 'scroll_right', 'dpi_up', 'dpi_down', 'dpi_slot_cycle', 'dpi_shift', 'dpi_default', 'dpi_goto_shift', 'gshift', 'battery_level', 'onboard_profile_cycle', 'easy_switch_1', 'easy_switch_2', 'easy_switch_3', 'dpi_cycle', 'smartshift_toggle', 'open_home', 'gesture_navigation', 'gesture_windows', 'gesture_volume', 'gesture_pan', 'hscroll', 'vscroll', 'zoom_wheel', 'volume_wheel', 'tabs_wheel', 'workspaces_wheel', 'brightness_wheel'] };
 const CAT_LABEL = { media: t('Media'), window: t('Window'), ws: t('Shell'), device: t('Device') };
 function pickerItems(p) {
   const all = S.presets.all;
   const allowed = new Set(p.section === 'ring' ? S.presets.buttons.filter(k => !['native', 'nothing', 'action_ring'].includes(k) && all[k] && all[k].type !== 'gesture') : p.section === 'thumbwheel' ? S.presets.wheel : p.section === 'gesture' ? Object.keys(all).filter(k => ['nothing', 'keystroke', 'button', 'command', 'change_host', 'dpi_cycle', 'scroll', 'smartshift_toggle', 'open'].includes(all[k].type)) : p.section === 'keys' ? S.presets.keys.filter(k => k !== 'action_ring') : S.presets.buttons);
+  withoutGaming(p, allowed);
   const items = [];
   for (const [cat, keys] of Object.entries(CAT_OF)) for (const k of keys) if (allowed.has(k) && all[k] && (p.cat === 'all' || p.cat === cat)) {
     if (all[k].type === 'gesture' && p.section !== 'buttons') continue;
@@ -109,13 +110,22 @@ const OPTS_CATS = {
   media: ['volume_dial', 'play_pause', 'prev_track', 'next_track', 'volume_up', 'volume_down', 'mute', 'mic_mute'],
   other: ['easy_switch_1', 'easy_switch_2', 'easy_switch_3', 'nothing'],
   mouse: MOUSE_GROUP, wheel: WHEEL_GROUP,
+  // a gaming mouse, as G HUB's System tab lists them
+  gmouse: ['primary_click', 'secondary_click', 'middle_click', 'forward', 'back', 'dpi_shift', 'double_click', 'scroll_up', 'scroll_down', 'scroll_left', 'scroll_right', 'dpi_up', 'dpi_down', 'dpi_goto_shift', 'dpi_default', 'dpi_slot_cycle'],
+  gdevice: ['battery_level', 'gshift', 'onboard_profile_cycle'],
 };
+// what only a gaming mouse does (its DPI slots, G-Shift, its onboard memory)
+const GAMING_ONLY = new Set(['dpi', 'gshift', 'onboard_cycle']);
+// and what a gaming mouse has no use for: an MX mouse's fixed DPI levels and its wheel's SmartShift
+const MX_ONLY = new Set(['dpi_cycle', 'smartshift_toggle']);
+const withoutGaming = (p, set) => { const g = gamingPick(p); for (const k of [...set]) { const ty = (S.presets.all[k] || {}).type; if (g ? MX_ONLY.has(ty) : GAMING_ONLY.has(ty)) set.delete(k); } return set; };
 // three sections, as Options+ shows a key: what it recommends, Smart actions (things that run,
 // type or open), and every other action grouped under small headings
 const DRAWER_SECTIONS = [['rec', t('Recommended')], ['smart', t('Smart actions')], ['more', t('Other actions')]];
 const ACTION_GROUPS = [['nav', t('Navigate computer')], ['edit', t('Edit files and folders')], ['media', t('Media and audio')], ['other', t('Device')]];
 // what each kind of control lists: a key, a mouse button (with a mouse group first), or the thumb wheel
-const groupsFor = p => p.section === 'thumbwheel' ? [['wheel', t('Wheel')]] : p.section === 'buttons' ? [['mouse', t('Mouse')]].concat(ACTION_GROUPS) : ACTION_GROUPS;
+const gamingPick = p => { const d = S.devices.find(x => x.id === p.dev); return !!d && isGaming(d); };
+const groupsFor = p => p.section === 'thumbwheel' ? [['wheel', t('Wheel')]] : p.section === 'buttons' ? [gamingPick(p) ? ['gmouse', t('Mouse')] : ['mouse', t('Mouse')], ['macros', t('Macros')]].concat(gamingPick(p) ? [['gdevice', t('Device')]] : [], ACTION_GROUPS) : ACTION_GROUPS;
 const sectionsFor = p => p.section === 'thumbwheel' ? DRAWER_SECTIONS.filter(([k]) => k !== 'smart') : DRAWER_SECTIONS;
 const KEY_GROUP_NAMES = [['fkeys', t('F keys')], ['letters', t('Letters')], ['numbers', t('Numbers')], ['symbols', t('Symbols')], ['numpad', t('Num pad')], ['modifiers', t('Modifier keys')], ['arrows', t('Arrow and navigation')], ['others', t('Others')]];
 const curOf = p => typeof p.current === 'string' ? p.current : (p.current && (p.current.preset || (p.current.type === 'brightness_dial' ? 'ring:brightness' : undefined)));
@@ -137,10 +147,15 @@ function easyLabel(k) {
 }
 const GESTURE_RECOMMEND = ['overview', 'show_desktop', 'app_switcher', 'workspace_next', 'workspace_prev', 'volume_up', 'volume_down', 'play_pause'];
 const GESTURE_TYPES = ['nothing', 'keystroke', 'button', 'command', 'change_host', 'dpi_cycle', 'scroll', 'smartshift_toggle', 'open'];
-const allowedFor = p => new Set(p.section === 'ring' ? S.presets.buttons.filter(k => !['native', 'nothing', 'action_ring'].includes(k) && (S.presets.all[k] || {}).type !== 'gesture')
+const allowedFor = p => withoutGaming(p, new Set(p.section === 'ring' ? S.presets.buttons.filter(k => !['native', 'nothing', 'action_ring'].includes(k) && (S.presets.all[k] || {}).type !== 'gesture')
   : p.section === 'gesture' ? Object.keys(S.presets.all).filter(k => GESTURE_TYPES.includes(S.presets.all[k].type))
-  : p.section === 'thumbwheel' ? S.presets.wheel.filter(k => k !== 'volume_dial') : p.section === 'buttons' ? S.presets.buttons.filter(k => k !== 'volume_dial' && ((S.presets.all[k] || {}).type !== 'gesture' || (p.ctl && p.ctl.raw_xy))) : S.presets.keys.filter(k => k !== 'volume_dial'));
+  : p.section === 'thumbwheel' ? S.presets.wheel.filter(k => k !== 'volume_dial') : p.section === 'buttons' ? S.presets.buttons.filter(k => k !== 'volume_dial' && ((S.presets.all[k] || {}).type !== 'gesture' || (p.ctl && p.ctl.raw_xy))) : S.presets.keys.filter(k => k !== 'volume_dial')));
 function drawerItems(sec, p) {
+  // a button's macros: the device's own, and a new one
+  if (sec === 'macros') {
+    const d = S.devices.find(x => x.id === (p || S.picker).dev), list = d && Array.isArray(((d.config || {}).settings || {}).macros) ? d.config.settings.macros : [];
+    return list.map(m => ({ key: 'macro:' + m.id, icon: 'fa-list-ol', label: m.name, meta: { once: t('Once'), while_held: t('While held'), toggle: t('Toggle') }[m.repeat] || '' })).concat([{ key: 'macro:new', icon: 'fa-plus', label: t('New macro…') }]);
+  }
   const ok = allowedFor(p || S.picker);
   return (OPTS_CATS[sec] || []).filter(k => ok.has(k) && S.presets.all[k]).map(presetItem);
 }
@@ -148,11 +163,13 @@ function openPicker(o) {
   // what is open right now, so the launch list can lead with it instead of 122 alphabetical entries
   api.quiet('running_apps').then(r => { S.running = r; if (S.picker && S.picker.cat === 'app') fx.refreshAppList(); }).catch(() => { S.running = []; });
   const d = o.dev || dev();
-  const section = o.section, cid = o.cid;
+  // a gaming mouse's G-Shift layer is picked for like its buttons, and kept apart
+  const layer = o.section === 'buttons_gshift' ? 'gshift' : null;
+  const section = layer ? 'buttons' : o.section, cid = o.cid;
   const gslot = section === 'gesture' && d && o.slot ? gestureObject(d, cid)[o.slot] : null;
-  const current = section === 'gesture' ? (gslot ? gslot.preset || gslot : null) : section === 'ring' ? (ringSlots()[cid] || {}).action || null : assignment(d, section, cid, o.profile);
+  const current = section === 'gesture' ? (gslot ? gslot.preset || gslot : null) : section === 'ring' ? (ringSlots()[cid] || {}).action || null : assignment(d, layer ? 'buttons_gshift' : section, cid, o.profile);
   const ctl = typeof cid === 'number' && section !== 'ring' && d ? d.controls.find(c => c.cid === cid) : null;
-  S.picker = { drawer: !!o.drawer, fold: o.drawer ? { rec: true } : null, dev: d ? d.id : null, section, cid, label: o.label, profile: o.profile || S.editProfile || 'default', cat: o.cat || 'all', current, ctl, sel: null, slot: o.slot, recording: o.drawer ? false : o.cat === 'key' };
+  S.picker = { drawer: !!o.drawer, fold: o.drawer ? { rec: true } : null, dev: d ? d.id : null, section, layer, cid, label: o.label, profile: o.profile || S.editProfile || 'default', cat: o.cat || 'all', current, ctl, sel: null, slot: o.slot, recording: o.drawer ? false : o.cat === 'key' };
   S.dlg = 'picker'; changed();
 }
 // the ring's actions open on the right with the ring, on its first empty slot (else the top one)
@@ -186,7 +203,7 @@ async function assignPicked(action) {
     g[p.slot] = sub; g.label = 'Custom gestures'; g.type = 'gesture';
     await setAssign(d, 'buttons', cid, g);
   } else {
-    await setAssign(d, p.section, p.cid, action, p.profile);
+    await setAssign(d, p.layer === 'gshift' ? 'buttons_gshift' : p.section, p.cid, action, p.profile);
   }
   if (p.drawer) { p.current = action; p.sel = null; p.selKey = null; p.cat = 'all'; p.chord = []; p.typed = ''; changed(); toast(t('Assigned {action}', { action: presetLabel(action) })); return; }
   S.dlg = null; toast(t('Assigned {action}', { action: presetLabel(action) })); changed();
@@ -264,6 +281,8 @@ export const commands = {
   'pick-cat': async (it, e, d, key) => { S.picker.cat = key; S.picker.recording = key === 'key'; changed(); return; },
   'pick-item': async (it, e, d, key) => {
     if (key.startsWith('app:')) return assignPicked(JSON.parse(JSON.stringify(APP_ACTIONS[key.slice(4)])));
+    if (key === 'macro:new') { const p = S.picker; openMacro(S.devices.find(x => x.id === p.dev) || d, null, { section: p.layer === 'gshift' ? 'buttons_gshift' : p.section, cid: p.cid, profile: p.profile }); return; }
+    if (key.startsWith('macro:')) { const dd = S.devices.find(x => x.id === S.picker.dev) || d, m = (((dd.config || {}).settings || {}).macros || []).find(x => x.id === key.slice(6)); if (m) return assignPicked({ type: 'macro', macro: m.id, label: m.name }); return; }
     if (key === 'wheel:keys') {
       const typedKeys = Act.typedKeys;
       prompt(t('Two keystrokes'), [{ key: 'up', label: t('Turning one way'), placeholder: 'ctrl+tab' }, { key: 'down', label: t('Turning the other way'), placeholder: 'ctrl+shift+tab' }], async v => {

@@ -7,14 +7,14 @@ let ALT, IS_LINUX, IS_MAC, IS_WIN, META, S, THEMES, VERSION, allProfiles, card, 
 export function link(ctx) { ({ ALT, IS_LINUX, IS_MAC, IS_WIN, META, S, THEMES, VERSION, allProfiles, card, esc, flowRefresh, range, row, sec, sw } = ctx); }
 
 function pageNotif() {
-  const g = S.general, ev = g.osd_events || { mic: true, smartshift: true, backlight: true, host: true, dpi: false };
+  const g = S.general, ev = Object.assign({ mic: true, smartshift: true, backlight: true, host: true, dpi: true, battery: true, onboard_profile: true }, g.osd_events || {});
   const pos = g.osd_position || 'bottom', dur = g.osd_duration ?? 1500;
   return sec(t('On-screen overlays'), card(row(t('Show overlays'), t('Toast when a diverted key changes device state'), sw(g.osd_enabled ?? true, 'data-act="general" data-key="osd_enabled"')) +
       `<div class="row"><span class="grow lbl">${t('Position')}</span><span class="seg">${['top', 'center', 'bottom'].map(p => `<button class="${pos === p ? 'on' : ''}" data-act="general-val" data-key="osd_position" data-val="${p}">${({ top: t('Top'), center: t('Centre'), bottom: t('Bottom') })[p]}</button>`).join('')}</span></div>` +
       `<div class="row"><span class="grow lbl">${t('Duration')}</span>${range('data-act="general-range" data-key="osd_duration" data-out="dur"', dur, 500, 4000, 250)}<span class="val" data-out="dur" style="width:40px;text-align:right">${t('{n} s', { n: (dur / 1000).toFixed(1) })}</span></div>` +
       row(t('Toggle overlays shortcut'), '', `<span class="val">${META()} + ${ALT()} + O</span>`) +
-      `<div class="row"><span class="grow lbl">${t('Preview')}</span>${['mic', 'smartshift', 'backlight', 'host', 'dpi', 'emoji'].map(k => `<button class="btn sm" data-act="osd-test" data-key="${k}">${k}</button>`).join('')}</div>`)) +
-    sec(t('Show overlay for'), card([['mic', 'fa-microphone-slash', t('Microphone mute')], ['smartshift', 'fa-gear', t('SmartShift mode')], ['backlight', 'fa-sun', t('Backlight level')], ['host', 'fa-right-left', t('Easy-Switch host')], ['dpi', 'fa-arrow-pointer', t('DPI change')]].map(([k, icon, label]) => `<div class="row"><i class="fa-solid ${icon}" style="width:20px;text-align:center;color:var(--dim)"></i><span class="grow lbl">${label}</span>${sw(ev[k] !== false, `data-act="osd-event" data-key="${k}"`)}</div>`).join(''))) +
+      `<div class="row"><span class="grow lbl">${t('Preview')}</span>${['mic', 'smartshift', 'backlight', 'host', 'dpi', 'battery', 'emoji'].map(k => `<button class="btn sm" data-act="osd-test" data-key="${k}">${k}</button>`).join('')}</div>`)) +
+    sec(t('Show overlay for'), card([['mic', 'fa-microphone-slash', t('Microphone mute')], ['smartshift', 'fa-gear', t('SmartShift mode')], ['backlight', 'fa-sun', t('Backlight level')], ['host', 'fa-right-left', t('Easy-Switch host')], ['dpi', 'fa-arrow-pointer', t('DPI change')], ['battery', 'fa-battery-three-quarters', t('Battery level, from a button')], ['onboard_profile', 'fa-microchip', t('Onboard profile')]].map(([k, icon, label]) => `<div class="row"><i class="fa-solid ${icon}" style="width:20px;text-align:center;color:var(--dim)"></i><span class="grow lbl">${label}</span>${sw(ev[k] !== false, `data-act="osd-event" data-key="${k}"`)}</div>`).join(''))) +
     sec(t('System notifications'), card(row(t('Low battery'), '', sw(g.notify_low ?? true, 'data-act="general" data-key="notify_low"')) + row(t('Device connected / disconnected'), '', sw(g.notify_connect ?? false, 'data-act="general" data-key="notify_connect"'))));
 }
 

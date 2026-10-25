@@ -20,7 +20,8 @@ static void usage() {
         "  presets                     list preset actions\n"
         "  config                      dump configuration\n"
         "  reload                      reload config from disk\n"
-        "  hidpp <id> <feature> <fn> [hex bytes...]   one raw HID++ request, e.g. hidpp 40be 2202 5 00\n");
+        "  hidpp <id> <feature> <fn> [hex bytes...]   one raw HID++ request, e.g. hidpp 40be 2202 5 00\n"
+        "  rpc <method> [json]         any agent request, e.g. rpc onboard_profiles '{\"id\":\"40be\"}'\n");
 }
 
 static json parseValue(const std::string& v) {
@@ -78,6 +79,8 @@ int main(int argc, char** argv) {
             while ((e = a[1].find('.', s)) != std::string::npos) { path.push_back(a[1].substr(s, e - s)); s = e + 1; }
             path.push_back(a[1].substr(s));
             printf("%s\n", c.call("set_setting", {{"id", a[0]}, {"path", path}, {"value", parseValue(a[2])}}).dump(1).c_str());
+        } else if (cmd == "rpc" && !a.empty()) {
+            printf("%s\n", c.call(a[0], a.size() > 1 ? json::parse(a[1]) : json::object()).dump(1).c_str());
         } else if (cmd == "hidpp" && a.size() >= 3) {
             json params = json::array();
             for (size_t i = 3; i < a.size(); ++i) params.push_back(a[i]);

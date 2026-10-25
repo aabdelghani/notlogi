@@ -1,8 +1,10 @@
 // Device events -> desktop actions (gestures, adapters, keystrokes)
 #pragma once
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <string>
@@ -29,6 +31,12 @@ struct DeviceOps {
     // the action ring held on a control: kind is open, move (raw dx, dy) or release
     std::function<void(const std::string& kind, int cid, int dx, int dy)> ringEvent;
     std::function<void()> gestureFired;   // a swipe was recognised and its action ran
+    // a gaming mouse: its DPI slots (up, down, cycle, default, goto_shift; shift_on and shift_off
+    // while DPI shift is held), the G-Shift layer while held, the battery shown, the next onboard profile
+    std::function<void(const std::string& op)> dpiOp;
+    std::function<void(bool held)> gshift;
+    std::function<void()> batteryLevel;
+    std::function<void()> onboardCycle;
 };
 
 // Smooth scrolling, as Options+ does it (its SmoothScrollManager and ScrollController, read from
@@ -84,8 +92,13 @@ class Engine {
     void wheel(double units, double speed, bool smooth);
     void setMomentum(bool on) { smooth_.setMomentum(on); }
     void setRatchet(bool on) { smooth_.setRatchet(on); }
+    ~Engine();
 
   private:
+    // a macro playing for a control: its stop flag, shared with the thread that plays it
+    void startMacro(int cid, const json& macro, bool loop);
+    void stopMacro(int cid);
+    std::map<int, std::shared_ptr<std::atomic<bool>>> macros_;
     struct Gesture {
         json action;
         int dx = 0, dy = 0;

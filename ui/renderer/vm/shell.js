@@ -3,8 +3,8 @@
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let IS_MAC, IS_WIN, S, SLOTS, agentNeedsBuild, api, applyPreset, call, changed, dev, devicePages, drawerUp, fx, gestureControl, go, isOffline, openPicker, refresh, ringSelect, sidePanelClosed, toast, ringEditorOn, openRingPanel;
-export function link(ctx) { ({ IS_MAC, IS_WIN, S, SLOTS, agentNeedsBuild, api, applyPreset, call, changed, dev, devicePages, drawerUp, fx, gestureControl, go, isOffline, openPicker, refresh, ringSelect, sidePanelClosed, toast, ringEditorOn, openRingPanel } = ctx); }
+let IS_MAC, IS_WIN, S, SLOTS, agentNeedsBuild, api, applyPreset, call, changed, dev, devicePages, drawerUp, fx, gestureControl, go, isOffline, openPicker, refresh, ringSelect, sidePanelClosed, toast, ringEditorOn, openRingPanel, closeTool;
+export function link(ctx) { ({ IS_MAC, IS_WIN, S, SLOTS, agentNeedsBuild, api, applyPreset, call, changed, dev, devicePages, drawerUp, fx, gestureControl, go, isOffline, openPicker, refresh, ringSelect, sidePanelClosed, toast, ringEditorOn, openRingPanel, closeTool } = ctx); }
 
 // the screen state this view model owns: where the window is: page and device, dialog and menu open, first run, theme
 export const state = {
@@ -111,7 +111,7 @@ export const commands = {
   'dismiss-conflict': async (it, e, d, key) => { S.conflictDismissed = true; changed(); return; },
   'stop-tool': async (it, e, d, key) => { const r = await api.host.stopTool(it.data.tool); toast(r && r.ok ? t('{tool} stopped', { tool: it.data.tool }) : (r && r.error) || t('Could not stop'), !(r && r.ok)); setTimeout(refresh, 1500); return; },
   'open': async (it, e, d, key) => { api.host.openExternal(it.data.url); return; },
-  'close-dlg': async (it, e, d, key) => { if (S.dlg === 'prompt' && S.prompt && S.prompt.back) { S.dlg = S.prompt.back; changed(); return; } if (drawerUp()) { fx.closeDrawer(); return; } fx.stopRecorder(); if (S.dlg === 'pair') { call('pair_cancel').catch(() => {}); if (S.pair && S.pair.bt) api.host.btClose(); } S.dlg = null; changed(); return; },
+  'close-dlg': async (it, e, d, key) => { if (S.dlg === 'prompt' && S.prompt && S.prompt.back) { S.dlg = S.prompt.back; changed(); return; } if (drawerUp()) { fx.closeDrawer(); return; } fx.stopRecorder(); if (S.dlg === 'pair') { call('pair_cancel').catch(() => {}); if (S.pair && S.pair.bt) api.host.btClose(); } if (S.dlg === 'gaming') { closeTool(); S.gtool = null; } S.dlg = null; changed(); return; },
   'dir': async (it, e, d, key) => { S.dir = key; changed(); return; },
   'im-open': async (it, e, d, key) => { await api.host.inputMonitoringOpen(); setTimeout(async () => { try { S.ax = await api.host.accessibility(false); S.status = await call('status'); changed(); } catch (err) {} }, 4000); return; },
   'ax-open': async (it, e, d, key) => { api.host.accessibility(true); api.host.openAccessibility(); setTimeout(async () => { S.ax = await api.host.accessibility(false); changed(); }, 4000); return; },
