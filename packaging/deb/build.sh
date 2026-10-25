@@ -27,6 +27,7 @@ mkdir -p "$PKG/DEBIAN" "$PKG/opt/logimx" "$PKG/usr/bin" "$PKG/usr/lib/udev/rules
 cp -a "$UNPACKED/." "$PKG/opt/logimx/"
 install -m755 "$ROOT/agent/build/logimx-agent" "$PKG/usr/bin/logimx-agent"
 install -m755 "$ROOT/agent/build/logimxctl"   "$PKG/usr/bin/logimxctl"
+install -m755 "$ROOT/packaging/uninstall.sh"  "$PKG/usr/bin/logimx-uninstall"
 install -m644 "$ROOT/udev/60-logimx.rules"    "$PKG/usr/lib/udev/rules.d/60-logimx.rules"
 install -m644 "$ROOT/udev/logimx-i2c.conf"    "$PKG/usr/lib/modules-load.d/logimx-i2c.conf"
 sed 's|^ExecStart=.*|ExecStart=/usr/bin/logimx-agent|' "$ROOT/systemd/logimx.service" \
@@ -74,6 +75,9 @@ cat > "$PKG/DEBIAN/postinst" <<'POST'
 #!/bin/sh
 set -e
 chmod 4755 /opt/logimx/chrome-sandbox 2>/dev/null || true
+# what installs made from a checkout, or the app's Install rule button, left outside home: the
+# package has its own copies, and a second one only shadows the first
+rm -f /etc/udev/rules.d/60-logimx.rules /usr/local/bin/logimx-agent /usr/local/bin/logimxctl /usr/local/lib/systemd/user/logimx.service 2>/dev/null || true
 if command -v udevadm >/dev/null 2>&1; then
   udevadm control --reload || true
   udevadm trigger --subsystem-match=hidraw --action=add || true
@@ -101,6 +105,8 @@ PRERM
 cat > "$PKG/DEBIAN/postrm" <<'POSTRM'
 #!/bin/sh
 set -e
+# purge: the rule the app's Install rule button may have placed before the package was installed
+[ "$1" = purge ] && rm -f /etc/udev/rules.d/60-logimx.rules 2>/dev/null || true
 command -v udevadm >/dev/null 2>&1 && udevadm control --reload || true
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
 exit 0

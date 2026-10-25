@@ -6,6 +6,18 @@ Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each 
 ## Unreleased
 
 - PRO X3 SUPERSTRIKE (LIGHTSPEED): recognised on its receiver, shown with its own picture and buttons, with Sensitivity, Assignments, Scroll wheel and HITS pages as G HUB lays them out. Everything reaches the mouse, which NotLogi puts in host mode as G HUB does: the DPI slot in use (snapped to the sensor's own steps, on a slider that spreads 100 to 48000 DPI like G HUB's), the report rate of the link in use, HITS (actuation point, rapid trigger and click haptics on both buttons), and BHOP with its time on the Scroll wheel page. Each button can be given any action: the mouse stops sending it and reports the press instead. The link shows as LIGHTSPEED receiver and the firmware as AM 01.01.B0012.
+- Remove NotLogi: About → Remove NotLogi lists what goes and takes it away: the agent and its login service, start at login, the launcher and icons, then the program itself (the .deb through one password prompt, the AppImage file; on macOS the bundle goes to the Trash and its permissions are reset, on Windows the setup's uninstaller runs). Settings, profiles and backups stay unless the switch says otherwise. On Linux `logimx-uninstall [--all]` does the same from a terminal.
+- Linux: leftovers of older installs are cleaned up when the app starts and when the package is installed: a second launcher and icons from a checkout or an AppImage beside the .deb (two NotLogi in the app grid), a launcher whose program is gone, a user service shadowing the package's, an old rule and binaries under /etc and /usr/local. Start agent at login now drives the package's own service.
+
+## [0.12.5](https://github.com/aabdelghani/notlogi/releases/tag/v0.12.5) - 2026-10-16
+
+- Linux on Wayland: 0.12.4 did not open at all on Ubuntu 24.04 and later (#16). The restart onto XWayland went through Electron's relauncher, which leaves the new process unable to use the setuid sandbox, the only sandbox those systems allow, so it died at once and silently. The app now starts itself as a plain child process.
+- The problem report names how the process was started (flags, display backend, a restart, sandbox state), the state of the windows and tray, Chromium and GPU details, and crashes or uncaught errors in the main process.
+
+## [0.12.4](https://github.com/aabdelghani/notlogi/releases/tag/v0.12.4) - 2026-10-13
+
+- Linux on Wayland: the action ring did not appear, and the window opened in the middle of the first screen. Since 0.12.3 (Electron 44) the app ran natively on Wayland, where a window can be neither placed nor kept on top; it runs through XWayland again, as up to 0.12.0. `--ozone-platform=wayland` still starts it on Wayland.
+- macOS with two displays: the action ring opened on the main display only. Its window now covers the display under the pointer.
 
 ## [0.12.3](https://github.com/aabdelghani/notlogi/releases/tag/v0.12.3) - 2026-10-09
 

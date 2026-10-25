@@ -7,7 +7,7 @@ export function link(ctx) { ({ IS_MAC, IS_WIN, S, VERSION, api, call, changed, f
 
 // the screen state this view model owns: the prompt, confirmation, wish and report being filled in
 export const state = {
-  prompt: undefined, confirm: undefined, wish: undefined, report: undefined,
+  prompt: undefined, confirm: undefined, wish: undefined, report: undefined, uninstall: undefined,
 };
 
 // The report goes into a public issue, so it is shown in full before anything leaves the machine
@@ -34,6 +34,10 @@ export const commands = {
     api.host.openExternal(`${ISSUE_URL}?labels=enhancement&title=${encodeURIComponent(title)}&body=${encodeURIComponent(wishBody(w))}`);
     S.dlg = null; toast(t('Wish received by the genie! Submit it on GitHub and the 24-hour clock starts')); changed(); return;
   },
+  // Remove NotLogi: the plan is fetched again when the settings switch changes; the app ends on success
+  'uninstall': async (it, e, d, key) => { S.uninstall = { settings: false }; S.dlg = 'uninstall'; changed(); const p = await api.host.uninstallPlan(false); if (S.dlg === 'uninstall') { S.uninstall = Object.assign({}, S.uninstall, p); changed(); } return; },
+  'uninstall-settings': async (it, e, d, key) => { const u = S.uninstall || {}; u.settings = !u.settings; S.uninstall = u; changed(); const p = await api.host.uninstallPlan(u.settings); if (S.dlg === 'uninstall') { S.uninstall = Object.assign({}, S.uninstall, p); changed(); } return; },
+  'uninstall-go': async (it, e, d, key) => { const u = S.uninstall; if (!u || u.busy) return; u.busy = true; changed(); const r = await api.host.uninstall(!!u.settings); if (!r || !r.ok) { u.busy = false; S.dlg = null; toast(t('Not everything could be removed'), true); changed(); } return; },
   'report-copy': async (it, e, d, key) => { api.host.copy(reportBody(S.report, true)); toast(t('Report copied')); return; },
   'report-open': async (it, e, d, key) => {
     const r = S.report; if (!r || !r.summary) return;

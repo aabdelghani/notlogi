@@ -5,10 +5,12 @@ const fs = require('fs');
 const { execFile } = require('child_process');
 const plat = require('../platform');
 const ROOT = require('path').join(__dirname, '..');   // the app's own folder
+const { isOurIcon } = require('./uninstall-plan');
+const list = d => { try { return fs.readdirSync(d); } catch (e) { return []; } };
 
 // from the other parts of the main process, filled in by link()
-let APPIMAGE, PACKAGED, WM_CLASS, launchCmd, loadUi, resPath;
-exports.link = ctx => { ({ APPIMAGE, PACKAGED, WM_CLASS, launchCmd, loadUi, resPath } = ctx); };
+let APPIMAGE, PACKAGED, WM_CLASS, debInstalled, launchCmd, loadUi, resPath;
+exports.link = ctx => { ({ APPIMAGE, PACKAGED, WM_CLASS, debInstalled, launchCmd, loadUi, resPath } = ctx); };
 
 // Artefacts left by an older name of the project: a stale enabled unit points at a binary
 // that no longer exists and quietly fails at login.
@@ -27,11 +29,41 @@ function cleanupLegacyAutostart() {
   }
 }
 
+// Leftovers of other installs of NotLogi in this user's account: a launcher and icons written by a
+// checkout or an AppImage beside the package's own (two NotLogi in the app grid), a launcher whose
+// program is gone, a user unit saying the same as the package's. An install that still works, and
+// is not this one, is left as it is.
+const SYSTEM_UNIT = '/usr/lib/systemd/user/logimx.service';
+function cleanupLeftovers() {
+  const home = os.homedir();
+  const launcher = path.join(home, '.local', 'share', 'applications', 'logimx.desktop');
+  const iconDir = path.join(home, '.local', 'share', 'icons', 'hicolor');
+  // the package's launcher serves, whether this is the package or something started beside it
+  const deb = (PACKAGED && !APPIMAGE && fs.existsSync('/usr/share/applications/logimx.desktop')) || debInstalled();
+  let drop = deb;
+  if (!drop) { try { const m = /^Exec=(?:"([^"]+)"|(\S+))/m.exec(fs.readFileSync(launcher, 'utf8')); drop = !!m && !fs.existsSync(m[1] || m[2]); } catch (e) {} }
+  if (drop) {
+    try { fs.unlinkSync(launcher); execFile('update-desktop-database', [path.dirname(launcher)], () => {}); } catch (e) {}
+    if (deb) {
+      for (const size of list(iconDir)) for (const f of list(path.join(iconDir, size, 'apps'))) if (isOurIcon(f)) { try { fs.unlinkSync(path.join(iconDir, size, 'apps', f)); } catch (e) {} }
+      execFile('gtk-update-icon-cache', ['-q', '-f', '-t', iconDir], () => {});
+    }
+  }
+  const unit = path.join(home, '.config', 'systemd', 'user', 'logimx.service');
+  try {
+    if (fs.existsSync(SYSTEM_UNIT) && /^ExecStart=\/usr\/bin\/logimx-agent\s*$/m.test(fs.readFileSync(unit, 'utf8'))) {
+      fs.unlinkSync(unit);
+      execFile('systemctl', ['--user', 'daemon-reload'], () => execFile('systemctl', ['--user', 'enable', 'logimx.service'], () => {}));
+    }
+  } catch (e) {}
+}
+
 // Re-apply the login setting every time the app starts, so a rename, a moved checkout or a
 // hand-edited unit cannot leave 'start at login' switched on but broken.
 function ensureAutostart() {
   if (!plat.IS_LINUX) { try { if (loadUi().autostart) plat.setLoginItem(true); } catch (e) {} return; }
   cleanupLegacyAutostart();
+  cleanupLeftovers();
   // a unit written by an AppImage points into a mount that no longer exists: rewrite or drop it
   try {
     const unitPath = path.join(os.homedir(), '.config', 'systemd', 'user', 'logimx.service');
@@ -78,13 +110,20 @@ function setAutostart(on) {
   const unitDir = path.join(os.homedir(), '.config', 'systemd', 'user');
   const unitPath = path.join(unitDir, 'logimx.service');
   const agentBin = on ? stableAgentBin() : null;
-  if (agentBin) {
+  if (agentBin === '/usr/bin/logimx-agent' && fs.existsSync(SYSTEM_UNIT)) {
+    // the package's own unit: enabled as it is, and a copy of this user's saying the same goes
+    try { fs.unlinkSync(unitPath); } catch (e) {}
+    execFile('systemctl', ['--user', 'daemon-reload'], () => execFile('systemctl', ['--user', 'enable', 'logimx.service'], () => {}));
+  } else if (agentBin) {
     const unit = `[Unit]\nDescription=NotLogi agent for MX Master and MX Keys devices\nAfter=graphical-session.target\nPartOf=graphical-session.target\n\n[Service]\nType=simple\nExecStart=${agentBin}\nRestart=on-failure\nRestartSec=2\n\n[Install]\nWantedBy=graphical-session.target\n`;
     try {
       fs.mkdirSync(unitDir, { recursive: true });
       fs.writeFileSync(unitPath, unit);
       execFile('systemctl', ['--user', 'daemon-reload'], () => execFile('systemctl', ['--user', 'enable', 'logimx.service'], () => {}));
     } catch (e) {}
+  } else if (!on && fs.existsSync(SYSTEM_UNIT)) {
+    execFile('systemctl', ['--user', 'disable', 'logimx.service'], () => {});   // the package's unit: off at login, still running now
+    if (unitPointsAtMissingBinary(unitPath)) removeAgentUnit(unitPath);
   } else if (unitPointsAtMissingBinary(unitPath)) {
     // nothing durable to point a unit at, and the one on disk is already broken. The desktop
     // entry starts the app, which starts its own agent, so drop the unit rather than let it
@@ -102,6 +141,7 @@ function iconName() {
 function ensureDesktopEntry() {
   if (!plat.IS_LINUX) return;          // the installer made the shortcuts
   if (PACKAGED && !APPIMAGE) return;   // the .deb installs its own entry
+  if (debInstalled()) return;          // the .deb is installed beside this: its entry serves (cleanupLeftovers drops ours)
   try {
     const iconDir = path.join(os.homedir(), '.local', 'share', 'icons', 'hicolor', '256x256', 'apps');
     const appDir = path.join(os.homedir(), '.local', 'share', 'applications');
@@ -120,4 +160,4 @@ function ensureDesktopEntry() {
   } catch (e) {}
 }
 
-exports.provide = { LEGACY_NAMES, cleanupLegacyAutostart, ensureAutostart, stableAgentBin, unitPointsAtMissingBinary, removeAgentUnit, setAutostart, ensureDesktopEntry };
+exports.provide = { LEGACY_NAMES, cleanupLegacyAutostart, cleanupLeftovers, ensureAutostart, stableAgentBin, unitPointsAtMissingBinary, removeAgentUnit, setAutostart, ensureDesktopEntry };

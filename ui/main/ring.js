@@ -92,9 +92,13 @@ async function systemLook() {
   lookAt = Date.now();
   return lookCache;
 }
-// every display together: the ring's window covers them all
-function ringArea() {
-  const all = screen.getAllDisplays();
+// the displays the ring's window covers: all of them on Linux, where the pointer may not be known
+// until it moves over the window; the one under the pointer on macOS and Windows. macOS gives each
+// display its own Spaces (the default), and there a window spanning two shows on one only: the ring
+// never opened on the second display.
+const ringDisplays = pt => (plat.IS_LINUX ? screen.getAllDisplays() : [pt ? screen.getDisplayNearestPoint(pt) : screen.getPrimaryDisplay()]);
+function ringArea(pt) {
+  const all = ringDisplays(pt);
   const x = Math.min(...all.map(d => d.bounds.x)), y = Math.min(...all.map(d => d.bounds.y));
   return { x, y, width: Math.max(...all.map(d => d.bounds.x + d.bounds.width)) - x, height: Math.max(...all.map(d => d.bounds.y + d.bounds.height)) - y };
 }
@@ -156,13 +160,12 @@ async function showRing(deviceId, raw) {
   if (rs.free_pointer) raw = false;   // the pointer stays free: the ring follows it instead of taking the mouse
   ringOpening = true; ringReleasedEarly = false; ringPending = [0, 0];
   const [pt, look] = await Promise.all([cursorPoint(), systemLook()]);
-  // The window covers every display and the page draws the ring where the pointer is. A window
+  // The window covers the displays (see ringDisplays) and the page draws the ring where the pointer is. A window
   // cannot be placed at the pointer on Wayland (the compositor puts it where it likes, usually the
   // middle of the screen), and there the pointer's position is not even known until it moves over
   // the window; the page waits for that first movement. On X11 the position is known up front.
-  const all = screen.getAllDisplays();
-  const X = Math.min(...all.map(d => d.bounds.x)), Y = Math.min(...all.map(d => d.bounds.y));
-  const R = Math.max(...all.map(d => d.bounds.x + d.bounds.width)), Bm = Math.max(...all.map(d => d.bounds.y + d.bounds.height));
+  const area = ringArea(pt);
+  const X = area.x, Y = area.y, R = area.x + area.width, Bm = area.y + area.height;
   const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11';
   const at = known ? { x: pt.x - X, y: pt.y - Y } : null;
   const guess = { x: pt.x - X, y: pt.y - Y };
@@ -226,4 +229,6 @@ ipcMain.on('ring-adjust', (_e, { path, dir }) => {
   rpc('run_action', params).catch(() => {});
 });
 
-exports.provide = { ringFor, RING_SCALE, ringSlotAt, ringRunDevice, RING_ADJUST, ringLog, RING_W, RING_H, ensureRing, warmRing, GNOME_ACCENTS, YARU_ACCENTS, gsetting, systemLook, releaseRing, RING_KEYS, ringKeysOn, ringKeysOff, moveRing, showRing, ringCue };
+// the ring window as it is now, for the problem report
+const ringState = () => !ringWin ? 'not made' : ringWin.isDestroyed() ? 'destroyed' : `${ringWin.isVisible() ? 'shown' : 'hidden'}${ringWarming ? ', warming up' : ''}${ringOpening ? ', opening' : ''}, ${ringWin.getBounds().width}x${ringWin.getBounds().height} at (${ringWin.getBounds().x}, ${ringWin.getBounds().y})`;
+exports.provide = { ringFor, RING_SCALE, ringSlotAt, ringRunDevice, RING_ADJUST, ringLog, ringState, RING_W, RING_H, ensureRing, warmRing, GNOME_ACCENTS, YARU_ACCENTS, gsetting, systemLook, releaseRing, RING_KEYS, ringKeysOn, ringKeysOff, moveRing, showRing, ringCue };

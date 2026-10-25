@@ -36,7 +36,8 @@ The app follows **MVVM**: Model, view models, views.
   - `media.js`: volume and brightness.
   - `battery.js`: battery notices.
   - `settings.js`: the window's own settings file.
-  - `autostart.js`, `system.js`: autostart, app icons, updates and the problem report.
+  - `autostart.js`, `system.js`: autostart, the clean-up of older installs, app icons, updates and the problem report.
+  - `uninstall.js`, `uninstall-plan.js`: Remove NotLogi. The plan (what goes, by kind of install) has no Electron in it and is tested; `packaging/uninstall.sh` does the same from a terminal.
   - `state.js`: what the parts share and change: devices, settings, windows.
   - `../flow.js`: Flow. NotLogi on each computer finds the others on the local network (UDP 24871),
     pairs with a shared key, and when the pointer is pushed against the edge facing another computer,

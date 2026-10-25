@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('agent', {
   btPopTest: stage => ipcRenderer.invoke('btpop-test', stage),
   ringShow: () => ipcRenderer.invoke('ring-show'),
   diagReport: () => ipcRenderer.invoke('diag-report'),
+  uninstallPlan: settings => ipcRenderer.invoke('uninstall-plan', !!settings),
+  uninstall: settings => ipcRenderer.invoke('uninstall', !!settings),
   generalChanged: () => ipcRenderer.invoke('general-changed'),
   setTheme: t => ipcRenderer.invoke('set-theme', t),
   openBluetooth: () => ipcRenderer.invoke('open-bluetooth'),
