@@ -25,7 +25,7 @@ button and key does, open an **action ring** of your favourite actions around th
 one mouse and keyboard across several computers with **Flow**.
 
 > [!IMPORTANT]
-> ### 🎯 New in 0.13.0: the PRO X3 SUPERSTRIKE on Linux
+> ### New in 0.13.0: the PRO X3 SUPERSTRIKE on Linux
 > **Everything G HUB offers for this mouse, now on Linux**, without Wine, a VM or an account
 > (only G HUB's online parts are left out). It works through the LIGHTSPEED receiver or the cable.
 >
@@ -64,7 +64,7 @@ by the .deb, and in the repository at `packaging/uninstall.sh`).
 
 | Device | State |
 |---|---|
-| **PRO X3 SUPERSTRIKE** 🆕 | **Tested on its LIGHTSPEED receiver, new in 0.13.0** |
+| **PRO X3 SUPERSTRIKE** | **Tested on its LIGHTSPEED receiver, new in 0.13.0** |
 | MX Master 4 | Tested |
 | MX Master 3S | Tested |
 | MX Keys S | Tested |
