@@ -20,10 +20,9 @@
 
 # NotLogi
 
-NotLogi sets up MX mice and keyboards, and now the **PRO X3 SUPERSTRIKE** gaming mouse, on Linux,
-with Windows and macOS in beta. Choose what every button and key does, open an **action ring** of
-your favourite actions around the pointer, and use one mouse and keyboard across several computers
-with **Flow**. It works on GNOME, KDE and other desktops, on X11 and Wayland.
+NotLogi sets up MX mice and keyboards on Linux, with Windows and macOS in beta. Choose what every
+button and key does, open an **action ring** of your favourite actions around the pointer, and use
+one mouse and keyboard across several computers with **Flow**.
 
 > [!IMPORTANT]
 > ### 🎯 New in 0.13.0: the PRO X3 SUPERSTRIKE on Linux
@@ -36,10 +35,6 @@ with **Flow**. It works on GNOME, KDE and other desktops, on X11 and Wayland.
 > - **Onboard memory**: write your settings to the mouse so they go with it to any PC
 >
 > [See all of it below](#pro-x3-superstrike)
-
-<p align="center">
-  <a href="#pro-x3-superstrike"><img src="screenshots/x3-hits.png" alt="PRO X3 SUPERSTRIKE HITS settings in NotLogi" width="860"></a>
-</p>
 
 NotLogi is an independent project. It is not affiliated with, endorsed by, or supported by the
 manufacturer of these devices.
