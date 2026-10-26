@@ -7,6 +7,8 @@
 
 <p align="center"><b>Unofficial mouse &amp; keyboard tools for Linux</b> (formerly LogiMX)</p>
 
+[![New in 0.13.0: PRO X3 SUPERSTRIKE](https://img.shields.io/badge/NEW%20in%200.13.0-PRO%20X3%20SUPERSTRIKE-ff4d4d.svg?style=for-the-badge)](#pro-x3-superstrike)
+
 [![Release build](https://github.com/aabdelghani/notlogi/actions/workflows/release.yml/badge.svg)](https://github.com/aabdelghani/notlogi/actions/workflows/release.yml)
 [![Tests](https://github.com/aabdelghani/notlogi/actions/workflows/test.yml/badge.svg)](https://github.com/aabdelghani/notlogi/actions/workflows/test.yml)
 [![Latest release](https://img.shields.io/github/v/release/aabdelghani/notlogi?color=2dd4bf&label=release)](https://github.com/aabdelghani/notlogi/releases/latest)
@@ -18,10 +20,26 @@
 
 # NotLogi
 
-NotLogi sets up MX mice and keyboards on Linux, with Windows and macOS in beta. Choose what every
-button and key does, open an **action ring** of your favourite actions around the pointer, and use
-one mouse and keyboard across several computers with **Flow**. It works on GNOME, KDE and other
-desktops, on X11 and Wayland.
+NotLogi sets up MX mice and keyboards, and now the **PRO X3 SUPERSTRIKE** gaming mouse, on Linux,
+with Windows and macOS in beta. Choose what every button and key does, open an **action ring** of
+your favourite actions around the pointer, and use one mouse and keyboard across several computers
+with **Flow**. It works on GNOME, KDE and other desktops, on X11 and Wayland.
+
+> [!IMPORTANT]
+> ### 🎯 New in 0.13.0: the PRO X3 SUPERSTRIKE on Linux
+> **Everything G HUB offers for this mouse, now on Linux**, without Wine, a VM or an account
+> (only G HUB's online parts are left out). It works through the LIGHTSPEED receiver or the cable.
+>
+> - **HITS analog buttons**: actuation point, rapid trigger and click haptics for each button, HITS codes that work with G HUB's, and the latency test with the switch travel shown live
+> - **Sensitivity**: G HUB's presets, five DPI slots with DPI shift, X/Y split, lift-off distance, up to 8000 Hz
+> - **G-Shift layer, macros**, and DPI actions on any button
+> - **Onboard memory**: write your settings to the mouse so they go with it to any PC
+>
+> [See all of it below](#pro-x3-superstrike)
+
+<p align="center">
+  <a href="#pro-x3-superstrike"><img src="screenshots/x3-hits.png" alt="PRO X3 SUPERSTRIKE HITS settings in NotLogi" width="860"></a>
+</p>
 
 NotLogi is an independent project. It is not affiliated with, endorsed by, or supported by the
 manufacturer of these devices.
@@ -51,10 +69,10 @@ by the .deb, and in the repository at `packaging/uninstall.sh`).
 
 | Device | State |
 |---|---|
+| **PRO X3 SUPERSTRIKE** 🆕 | **Tested on its LIGHTSPEED receiver, new in 0.13.0** |
 | MX Master 4 | Tested |
 | MX Master 3S | Tested |
 | MX Keys S | Tested |
-| PRO X3 SUPERSTRIKE | Tested on its LIGHTSPEED receiver |
 | MX Keys, MX Keys for Mac, MX Keys for Business | Working, reported by users |
 | MX Anywhere 3S | Included, not yet tested |
 | MX Keys Mini, Mini for Mac, Mini for Business | Included, not yet tested |
@@ -62,6 +80,24 @@ by the .deb, and in the repository at `packaging/uninstall.sh`).
 Through a Bolt, Unifying or LIGHTSPEED receiver, or over Bluetooth.
 
 ## Features
+
+### PRO X3 SUPERSTRIKE
+
+**New in 0.13.0.** What G HUB offers for the mouse, without its online parts:
+
+- Sensitivity: G HUB's presets and your own, five DPI slots with the default and DPI shift slots, X and Y apart, lift-off distance, report rate, HERO sensor calibration and a Sensitivity tool
+- HITS: actuation point, rapid trigger and click haptics for each main button, presets, the HITS code, and the latency test with the button's travel shown live
+- Assignments: G HUB's System actions, a G-Shift layer, and macros
+- Gaming surface mode, the onboard memory (use it, or write your settings into a profile), BHOP, time left from the mouse's power model
+- A sensitivity of its own for each app profile
+
+| Sensitivity | HITS |
+|---|---|
+| ![PRO X3 sensitivity](screenshots/x3-sensitivity.png) | ![PRO X3 HITS](screenshots/x3-hits.png) |
+
+| Assignments | Settings |
+|---|---|
+| ![PRO X3 assignments](screenshots/x3-assignments.png) | ![PRO X3 settings](screenshots/x3-settings.png) |
 
 ### Flow
 
@@ -107,24 +143,6 @@ Hold a button, flick toward an action, let go. Up to eight actions around the po
 | Buttons and the haptic panel | Easy-Switch |
 |---|---|
 | ![MX Master 4 buttons](screenshots/mx4-buttons.png) | ![MX Master 4 Easy-Switch](screenshots/mx4-easy-switch.png) |
-
-### PRO X3 SUPERSTRIKE
-
-What G HUB offers for the mouse, without its online parts:
-
-- Sensitivity: G HUB's presets and your own, five DPI slots with the default and DPI shift slots, X and Y apart, lift-off distance, report rate, HERO sensor calibration and a Sensitivity tool
-- HITS: actuation point, rapid trigger and click haptics for each main button, presets, the HITS code, and the latency test with the button's travel shown live
-- Assignments: G HUB's System actions, a G-Shift layer, and macros
-- Gaming surface mode, the onboard memory (use it, or write your settings into a profile), BHOP, time left from the mouse's power model
-- A sensitivity of its own for each app profile
-
-| Sensitivity | HITS |
-|---|---|
-| ![PRO X3 sensitivity](screenshots/x3-sensitivity.png) | ![PRO X3 HITS](screenshots/x3-hits.png) |
-
-| Assignments | Settings |
-|---|---|
-| ![PRO X3 assignments](screenshots/x3-assignments.png) | ![PRO X3 settings](screenshots/x3-settings.png) |
 
 ### Home
 
