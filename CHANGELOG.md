@@ -3,7 +3,7 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
-## Unreleased
+## [0.13.1](https://github.com/aabdelghani/notlogi/releases/tag/v0.13.1) - 2026-10-27
 
 - Signature K650 and K650 for Business: their own photo with every key that can be set (the F row with its browser keys, the media buttons, Home, End, Page up and Page down), and defaults like the MX Keys S without a backlight ([#19](https://github.com/aabdelghani/notlogi/discussions/19)).
 
