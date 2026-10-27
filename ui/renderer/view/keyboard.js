@@ -1,10 +1,11 @@
 // View: a keyboard's pages: its keys and the backlight.
 import { isNative, isMouse } from '../../shared/profiles.mjs';
 import { t } from '../../shared/i18n.mjs';
+import { toEntry, nextKey, placedCount } from '../../shared/keymap.mjs';
 
 // from the rest of the window, filled in by link()
-let S, assignment, card, drawerUp, esc, fmtOut, overridden, presetLabel, range, row, sec, sw;
-export function link(ctx) { ({ S, assignment, card, drawerUp, esc, fmtOut, overridden, presetLabel, range, row, sec, sw } = ctx); }
+let S, assignment, card, drawerUp, drop, esc, fmtOut, overridden, presetLabel, range, row, sec, sw;
+export function link(ctx) { ({ S, assignment, card, drawerUp, drop, esc, fmtOut, overridden, presetLabel, range, row, sec, sw } = ctx); }
 
 // One photo per keyboard model, keyed by the device id the agent uses (its product id in hex:
 // the Bluetooth pid, or the receiver-side pid when it comes through a receiver). Each spot is a
@@ -22,8 +23,13 @@ const KEYBOARD_PHOTOS = (() => {
   const k650 = { src: '../assets/devices/b36f.png', w: 2739, h: 1156, kw: 115, kh: 86, spots: [[199, 370, 212], [200, 488, 212], [224, 605, 212], [265, 723, 212], [259, 871, 212], [264, 993, 212], [266, 1112, 212], [284, 1230, 212], [206, 1378, 212], [287, 1498, 212], [238, 1619, 212], [288, 1737, 212], [166, 1999, 212], [24, 2114, 212], [10, 2257, 212], [110, 2372, 212], [212, 2488, 212], [111, 2605, 212], [221, 1878, 317], [228, 604, 86, 64, 64, 32], [229, 722, 85, 64, 64, 32], [230, 840, 85, 64, 64, 32], [231, 1881, 85, 64, 64, 32], [232, 1994, 84, 64, 64, 32], [233, 2111, 85, 64, 64, 32], [280, 1999, 315], [281, 1997, 430], [282, 2112, 315], [283, 2112, 430]] };
   return { b378: s, b379: s, b37a: s, b35b: keys, '408a': keys, b361: mac, '4092': mac, b363: business, b369: mini, b36e: miniBusiness, b36a: miniMac, b36f: k650, b370: k650 };
 })();
+// the photo a keyboard is drawn with: one its owner made (vm/keymap.js) before the one NotLogi has
+function photoOf(id) {
+  const f = (S.userDevices || []).find(x => x.ids.includes(id));
+  return f ? toEntry(f) : KEYBOARD_PHOTOS[id];
+}
 function keyboardPhoto(d, plain) {
-  const P = KEYBOARD_PHOTOS[d.id];
+  const P = photoOf(d.id);
   if (!P) return '';
   const hot = plain ? '' : P.spots.filter(([cid]) => d.controls.some(c => c.cid === cid)).map(([cid, x, y, w = P.kw, h = P.kh, r = 12]) => {
     const a = assignment(d, 'keys', cid); const ctl = d.controls.find(c => c.cid === cid);
@@ -34,9 +40,39 @@ function keyboardPhoto(d, plain) {
 }
 
 function pageKeys(d) {
+  if (S.keymap && S.keymap.dev === d.id) return keymapPage(d);
   // only the keyboard: hovering a key says what it does, clicking it opens its actions beside it
   const photo = keyboardPhoto(d);
-  return photo ? `<div class="kb-photo">${photo}</div><div class="kb-tip" hidden></div>` : sec(t('Keys'), card(row(t('No photo for this keyboard'), '', '')));
+  if (photo) return `<div class="kb-photo">${photo}</div><div class="kb-tip" hidden></div>` + (photoOf(d.id).own ? ownPhotoBar() : '');
+  // no photo yet: every key the keyboard reports, in a list, and the way to give it a photo
+  const keys = d.controls.filter(c => c.divertable !== false).sort((a, b) => (b.fkey ? 1 : 0) - (a.fkey ? 1 : 0) || (a.position || 0) - (b.position || 0));
+  const rows = keys.map(c => `<div class="row"><span class="grow lbl">${esc(c.label || String(c.cid))}</span>${drop(assignment(d, 'keys', c.cid), `data-act="pick" data-section="keys" data-cid="${c.cid}" data-label="${esc(c.label || String(c.cid))}"`)}</div>`).join('');
+  return sec(t('Add a photo of this keyboard'), card(`<div class="row km-intro"><i class="fa-solid fa-image"></i><div class="grow"><div class="lbl">${t('NotLogi has no photo of this keyboard yet')}</div><div class="sub">${t('Take a photo from above, then click each key on it once. You can share the file it makes, so others with this keyboard get it too.')}</div></div></div>` +
+      `<div class="row km-intro-acts"><button class="btn primary" data-act="km-photo"><i class="fa-solid fa-camera"></i>${t('Choose a photo')}</button><button class="btn" data-act="km-import"><i class="fa-solid fa-file-import"></i>${t('Import a device file')}</button></div>`)) +
+    (rows ? sec(t('Keys'), card(rows)) : sec(t('Keys'), card(row(t('This keyboard reports no keys that can be set'), '', ''))));
+}
+// under a photo its owner made: change it, share it or take it away
+const ownPhotoBar = () => `<div class="km-own"><span class="hint"><i class="fa-solid fa-user-pen"></i>${t('Your own photo')}</span><button class="btn" data-act="km-edit"><i class="fa-solid fa-crosshairs"></i>${t('Place keys again')}</button><button class="btn" data-act="km-share"><i class="fa-solid fa-share-nodes"></i>${t('Share')}</button><button class="btn" data-act="km-remove"><i class="fa-solid fa-trash"></i>${t('Remove')}</button></div>`;
+// Mapping a photo: it asks for one key at a time and a click on the photo puts it there; a key
+// already placed can be clicked to place it again
+function keymapPage(d) {
+  const m = S.keymap, k = nextKey(m), n = placedCount(m);
+  const name = x => x.host !== undefined ? t('Easy-Switch {n}', { n: x.host + 1 }) : x.label;
+  const label = cid => ((m.keys.find(x => x.cid === cid) || {}).label) || String(cid);
+  const spot = (attrs, x, y, title, cur) => `<g class="km-spot ${cur ? 'cur' : ''}" data-act="km-again" ${attrs}><rect x="${x - m.kw / 2}" y="${y - m.kh / 2}" width="${m.kw}" height="${m.kh}" rx="${Math.round(m.kw / 8)}"/><title>${esc(title)}</title></g>`;
+  const isCur = x => k && (x.host !== undefined ? k.host === x.host : k.cid === x.cid);
+  const spots = m.spots.map(([cid, x, y]) => spot(`data-cid="${cid}"`, x, y, label(cid), isCur({ cid }))).join('') +
+    m.hosts.map(([i, x, y]) => spot(`data-host="${i}"`, x, y, name({ host: i }), isCur({ host: i }))).join('');
+  const ask = k ? t('Click {key} on the photo', { key: `<b>${esc(name(k))}</b>` }) : t('Every key has its place');
+  return `<div class="km">
+    <div class="km-bar"><div class="grow"><div class="lbl">${ask}</div><div class="sub">${t('{n} of {total} placed', { n, total: m.keys.length })} · ${t('Click a placed key to put it somewhere else')}</div></div>
+      <span class="km-size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i>${range('data-act="km-size"', m.kw, 8, Math.round(m.w / 4), 1)}</span>
+      <button class="btn" data-act="km-undo" ${m.last ? '' : 'disabled'}><i class="fa-solid fa-rotate-left"></i>${t('Undo')}</button>
+      <button class="btn" data-act="km-skip" ${k ? '' : 'disabled'}><i class="fa-solid fa-forward"></i>${t('Skip')}</button>
+      <button class="btn" data-act="km-cancel">${t('Cancel')}</button>
+      <button class="btn primary" data-act="km-save" ${n ? '' : 'disabled'}><i class="fa-solid fa-check"></i>${t('Save')}</button></div>
+    <div class="kb-photo km-photo" data-keymap-area><svg viewBox="0 0 ${m.w} ${m.h}"><image href="${m.src}" width="${m.w}" height="${m.h}"/>${spots}</svg></div>
+  </div>`;
 }
 // the tag pinned above the keyboard on the Backlight page, saying how the backlight is set right now
 function backlightTag(d) {
@@ -48,7 +84,7 @@ function backlightTag(d) {
   return `<div class="kb-pin bl-pin" data-act="bl-open" title="${t('Backlight settings')}"><span class="k">${t('Backlight')}</span><span class="d">${esc(bits.join(' · '))}</span></div>`;
 }
 function pageBacklight(d) {
-  if (!isMouse(d) && (d.state || {}).backlight && KEYBOARD_PHOTOS[d.id]) return `<div class="kb-photo">${keyboardPhoto(d, true)}${backlightTag(d)}</div>`;   // settings live in the panel
+  if (!isMouse(d) && (d.state || {}).backlight && photoOf(d.id)) return `<div class="kb-photo">${keyboardPhoto(d, true)}${backlightTag(d)}</div>`;   // settings live in the panel
   const st = (d.state || {}).backlight, s = (d.config.settings || {}).backlight || {};
   if (!st) return sec(t('Backlight'), card(row(t('Not supported by this device'), '', '')));
   const on = s.enabled ?? st.enabled, manual = (s.mode || (st.mode === 3 ? 'manual' : 'auto')) === 'manual';
@@ -85,4 +121,4 @@ function renderBacklightPanel(d) {
   </div></div>`;
 }
 
-export const provide = { KEYBOARD_PHOTOS, keyboardPhoto, pageKeys, backlightTag, pageBacklight, BL_STEPS, renderBacklightPanel };
+export const provide = { photoOf, keyboardPhoto, pageKeys, backlightTag, pageBacklight, BL_STEPS, renderBacklightPanel };

@@ -37,7 +37,8 @@ import * as settingsVM from './vm/settings.js';
 import * as pairVM from './vm/pair.js';
 import * as dialogsVM from './vm/dialogs.js';
 import * as gamingVM from './vm/gaming.js';
-const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mouseView, keyboardView, deviceView, profilesView, ringView, homeView, settingsView, ringVM, flowVM, pickerVM, pickerView, dialogsView, dispatchView, profilesVM, shellVM, gesturesVM, deviceVM, settingsVM, pairVM, dialogsVM, gamingView, gamingVM];
+import * as keymapVM from './vm/keymap.js';
+const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mouseView, keyboardView, deviceView, profilesView, ringView, homeView, settingsView, ringVM, flowVM, pickerVM, pickerView, dialogsView, dispatchView, profilesVM, shellVM, gesturesVM, deviceVM, settingsVM, pairVM, dialogsVM, gamingView, gamingVM, keymapVM];
 (() => {
   const $ = s => document.querySelector(s);
   const root = $('#root');

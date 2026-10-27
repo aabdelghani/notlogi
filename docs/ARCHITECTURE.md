@@ -37,6 +37,8 @@ The app follows **MVVM**: Model, view models, views.
   - `battery.js`: battery notices.
   - `settings.js`: the window's own settings file.
   - `autostart.js`, `system.js`: autostart, the clean-up of older installs, app icons, updates and the problem report.
+  - `devices.js`: keyboard photos made by their owners, one device file each in the `devices` folder,
+    and the photo picked for one.
   - `uninstall.js`, `uninstall-plan.js`: Remove NotLogi. The plan (what goes, by kind of install) has no Electron in it and is tested; `packaging/uninstall.sh` does the same from a terminal.
   - `state.js`: what the parts share and change: devices, settings, windows.
   - `../flow.js`: Flow. NotLogi on each computer finds the others on the local network (UDP 24871),
@@ -51,6 +53,8 @@ The app follows **MVVM**: Model, view models, views.
   - `profiles.mjs`: application profiles falling back to the global one.
   - `actions.mjs`: action names and icons, key names, typed shortcuts.
   - `battery.mjs`: the low and critical levels, icons and words.
+  - `keymap.mjs`: a keyboard photo made by its owner: the keys to place and in what order, the device
+    file it is kept and shared as, and the check of a file someone else made.
 
 ## View models
 
@@ -59,6 +63,7 @@ The app follows **MVVM**: Model, view models, views.
 - `picker`: the action picker.
 - `ring`: the action ring settings.
 - `gestures`, `device`, `profiles`, `pair`, `dialogs`, `settings`, `flow`.
+- `keymap`: a keyboard's own photo being made, shared, imported or removed.
 - `core`: what every screen uses.
 
 Each view model:

@@ -6,8 +6,10 @@ export function createStore(api) {
     devices: [], presets: null, apps: null, general: {}, conflicts: [], status: {}, connected: false, appInfo: {},
     history: {}, logs: [], backups: [], ui: {}, agentBusy: false, agentErr: null, agentInfo: null, buildStep: null,
     ready: false, loaded: false, running: null, flow: null, ax: undefined, briStatus: undefined,
+    userDevices: [],   // keyboard photos made by their owners (device files, shared/keymap.mjs)
   };
   const device = id => data.devices.find(d => d.id === id) || null;
+  let userRead = false;   // the device files are read once, with the first load
   function merge(summary) {
     const i = data.devices.findIndex(x => x.id === summary.id);
     if (i >= 0) data.devices[i] = summary; else data.devices.push(summary);
@@ -40,6 +42,7 @@ export function createStore(api) {
       data.devices = devices; data.status = status; data.presets = presets;
       data.general = status.general || {}; data.conflicts = status.conflicts || [];
       data.connected = true; data.loaded = true;
+      if (!userRead) { userRead = true; await this.loadUserDevices(); }
     },
     // the rest is not needed to show a device, so it arrives afterwards
     async loadRest() {
@@ -47,6 +50,7 @@ export function createStore(api) {
       try { data.backups = await api.quiet('list_backups'); } catch (e) { data.backups = []; }
       for (const d of data.devices) { try { data.history[d.id] = await api.quiet('battery_history', { id: d.id }); } catch (e) {} }
     },
+    async loadUserDevices() { try { data.userDevices = (await api.host.userDevices()) || []; } catch (e) { data.userDevices = []; } },
     async loadLogs() { try { data.logs = (await api.quiet('logs')).map(t => ({ t, c: /WARN/.test(t) ? 'warn' : /ERR|fatal/.test(t) ? 'err' : 'dim' })); } catch (e) { data.logs = []; } },
     async loadFlow() { const f = await api.host.flowInfo(); data.flow = f; return f; },
     async setGeneral(patch) {

@@ -27,13 +27,13 @@ app.setPath('userData', require('path').join(app.getPath('appData'), 'LogiMX'));
 if (plat.IS_WIN) app.setAppUserModelId('io.github.aabdelghani.logimx');
 // The main process in parts (main/), loaded once the app's name and settings folder are set;
 // each one gets what it uses from the others.
-const parts = ['env', 'settings', 'window', 'tray', 'agent', 'osd', 'battery', 'emoji', 'ring', 'media', 'bluetooth', 'system', 'autostart', 'uninstall', 'i18n'].map(n => require('./main/' + n));
+const parts = ['env', 'settings', 'window', 'tray', 'agent', 'osd', 'battery', 'emoji', 'ring', 'media', 'bluetooth', 'system', 'autostart', 'uninstall', 'i18n', 'devices'].map(n => require('./main/' + n));
 const state = require('./main/state');
 const ctx = Object.assign({}, ...parts.map(p => p.provide));
 parts.forEach(p => p.link(ctx));
 const { applyLanguage, rpc, btSetMode, btStopScan, connect, createTray, createWindow, ensureAutostart, ensureDesktopEntry, loadUi, registerShortcuts, saveUi, showWindow, startAgent, warmRing } = ctx;
 // the logic shared with the windows (ES modules in shared/, loaded before the app starts)
-const sharedReady = Promise.all([import('./shared/ring.mjs'), import('./shared/battery.mjs'), import('./shared/i18n.mjs')]).then(([r, b, i]) => { state.Ring = r; state.Battery = b; state.I18n = i; });
+const sharedReady = Promise.all([import('./shared/ring.mjs'), import('./shared/battery.mjs'), import('./shared/i18n.mjs'), import('./shared/keymap.mjs')]).then(([r, b, i, k]) => { state.Ring = r; state.Battery = b; state.I18n = i; state.Keymap = k; });
 app.isQuitting = false;
 
 // (a process restarting on X11 takes neither the lock nor anything else: the new one does)

@@ -4,8 +4,8 @@ import { batIcon, known, pctText, isLow } from '../../shared/battery.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let ALT, KEYBOARD_PHOTOS, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw, isGaming, gamingBattery, gamingSettings;
-export function link(ctx) { ({ ALT, KEYBOARD_PHOTOS, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw, isGaming, gamingBattery, gamingSettings } = ctx); }
+let ALT, photoOf, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw, isGaming, gamingBattery, gamingSettings;
+export function link(ctx) { ({ ALT, photoOf, META, MOUSE_BOTTOMS, MOUSE_PHOTOS, S, card, chk, esc, isOffline, range, row, sec, sw, isGaming, gamingBattery, gamingSettings } = ctx); }
 
 // a computer slot: its name, whether it is the one in use, and how it is linked
 function hostInfo(h, i) {
@@ -35,7 +35,7 @@ function easyPhoto(d) {
 // The keyboard's Easy-Switch keys outlined on its photo, the computer on each named above it; the
 // names fan out so three neighbouring keys still get readable labels
 function keyboardEasyPhoto(d) {
-  const P = KEYBOARD_PHOTOS[d.id], h = d.state.hosts;
+  const P = photoOf(d.id), h = d.state.hosts;
   const on = i => backlightPanel(d) && S.esSel === i;
   // stacked above and to the left of the keys, one row each (1 nearest the keyboard), so the names
   // never collide however narrow the page gets; each row's line runs down to its key
@@ -98,7 +98,7 @@ function pageInfo(d) {
 // ----------------------------------------------------------- home
 // The first thing seen: every connected device with its photo, its battery and whether it is
 // charging, how it is connected and which profile it is using. A card opens its device.
-const devicePhotoSrc = d => ((isMouse(d) ? MOUSE_PHOTOS : KEYBOARD_PHOTOS)[d.id] || {}).src;
+const devicePhotoSrc = d => ((isMouse(d) ? MOUSE_PHOTOS[d.id] : photoOf(d.id)) || {}).src;
 // Home shows a mouse from above; its own view shows it from the side with the buttons numbered
 const TOP_VIEWS = { b034: 'b034-top.png', b035: 'b034-top.png', b043: 'b034-top.png', b042: 'b042-top.png', b048: 'b042-top.png', b037: 'b037-top.png' };
 const homePhotoSrc = d => isMouse(d) && TOP_VIEWS[d.id] ? '../assets/devices/' + TOP_VIEWS[d.id] : devicePhotoSrc(d);
@@ -132,6 +132,6 @@ function pageDeviceSettings(d) {
   return (general ? sec(t('General'), card(general)) : '') + (keys ? sec(t('Disabled keys'), card(keys), t('switched off while on')) : '') + sec(t('Device backup'), card(backup));
 }
 
-const easyView = d => !!(d && (d.state || {}).hosts && (isMouse(d) ? MOUSE_BOTTOMS[d.id] : (KEYBOARD_PHOTOS[d.id] || {}).hosts));
-const backlightPanel = d => !!(d && !S.blClosed && !S.appDetail && !S.previewProfile && ((S.page === 'backlight' && !isMouse(d) && (d.state || {}).backlight && KEYBOARD_PHOTOS[d.id]) || (S.page === 'pointer' && isMouse(d) && MOUSE_PHOTOS[d.id]) || (S.page === 'easy' && easyView(d)) || (S.page === 'hits' && isGaming(d) && S.hitsPanel)));
+const easyView = d => !!(d && (d.state || {}).hosts && (isMouse(d) ? MOUSE_BOTTOMS[d.id] : (photoOf(d.id) || {}).hosts));
+const backlightPanel = d => !!(d && !S.blClosed && !S.appDetail && !S.previewProfile && ((S.page === 'backlight' && !isMouse(d) && (d.state || {}).backlight && photoOf(d.id)) || (S.page === 'pointer' && isMouse(d) && MOUSE_PHOTOS[d.id]) || (S.page === 'easy' && easyView(d)) || (S.page === 'hits' && isGaming(d) && S.hitsPanel)));
 export const provide = { hostInfo, easyPhoto, keyboardEasyPhoto, renderEasyPanel, pageEasy, pageInfo, devicePhotoSrc, TOP_VIEWS, homePhotoSrc, navBattery, batteryState, DISABLE_KEYS, pageDeviceSettings, easyView, backlightPanel };

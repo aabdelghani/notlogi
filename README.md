@@ -75,6 +75,11 @@ by the .deb, and in the repository at `packaging/uninstall.sh`).
 
 Through a Bolt, Unifying or LIGHTSPEED receiver, or over Bluetooth.
 
+Another Logitech keyboard that NotLogi finds but has no photo of still gets every key it reports, in a
+list. Give it a photo of your own (see [Your keyboard's own photo](#your-keyboards-own-photo)) and share
+the file it makes in [Discussions](https://github.com/aabdelghani/notlogi/discussions), so the keyboard
+can come with NotLogi for everyone.
+
 ## Features
 
 ### PRO X3 SUPERSTRIKE
@@ -177,6 +182,18 @@ Click a key on the photo of your keyboard and choose what it does.
 | Keyboard | Key actions |
 |---|---|
 | ![Keys](screenshots/keyboard-keys.png) | ![Key actions](screenshots/action-picker.png) |
+
+### Your keyboard's own photo
+
+For a keyboard NotLogi has no photo of: on its **Keys** page, **Choose a photo** (one taken from above),
+then click each key on it as NotLogi names them, the Easy-Switch keys last. **Save**, and the keyboard
+is drawn like the ones NotLogi comes with: its keys on the photo, and the Easy-Switch page.
+
+**Share** saves it as one file (the photo inside) for others with the same keyboard, who take it in
+with **Import a device file**. The files are kept in the `devices` folder of NotLogi's settings
+(`~/.config/LogiMX/devices` on Linux).
+
+![Placing the keys on a photo](screenshots/keyboard-own-photo.png)
 
 ### Backlight
 

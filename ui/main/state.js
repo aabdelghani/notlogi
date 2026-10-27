@@ -13,4 +13,5 @@ module.exports = {
   btTimer: null,   // bluetooth.js
   btMode: null,   // bluetooth.js
   I18n: null,   // shared/i18n.mjs: the language in use, t()
+  Keymap: null,   // shared/keymap.mjs: keyboard photos made by their owners
 };

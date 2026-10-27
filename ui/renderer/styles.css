@@ -1311,3 +1311,23 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .hits-badge span { display: flex; align-items: center; gap: 30px; }
 .hits-badge span i { width: 60px; font-size: 56px; text-align: center; }
 .hits-badge span.lit { color: #2f7de1; }
+
+/* a keyboard's own photo (vm/keymap.js): the ask above it, the keys placed on it, the owner's buttons below */
+.km { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 1060px; margin: 0 auto; }
+.km-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--brd); border-radius: 12px; background: var(--card); }
+.km-bar .grow { min-width: 220px; }
+.km-bar .lbl { font-size: 15px; }
+.km-bar .lbl b { color: var(--accbg); }
+.km-bar .sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
+.km-size { display: inline-flex; align-items: center; gap: 6px; color: var(--dim); margin-right: 4px; }
+.km-size input { width: 110px !important; }
+.km-photo svg { cursor: crosshair; }
+.km-spot { cursor: pointer; }
+.km-spot rect { fill: color-mix(in srgb, var(--accbg) 30%, transparent); stroke: var(--accbg); stroke-width: 4; }
+.km-spot:hover rect { fill: color-mix(in srgb, var(--accbg) 50%, transparent); }
+.km-spot.cur rect { stroke-dasharray: 10 6; fill: transparent; }
+.km-own { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.km-own .hint { margin-right: 6px; }
+.km-own .hint i, .km-intro > i { margin-right: 6px; }
+.km-intro > i { font-size: 20px; color: var(--accbg); width: 28px; text-align: center; }
+.km-intro-acts { gap: 8px; }
