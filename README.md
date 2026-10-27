@@ -71,6 +71,7 @@ by the .deb, and in the repository at `packaging/uninstall.sh`).
 | MX Keys, MX Keys for Mac, MX Keys for Business | Working, reported by users |
 | MX Anywhere 3S | Included, not yet tested |
 | MX Keys Mini, Mini for Mac, Mini for Business | Included, not yet tested |
+| Signature K650, K650 for Business | Included, not yet tested |
 
 Through a Bolt, Unifying or LIGHTSPEED receiver, or over Bluetooth.
 

@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Hvor langt knappen er trykket ned nå",
  "All (L+R)": "Alle (V+H)",
  "Click a button to set its switch": "Klikk på en knapp for å stille inn bryteren",
- "Set both buttons": "Still inn begge knappene"
+ "Set both buttons": "Still inn begge knappene",
+ "Print": "Skriv ut",
+ "End": "End"
 }

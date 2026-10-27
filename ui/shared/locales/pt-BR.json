@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "O quanto o botão está pressionado agora",
  "All (L+R)": "Todos (E+D)",
  "Click a button to set its switch": "Clique em um botão para ajustar sua chave",
- "Set both buttons": "Ajustar os dois botões"
+ "Set both buttons": "Ajustar os dois botões",
+ "Print": "Imprimir",
+ "End": "End"
 }

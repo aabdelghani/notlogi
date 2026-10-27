@@ -64,7 +64,7 @@ const btPopShown = () => !!(btPopWin && !btPopWin.isDestroyed() && btPopWin.isVi
 // a photo of the model when its name says which one it is
 function btPhoto(name) {
   const n = name || '';
-  const f = /Master 4/i.test(n) ? 'b042.png' : /Anywhere/i.test(n) ? 'b037-top.png' : /Master/i.test(n) ? 'b034.png' : /Keys/i.test(n) ? 'b378.png' : null;
+  const f = /Master 4/i.test(n) ? 'b042.png' : /Anywhere/i.test(n) ? 'b037-top.png' : /Master/i.test(n) ? 'b034.png' : /Keys/i.test(n) ? 'b378.png' : /K650/i.test(n) ? 'b36f.png' : null;
   return f && fs.existsSync(path.join(ROOT, 'assets', 'devices', f)) ? '../assets/devices/' + f : null;
 }
 function ensureBtPop() {

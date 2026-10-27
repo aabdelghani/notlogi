@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "現在のボタンの押し込み量",
  "All (L+R)": "すべて (L+R)",
  "Click a button to set its switch": "ボタンをクリックしてスイッチを設定",
- "Set both buttons": "両方のボタンを設定"
+ "Set both buttons": "両方のボタンを設定",
+ "Print": "印刷",
+ "End": "End"
 }

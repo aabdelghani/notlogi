@@ -9,7 +9,8 @@ export function link(ctx) { ({ S, assignment, card, drawerUp, esc, fmtOut, overr
 // One photo per keyboard model, keyed by the device id the agent uses (its product id in hex:
 // the Bluetooth pid, or the receiver-side pid when it comes through a receiver). Each spot is a
 // control id with the centre of its key cap in photo pixels; only the controls the connected
-// keyboard reports are drawn. A keyboard with no entry here gets no photo, only the key tiles.
+// keyboard reports are drawn; a spot may add its own width, height and corner radius (the K650's
+// round media buttons). A keyboard with no entry here gets no photo, only the key tiles.
 const KEYBOARD_PHOTOS = (() => {
   const s = { src: '../assets/devices/b378.png', w: 2596, h: 800, kw: 99, kh: 75, hosts: [[0, 1800, 145], [1, 1915, 145], [2, 2030, 145]], spots: [[199, 288, 142], [200, 402, 142], [226, 517, 142], [227, 632, 142], [259, 749, 143], [264, 862, 142], [284, 976, 142], [228, 1090, 142], [229, 1206, 142], [230, 1320, 142], [231, 1433, 142], [232, 1547, 142], [233, 1663, 142], [10, 2157, 142], [266, 2274, 142], [234, 2388, 142], [111, 2503, 142]] };
   const keys = { src: '../assets/devices/b35b.png', w: 2004, h: 618, kw: 76, kh: 57, spots: [[199, 222, 109], [200, 310, 109], [224, 399, 109], [225, 488, 109], [110, 575, 109], [226, 665, 109], [227, 753, 109], [228, 842, 109], [229, 931, 109], [230, 1019, 109], [231, 1108, 109], [232, 1194, 109], [233, 1284, 109], [10, 1665, 109], [191, 1755, 109], [234, 1844, 109], [111, 1932, 109]] };
@@ -18,15 +19,16 @@ const KEYBOARD_PHOTOS = (() => {
   const mini = { src: '../assets/devices/b369.png', w: 1382, h: 616, kw: 77, kh: 58, spots: [[226, 424, 114], [227, 513, 114], [259, 602, 114], [264, 689, 114], [266, 778, 114], [284, 866, 114], [229, 955, 114], [231, 1043, 114], [232, 1132, 114], [233, 1220, 114]] };
   const miniMac = { src: '../assets/devices/b36a.png', w: 1634, h: 725, kw: 91, kh: 68, spots: [[226, 498, 125], [227, 604, 125], [259, 709, 125], [264, 815, 125], [266, 918, 125], [284, 1023, 125], [229, 1129, 125], [231, 1233, 125], [232, 1338, 125], [233, 1444, 125], [285, 1548, 125]] };
   const miniBusiness = { src: '../assets/devices/b36e.png', w: 1382, h: 616, kw: 77, kh: 58, spots: [[226, 424, 114], [227, 513, 114], [259, 602, 114], [264, 689, 114], [266, 778, 114], [284, 866, 114], [229, 955, 114], [231, 1043, 115], [232, 1132, 114], [233, 1220, 114]] };
-  return { b378: s, b379: s, b37a: s, b35b: keys, '408a': keys, b361: mac, '4092': mac, b363: business, b369: mini, b36e: miniBusiness, b36a: miniMac };
+  const k650 = { src: '../assets/devices/b36f.png', w: 2739, h: 1156, kw: 115, kh: 86, spots: [[199, 370, 212], [200, 488, 212], [224, 605, 212], [265, 723, 212], [259, 871, 212], [264, 993, 212], [266, 1112, 212], [284, 1230, 212], [206, 1378, 212], [287, 1498, 212], [238, 1619, 212], [288, 1737, 212], [166, 1999, 212], [24, 2114, 212], [10, 2257, 212], [110, 2372, 212], [212, 2488, 212], [111, 2605, 212], [221, 1878, 317], [228, 604, 86, 64, 64, 32], [229, 722, 85, 64, 64, 32], [230, 840, 85, 64, 64, 32], [231, 1881, 85, 64, 64, 32], [232, 1994, 84, 64, 64, 32], [233, 2111, 85, 64, 64, 32], [280, 1999, 315], [281, 1997, 430], [282, 2112, 315], [283, 2112, 430]] };
+  return { b378: s, b379: s, b37a: s, b35b: keys, '408a': keys, b361: mac, '4092': mac, b363: business, b369: mini, b36e: miniBusiness, b36a: miniMac, b36f: k650, b370: k650 };
 })();
 function keyboardPhoto(d, plain) {
   const P = KEYBOARD_PHOTOS[d.id];
   if (!P) return '';
-  const hot = plain ? '' : P.spots.filter(([cid]) => d.controls.some(c => c.cid === cid)).map(([cid, x, y]) => {
+  const hot = plain ? '' : P.spots.filter(([cid]) => d.controls.some(c => c.cid === cid)).map(([cid, x, y, w = P.kw, h = P.kh, r = 12]) => {
     const a = assignment(d, 'keys', cid); const ctl = d.controls.find(c => c.cid === cid);
     const editing = drawerUp() && S.picker.cid === cid;
-    return `<g class="hotspot key-photo ${isNative(a) ? '' : 'assigned'} ${overridden(d, 'keys', cid) ? 'pv' : ''} ${editing ? 'selected' : ''}" data-section="keys" data-cid="${cid}" data-name="${esc(ctl ? ctl.label : cid)}" data-does="${esc(isNative(a) ? (ctl ? ctl.label : t('Default')) : presetLabel(a))}" data-custom="${isNative(a) ? '' : '1'}"><rect x="${x - P.kw / 2}" y="${y - P.kh / 2}" width="${P.kw}" height="${P.kh}" rx="12"/></g>`;
+    return `<g class="hotspot key-photo ${isNative(a) ? '' : 'assigned'} ${overridden(d, 'keys', cid) ? 'pv' : ''} ${editing ? 'selected' : ''}" data-section="keys" data-cid="${cid}" data-name="${esc(ctl ? ctl.label : cid)}" data-does="${esc(isNative(a) ? (ctl ? ctl.label : t('Default')) : presetLabel(a))}" data-custom="${isNative(a) ? '' : '1'}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${r}"/></g>`;
   }).join('');
   return `<svg viewBox="0 0 ${P.w} ${P.h}"><image href="${P.src}" width="${P.w}" height="${P.h}"/>${hot}</svg>`;
 }

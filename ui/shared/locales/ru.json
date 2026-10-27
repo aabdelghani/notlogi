@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Насколько сейчас нажата кнопка",
  "All (L+R)": "Обе (Л+П)",
  "Click a button to set its switch": "Нажмите на кнопку, чтобы настроить её переключатель",
- "Set both buttons": "Настроить обе кнопки"
+ "Set both buttons": "Настроить обе кнопки",
+ "Print": "Печать",
+ "End": "End"
 }

@@ -38,6 +38,9 @@ CID = {
     "right_arrow": 0xEB, "left_arrow": 0xEC,
     "haptic_panel": 0x1A0,
     "emoji_heart_eyes": 0x104, "emoji_crying": 0x105, "emoji_smiley": 0x106, "emoji_tears": 0x107,
+    # Signature K650: browser keys on the F row, and Home, End, Page up and Page down above the arrows
+    "browser_back": 0xCE, "refresh": 0x11F, "new_tab": 0xEE, "close_tab": 0x120, "settings": 0xA6, "print": 0x18,
+    "home_key": 0x118, "end_key": 0x119, "page_up": 0x11A, "page_down": 0x11B,
 }
 CID_NAMES = {v: k for k, v in CID.items()}
 
@@ -56,6 +59,8 @@ CONTROL_LABELS = {
     0xDD: "Language switch", 0xCA: "Open apps", 0xCB: "All apps", 0xCC: "Switch app",
     0x104: "Emoji (heart eyes)", 0x105: "Emoji (crying)", 0x106: "Emoji (smiley)", 0x107: "Emoji (tears of joy)",
     0xD1: "Easy-Switch 1", 0xD2: "Easy-Switch 2", 0xD3: "Easy-Switch 3", 0xDE: "F lock",
+    0xCE: "Back", 0x11F: "Refresh", 0xEE: "New tab", 0x120: "Close tab", 0xA6: "Settings", 0x18: "Print",
+    0x118: "Home", 0x119: "End", 0x11A: "Page up", 0x11B: "Page down",
 }
 
 MX_MASTER_3S = {
@@ -141,11 +146,12 @@ MX_KEYS_S = {
     },
 }
 
-def _keyboard(keys, **overrides):
-    """Keyboard defaults: backlight on automatic, F row sending its printed functions, every
-    listed control left to the device unless an override names one of our presets."""
+def _keyboard(keys, backlight=True, **overrides):
+    """Keyboard defaults: backlight on automatic (for a keyboard that has one), F row sending its
+    printed functions, every listed control left to the device unless an override names one of our presets."""
+    settings = {"backlight": {"enabled": True, "mode": "auto", "level": 0}, "fn_swap": True} if backlight else {"fn_swap": True}
     return {
-        "settings": {"backlight": {"enabled": True, "mode": "auto", "level": 0}, "fn_swap": True},
+        "settings": settings,
         "profiles": {"default": {"name": "All applications",
                                  "keys": {str(CID[k]): overrides.get(k, "native") for k in keys}}},
     }
@@ -158,6 +164,12 @@ _MINI_ROW = ["backlight_down", "backlight_up", "dictation", "emoji", "screenshot
 _S_STYLE = {"dictation": "nothing", "emoji": "emoji_picker", "screenshot": "screenshot_area", "mic_mute": "mic_mute"}
 MX_KEYS_MINI = _keyboard(_MINI_ROW, **_S_STYLE)
 MX_KEYS_MINI_MAC = _keyboard(_MINI_ROW + ["do_not_disturb"], **_S_STYLE)
+# Signature K650: no backlight, the S's F row keys plus browser keys, and a number pad
+SIGNATURE_K650 = _keyboard(["brightness_down", "brightness_up", "mission_control", "app_switch", "dictation", "emoji", "screenshot",
+                            "mic_mute", "browser_back", "refresh", "new_tab", "close_tab", "settings", "print", "calculator",
+                            "show_desktop", "search", "screen_lock", "prev_track", "play_pause", "next_track", "mute",
+                            "volume_down", "volume_up", "language_switch", "home_key", "end_key", "page_up", "page_down"],
+                           backlight=False, **_S_STYLE)
 
 PRO_X3_SUPERSTRIKE = {
     "settings": {
@@ -193,6 +205,7 @@ DEFAULTS_BY_PID = {
     0xB361: MX_KEYS_MAC, 0x4092: MX_KEYS_MAC,                           # MX Keys for Mac
     0xB363: MX_KEYS_S,                                                  # MX Keys for Business (same keys as the S)
     0xB369: MX_KEYS_MINI, 0xB36E: MX_KEYS_MINI, 0xB36A: MX_KEYS_MINI_MAC,   # MX Keys Mini / for Business / for Mac
+    0xB36F: SIGNATURE_K650, 0xB370: SIGNATURE_K650,                     # Signature K650 / for Business
 }
 
 GENERIC_MOUSE = {"settings": {}, "profiles": {"default": {"name": "All applications", "buttons": {}, "thumbwheel": "native"}}}

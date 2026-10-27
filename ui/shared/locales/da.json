@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Hvor langt knappen er trykket ned nu",
  "All (L+R)": "Alle (V+H)",
  "Click a button to set its switch": "Klik på en knap for at indstille dens kontakt",
- "Set both buttons": "Indstil begge knapper"
+ "Set both buttons": "Indstil begge knapper",
+ "Print": "Udskriv",
+ "End": "End"
 }

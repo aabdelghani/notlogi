@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Jak głęboko przycisk jest teraz wciśnięty",
  "All (L+R)": "Wszystkie (L+P)",
  "Click a button to set its switch": "Kliknij przycisk, aby ustawić jego przełącznik",
- "Set both buttons": "Ustaw oba przyciski"
+ "Set both buttons": "Ustaw oba przyciski",
+ "Print": "Drukuj",
+ "End": "End"
 }

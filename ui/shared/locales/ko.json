@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "현재 버튼이 눌린 정도",
  "All (L+R)": "전체 (L+R)",
  "Click a button to set its switch": "버튼을 클릭해 스위치를 설정하세요",
- "Set both buttons": "두 버튼 모두 설정"
+ "Set both buttons": "두 버튼 모두 설정",
+ "Print": "인쇄",
+ "End": "End"
 }

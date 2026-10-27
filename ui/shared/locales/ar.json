@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "مدى ضغط الزر الآن",
  "All (L+R)": "الكل (ي+ي)",
  "Click a button to set its switch": "انقر زرًا لضبط مفتاحه",
- "Set both buttons": "اضبط الزرين معًا"
+ "Set both buttons": "اضبط الزرين معًا",
+ "Print": "طباعة",
+ "End": "نهاية"
 }

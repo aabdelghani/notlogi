@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Jusqu’où le bouton est enfoncé en ce moment",
  "All (L+R)": "Tous (G+D)",
  "Click a button to set its switch": "Cliquez sur un bouton pour régler son interrupteur",
- "Set both buttons": "Régler les deux boutons"
+ "Set both buttons": "Régler les deux boutons",
+ "Print": "Imprimer",
+ "End": "Fin"
 }

@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Wie weit die Taste gerade gedrückt ist",
  "All (L+R)": "Alle (L+R)",
  "Click a button to set its switch": "Klicke auf eine Taste, um ihren Schalter einzustellen",
- "Set both buttons": "Beide Tasten einstellen"
+ "Set both buttons": "Beide Tasten einstellen",
+ "Print": "Drucken",
+ "End": "Ende"
 }

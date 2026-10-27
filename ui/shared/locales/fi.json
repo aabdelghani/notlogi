@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Kuinka pitkälle painike on nyt painettu",
  "All (L+R)": "Kaikki (V+O)",
  "Click a button to set its switch": "Napsauta painiketta asettaaksesi sen kytkimen",
- "Set both buttons": "Aseta molemmat painikkeet"
+ "Set both buttons": "Aseta molemmat painikkeet",
+ "Print": "Tulosta",
+ "End": "End"
 }

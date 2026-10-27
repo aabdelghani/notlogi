@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "按鈕目前按下的深度",
  "All (L+R)": "全部 (左+右)",
  "Click a button to set its switch": "點擊按鍵以設定其開關",
- "Set both buttons": "設定兩個按鍵"
+ "Set both buttons": "設定兩個按鍵",
+ "Print": "列印",
+ "End": "End"
 }

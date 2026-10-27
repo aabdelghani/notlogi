@@ -1233,5 +1233,7 @@
  "How far the button is pressed now": "Πόσο πατημένο είναι τώρα το κουμπί",
  "All (L+R)": "Όλα (Α+Δ)",
  "Click a button to set its switch": "Κάντε κλικ σε ένα κουμπί για να ρυθμίσετε τον διακόπτη του",
- "Set both buttons": "Ρύθμιση και των δύο κουμπιών"
+ "Set both buttons": "Ρύθμιση και των δύο κουμπιών",
+ "Print": "Εκτύπωση",
+ "End": "End"
 }
