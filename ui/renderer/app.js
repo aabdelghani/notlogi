@@ -56,7 +56,7 @@ const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mo
     set: (t, k, v) => { if (k in store.data) store.data[k] = v; else if (owner[k]) owner[k][k] = v; else t[k] = v; return true; },
   });
   try { S.theme = localStorage.getItem('theme') || 'light'; } catch (e) {}
-  const VERSION = '0.13.1';
+  const VERSION = '0.14.0';
 
   // ------------------------------------------------------------------ rpc
   const call = api.call;
