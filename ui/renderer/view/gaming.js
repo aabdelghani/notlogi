@@ -23,7 +23,11 @@ const LOD_NAMES = { 1: t('Low'), 2: t('Medium'), 3: t('High') };
 const settingsOf = d => (d.config || {}).settings || {};
 const stateOf = d => d.state || {};
 // while the mouse runs on its onboard memory, what is set here waits until NotLogi takes over again
-const onboardNote = d => settingsOf(d).onboard_memory ? `<div class="banner info onboard-mem"><i class="fa-solid fa-microchip"></i><span>${t('The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).', { link: `<button class="linkbtn" data-act="onboard-goto">${t('Settings, Onboard memory')}</button>` })}</span></div>` : '';
+// On its onboard memory the mouse runs its own profiles: the gaming pages are shown but locked
+// (greyed, nothing to click), the notice says why and turns it off on the spot
+const LOCKABLE = ['dpi', 'assignments', 'wheel', 'hits'];
+const onboardLocked = d => !!(d && (d.state || {}).onboard && ((d.config || {}).settings || {}).onboard_memory && LOCKABLE.includes(S.page));
+const onboardNote = d => settingsOf(d).onboard_memory ? `<div class="banner info onboard-mem"><i class="fa-solid fa-microchip"></i><span>${t('The mouse runs on its onboard memory, so these settings are locked ({link}).', { link: `<button class="linkbtn" data-act="onboard-goto">${t('Settings, Onboard memory')}</button>` })}</span><button class="bact" data-act="onboard-off"><i class="fa-solid fa-lock-open"></i> ${t('Turn off onboard memory')}</button></div>` : '';
 
 // ----------------------------------------------------------- presets
 // A preset bar, the same for DPI and HITS: the one in use (marked when changed since), a menu of
@@ -402,4 +406,4 @@ function paintTravel(level) {
   [...bar.children].forEach((c, i) => c.classList.toggle('fill', i + 1 <= level));
 }
 
-export const provide = { macrosButton, renderHitsPanel, renderWheelPanel, renderDpiPanel, dpiSettings, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };
+export const provide = { onboardLocked, onboardNote, macrosButton, renderHitsPanel, renderWheelPanel, renderDpiPanel, dpiSettings, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };

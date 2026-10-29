@@ -1258,7 +1258,8 @@
  "{n} of {total} placed": "{n} di {total} posizionati",
  "Click a placed key to put it somewhere else": "Fai clic su un tasto posizionato per spostarlo",
  "Skip": "Salta",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Il mouse funziona con la sua memoria integrata: ciò che è impostato qui si applica quando NotLogi riprende il controllo ({link}).",
  "Settings, Onboard memory": "Impostazioni, Memoria integrata",
- "On its onboard memory the mouse keeps its profile's report rate during the test.": "Con la memoria integrata, il mouse mantiene la frequenza di report del suo profilo durante il test."
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "Con la memoria integrata, il mouse mantiene la frequenza di report del suo profilo durante il test.",
+ "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Il mouse funziona con la sua memoria integrata, quindi queste impostazioni sono bloccate ({link}).",
+ "Turn off onboard memory": "Disattiva la memoria integrata"
 }

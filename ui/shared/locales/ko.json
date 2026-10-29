@@ -1258,7 +1258,8 @@
  "{n} of {total} placed": "{total}개 중 {n}개 배치됨",
  "Click a placed key to put it somewhere else": "배치된 키를 클릭하면 다른 곳으로 옮길 수 있습니다",
  "Skip": "건너뛰기",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "마우스가 온보드 메모리로 작동 중입니다. 여기서 설정한 내용은 NotLogi가 다시 제어하면 적용됩니다 ({link}).",
  "Settings, Onboard memory": "설정, 온보드 메모리",
- "On its onboard memory the mouse keeps its profile's report rate during the test.": "온보드 메모리 사용 시 테스트 중에도 마우스는 프로필의 리포트 속도를 유지합니다."
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "온보드 메모리 사용 시 테스트 중에도 마우스는 프로필의 리포트 속도를 유지합니다.",
+ "The mouse runs on its onboard memory, so these settings are locked ({link}).": "마우스가 온보드 메모리로 작동 중이므로 이 설정은 잠겨 있습니다 ({link}).",
+ "Turn off onboard memory": "온보드 메모리 끄기"
 }

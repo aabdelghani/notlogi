@@ -1258,7 +1258,8 @@
  "{n} of {total} placed": "Rozmieszczono {n} z {total}",
  "Click a placed key to put it somewhere else": "Kliknij rozmieszczony klawisz, aby przenieść go w inne miejsce",
  "Skip": "Pomiń",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Mysz działa z pamięci wbudowanej: ustawienia z tego miejsca zostaną zastosowane, gdy NotLogi ponownie przejmie kontrolę ({link}).",
  "Settings, Onboard memory": "Ustawienia, Pamięć wbudowana",
- "On its onboard memory the mouse keeps its profile's report rate during the test.": "W trybie pamięci wbudowanej mysz zachowuje podczas testu częstotliwość raportowania ze swojego profilu."
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "W trybie pamięci wbudowanej mysz zachowuje podczas testu częstotliwość raportowania ze swojego profilu.",
+ "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Mysz działa z pamięci wbudowanej, więc te ustawienia są zablokowane ({link}).",
+ "Turn off onboard memory": "Wyłącz pamięć wbudowaną"
 }

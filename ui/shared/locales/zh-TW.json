@@ -1258,7 +1258,8 @@
  "{n} of {total} placed": "已放置 {n}/{total}",
  "Click a placed key to put it somewhere else": "按一下已放置的按鍵即可移到其他位置",
  "Skip": "略過",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "滑鼠正在使用其板載記憶體：此處的設定會在 NotLogi 重新接管後生效（{link}）。",
  "Settings, Onboard memory": "設定，板載記憶體",
- "On its onboard memory the mouse keeps its profile's report rate during the test.": "使用板載記憶體時，滑鼠在測試期間會保持其設定檔的回報率。"
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "使用板載記憶體時，滑鼠在測試期間會保持其設定檔的回報率。",
+ "The mouse runs on its onboard memory, so these settings are locked ({link}).": "滑鼠正在使用其板載記憶體，因此這些設定已鎖定（{link}）。",
+ "Turn off onboard memory": "關閉板載記憶體"
 }

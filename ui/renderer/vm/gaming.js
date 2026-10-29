@@ -265,7 +265,10 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   'hits-test-side': async (it, e, d, key) => { S.gtool.side = key; S.gtool.result = null; S.gtool.phase = 'idle'; changed(); },
   'hits-test-ap': async (it, e, d) => { await hitsSet(d, G.hitsItems({ actuation: Number(it.value) }, [S.gtool.side || 'left'])); },
   // ------------------------------------------------- settings
-  'onboard-memory': async (it, e, d) => { await setMany(d, [{ path: ['onboard_memory'], value: !it.on }]); loadOnboard(d); },
+  // switched on, the gaming pages lock: their panels close
+  'onboard-memory': async (it, e, d) => { if (!it.on) { S.hitsPanel = false; S.wheelPanel = false; S.dpiPanel = false; } await setMany(d, [{ path: ['onboard_memory'], value: !it.on }]); loadOnboard(d); },
+  // the notice on a locked page: NotLogi takes over again, the page unlocks
+  'onboard-off': async (it, e, d) => { await setMany(d, [{ path: ['onboard_memory'], value: false }]); loadOnboard(d); },
   // a profile switched on or off in the mouse's directory, its settings left as they are (G HUB's Enable)
   // (shown at once: the mouse answers with its old directory for a moment after a write, so it is read again later)
   'onboard-enable': async (it, e, d, key) => {

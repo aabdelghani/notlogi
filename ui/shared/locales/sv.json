@@ -1258,7 +1258,8 @@
  "{n} of {total} placed": "{n} av {total} placerade",
  "Click a placed key to put it somewhere else": "Klicka på en placerad tangent för att flytta den",
  "Skip": "Hoppa över",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Musen körs från sitt inbyggda minne: det som ställs in här gäller när NotLogi tar över igen ({link}).",
  "Settings, Onboard memory": "Inställningar, Inbyggt minne",
- "On its onboard memory the mouse keeps its profile's report rate during the test.": "Med det inbyggda minnet behåller musen profilens rapportfrekvens under testet."
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "Med det inbyggda minnet behåller musen profilens rapportfrekvens under testet.",
+ "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Musen körs från sitt inbyggda minne, så de här inställningarna är låsta ({link}).",
+ "Turn off onboard memory": "Stäng av det inbyggda minnet"
 }

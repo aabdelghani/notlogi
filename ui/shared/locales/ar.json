@@ -1258,7 +1258,8 @@
  "{n} of {total} placed": "تم وضع {n} من {total}",
  "Click a placed key to put it somewhere else": "انقر على مفتاح موضوع لنقله إلى مكان آخر",
  "Skip": "تخطٍّ",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "يعمل الماوس من ذاكرته المدمجة: ما يُضبط هنا يُطبَّق عندما يتولى NotLogi التحكم مجددًا ({link}).",
  "Settings, Onboard memory": "الإعدادات، الذاكرة المدمجة",
- "On its onboard memory the mouse keeps its profile's report rate during the test.": "عند العمل من الذاكرة المدمجة يحتفظ الماوس بمعدل الإرسال المحدد في ملف التعريف الخاص به أثناء الاختبار."
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "عند العمل من الذاكرة المدمجة يحتفظ الماوس بمعدل الإرسال المحدد في ملف التعريف الخاص به أثناء الاختبار.",
+ "The mouse runs on its onboard memory, so these settings are locked ({link}).": "يعمل الماوس من ذاكرته المدمجة، لذا هذه الإعدادات مقفلة ({link}).",
+ "Turn off onboard memory": "إيقاف الذاكرة المدمجة"
 }
