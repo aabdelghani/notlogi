@@ -1266,5 +1266,9 @@
  "Keep": "保持",
  "Discard": "破棄",
  "Keep your settings?": "設定を保持しますか？",
- "User {n} settings": "ユーザー設定 {n}"
+ "User {n} settings": "ユーザー設定 {n}",
+ "A firmware NotLogi was not tested on": "NotLogi で未テストのファームウェア",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "オンボードメモリへの書き込みはファームウェア {tested} でのみテストされています。お使いのマウスのファームウェアは {fw} です。書き込みは自己責任で行ってください。",
+ "Write at my own risk": "自己責任で書き込む",
+ "Don't show this again": "今後表示しない"
 }

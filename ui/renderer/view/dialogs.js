@@ -96,7 +96,7 @@ function renderConfirm() {
   const p = S.confirm;
   return `<div class="scrim" data-act="close-dlg"><div class="dlg" style="width:440px" data-stop>
     <div class="dlg-head">${esc(p.title)}<button class="hbtn close" data-act="close-dlg"><i class="fa-solid fa-xmark"></i></button></div>
-    <div class="dlg-body"><div class="hint" style="font-size:14px">${esc(p.text)}</div></div>
+    <div class="dlg-body"><div class="hint" style="font-size:14px">${esc(p.text)}</div>${p.check ? `<button class="confirm-check ${p.check.on ? 'on' : ''}" data-act="confirm-check"><i class="fa-regular ${p.check.on ? 'fa-square-check' : 'fa-square'}"></i>${esc(p.check.label)}</button>` : ''}</div>
     <div class="dlg-foot"><span></span><div class="r"><button class="btn" data-act="confirm-ok">${esc(p.ok)}</button><button class="btn primary" data-act="close-dlg" autofocus>${t('Cancel')}</button></div></div></div></div>`;
 }
 // Remove NotLogi: what goes is listed first (the main process looks), settings only when chosen

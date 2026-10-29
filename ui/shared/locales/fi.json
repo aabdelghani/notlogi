@@ -1266,5 +1266,9 @@
  "Keep": "Säilytä",
  "Discard": "Hylkää",
  "Keep your settings?": "Säilytetäänkö asetuksesi?",
- "User {n} settings": "Käyttäjän asetukset {n}"
+ "User {n} settings": "Käyttäjän asetukset {n}",
+ "A firmware NotLogi was not tested on": "Laiteohjelmisto, jolla NotLogia ei ole testattu",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "Laitteen sisäiseen muistiin kirjoittaminen on testattu vain laiteohjelmistolla {tested}. Hiiressäsi on laiteohjelmisto {fw}. Kirjoitat siihen omalla vastuullasi.",
+ "Write at my own risk": "Kirjoita omalla vastuullani",
+ "Don't show this again": "Älä näytä tätä uudelleen"
 }

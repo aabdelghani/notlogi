@@ -1266,5 +1266,9 @@
  "Keep": "Сохранить",
  "Discard": "Отменить",
  "Keep your settings?": "Сохранить ваши настройки?",
- "User {n} settings": "Настройки пользователя {n}"
+ "User {n} settings": "Настройки пользователя {n}",
+ "A firmware NotLogi was not tested on": "Микропрограмма, на которой NotLogi не тестировался",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "Запись во встроенную память проверялась только на микропрограмме {tested}. У вашей мыши микропрограмма {fw}. Запись выполняется на ваш страх и риск.",
+ "Write at my own risk": "Записать на свой страх и риск",
+ "Don't show this again": "Больше не показывать"
 }

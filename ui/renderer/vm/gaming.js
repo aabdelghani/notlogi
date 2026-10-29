@@ -53,6 +53,17 @@ async function keepInHitsPreset(d) {
 const dpiSet = async (d, items) => { await setMany(d, items); await keepInPreset(d); };
 const hitsSet = async (d, items) => { await setMany(d, items); await keepInHitsPreset(d); };
 
+// Writing the onboard memory was tested on one firmware: with another the person is told, and goes on
+// at their own risk (or ticks it away for good)
+const TESTED_FIRMWARE = 'AM 01.02.B0015';
+function riskCheck(d, run) {
+  if (!d.firmware || d.firmware === TESTED_FIRMWARE || (S.ui || {}).onboard_risk_ok) return run();
+  const c = { title: t('A firmware NotLogi was not tested on'), text: t('Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.', { tested: TESTED_FIRMWARE, fw: d.firmware }),
+    ok: t('Write at my own risk'), check: { label: t('Don\'t show this again'), on: false },
+    onOk: async () => { if (c.check.on) S.ui = (await api.host.uiSettings({ onboard_risk_ok: true })) || S.ui; await run(); } };
+  S.confirm = c; S.dlg = 'confirm'; changed();
+}
+
 // The preset made from a curated one's changes: kept under the name given, or dropped and the curated
 // one put back on the mouse
 function askKeepPreset() {
@@ -306,30 +317,30 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   'onboard-off': async (it, e, d) => { await setMany(d, [{ path: ['onboard_memory'], value: false }]); loadOnboard(d); },
   // a profile switched on or off in the mouse's directory, its settings left as they are (G HUB's Enable)
   // (shown at once: the mouse answers with its old directory for a moment after a write, so it is read again later)
-  'onboard-enable': async (it, e, d, key) => {
+  'onboard-enable': async (it, e, d, key) => riskCheck(d, async () => {
     try {
       await call('onboard_enable', { id: d.id, profile: Number(key), on: !it.on });
       const p = ((S.onboard || {})[d.id] || []).find(x => x.index === Number(key)); if (p) p.enabled = !it.on;
       changed();
     } catch (err) { loadOnboard(d); return; }
     setTimeout(() => loadOnboard(d), 1500);
-  },
+  }),
   'onboard-pick': async (it, e, d, key) => { await setMany(d, [{ path: ['onboard_profile'], value: Number(key) }]); loadOnboard(d); },
   // writing the mouse's memory: asked first, backed up by the agent, read back before it says done
-  'onboard-save': async (it, e, d, key) => {
+  'onboard-save': async (it, e, d, key) => riskCheck(d, () => {
     S.confirm = { title: t('Write profile {n}?', { n: key }), text: t('Onboard profile {n} gets the DPI slots, report rates and HITS set in NotLogi, so the mouse keeps them without software. What it holds now is kept in a backup file.', { n: key }), ok: t('Write'), onOk: async () => {
       try { await call('onboard_save', { id: d.id, profile: Number(key) }); toast(t('Profile {n} written', { n: key })); } catch (err) { toast(err.message, true); }
       loadOnboard(d);
     } };
     S.dlg = 'confirm'; changed();
-  },
-  'onboard-restore': async (it, e, d) => {
+  }),
+  'onboard-restore': async (it, e, d) => riskCheck(d, () => {
     S.confirm = { title: t('Restore all profiles?'), text: t('Every onboard profile goes back to the mouse\'s factory profile, and only the first stays switched on. What they hold now is kept in a backup file.'), ok: t('Restore'), onOk: async () => {
       try { await call('onboard_restore', { id: d.id }); toast(t('Onboard profiles restored')); } catch (err) { toast(err.message, true); }
       loadOnboard(d);
     } };
     S.dlg = 'confirm'; changed();
-  },
+  }),
   // ------------------------------------------------- app profiles
   // a preset for one app: its slots kept in that app's profile (the agent needs no preset tables)
   'app-sens': async (it, e, d) => {

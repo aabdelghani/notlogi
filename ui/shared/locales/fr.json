@@ -1266,5 +1266,9 @@
  "Keep": "Garder",
  "Discard": "Abandonner",
  "Keep your settings?": "Garder vos réglages ?",
- "User {n} settings": "Réglages utilisateur {n}"
+ "User {n} settings": "Réglages utilisateur {n}",
+ "A firmware NotLogi was not tested on": "Un micrologiciel sur lequel NotLogi n'a pas été testé",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "L'écriture dans la mémoire intégrée n'a été testée qu'avec le micrologiciel {tested}. Votre souris utilise le micrologiciel {fw}. L'écriture se fait à vos propres risques.",
+ "Write at my own risk": "Écrire à mes propres risques",
+ "Don't show this again": "Ne plus afficher"
 }

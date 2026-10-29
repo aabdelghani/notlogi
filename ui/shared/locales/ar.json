@@ -1266,5 +1266,9 @@
  "Keep": "احتفاظ",
  "Discard": "تجاهل",
  "Keep your settings?": "هل تحتفظ بإعداداتك؟",
- "User {n} settings": "إعدادات المستخدم {n}"
+ "User {n} settings": "إعدادات المستخدم {n}",
+ "A firmware NotLogi was not tested on": "برنامج ثابت لم يُختبر عليه NotLogi",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "اختُبرت الكتابة إلى الذاكرة المدمجة على البرنامج الثابت {tested} فقط. يعمل الماوس لديك بالبرنامج الثابت {fw}. الكتابة إليه على مسؤوليتك الخاصة.",
+ "Write at my own risk": "الكتابة على مسؤوليتي الخاصة",
+ "Don't show this again": "عدم إظهار هذا مجددًا"
 }

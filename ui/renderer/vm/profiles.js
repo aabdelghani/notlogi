@@ -94,6 +94,8 @@ export const commands = {
     } };
     S.dlg = 'confirm'; changed(); return;
   },
+  // a confirmation's own tick box (Don't show this again), read by its onOk
+  'confirm-check': async () => { if (S.confirm && S.confirm.check) { S.confirm.check.on = !S.confirm.check.on; changed(); } return; },
   'confirm-ok': async (it, e, d, key) => { const p = S.confirm; S.dlg = null; S.confirm = null; changed(); if (p && p.onOk) { await p.onOk(); changed(); } return; },
   'reset-overrides': async (it, e, d, key) => { for (const dd of S.devices) { const profs = JSON.parse(JSON.stringify(dd.config.profiles)); if (profs[key]) { const keep = { name: profs[key].name, match: profs[key].match }; profs[key] = keep; merge(await call('set_profiles', { id: dd.id, profiles: profs })); } } toast(t('Overrides cleared')); changed(); return; },
   'reset-buttons': async (it, e, d, key) => { const defs = ((await api.quiet('defaults', { id: d.id })).profiles || {}).default || {}; const btns = defs.buttons || {}; for (const cid of Object.keys(btns)) await setAssign(d, 'buttons', cid, btns[cid]); if (defs.thumbwheel) await setAssign(d, 'thumbwheel', null, defs.thumbwheel); toast(t('Buttons reset to defaults')); changed(); return; },

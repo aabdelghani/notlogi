@@ -1421,3 +1421,25 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .slot-menu .menu-lod button { flex: 1; }
 .slot-menu .mhead { padding: 6px 12px 2px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
 .dpi-panel .dpi-slot.adv .switch { margin-left: auto; }
+
+/* as the mouse buttons on Assignments: pointing at a box, its line or the part it names lights all three */
+.hits-pic svg:has([data-pair=left]:hover) [data-pair=left] .hits-badge { background: var(--accbg); color: #fff; box-shadow: 0 0 0 6px var(--accbg), 0 18px 40px rgba(0,0,0,.35); }
+.hits-pic svg:has([data-pair=left]:hover) [data-pair=left] .hits-badge * { color: #fff !important; opacity: 1 !important; }
+.hits-pic svg:has([data-pair=left]:hover) [data-pair=left] line { stroke: var(--accbg); stroke-width: 9; opacity: 1; }
+.hits-pic svg:has([data-pair=left]:hover) .hb[data-pair=left] > :first-child { fill: color-mix(in srgb, var(--accbg) 60%, transparent); stroke: var(--accbg); }
+.hits-pic svg:has([data-pair=right]:hover) [data-pair=right] .hits-badge { background: var(--accbg); color: #fff; box-shadow: 0 0 0 6px var(--accbg), 0 18px 40px rgba(0,0,0,.35); }
+.hits-pic svg:has([data-pair=right]:hover) [data-pair=right] .hits-badge * { color: #fff !important; opacity: 1 !important; }
+.hits-pic svg:has([data-pair=right]:hover) [data-pair=right] line { stroke: var(--accbg); stroke-width: 9; opacity: 1; }
+.hits-pic svg:has([data-pair=right]:hover) .hb[data-pair=right] > :first-child { fill: color-mix(in srgb, var(--accbg) 60%, transparent); stroke: var(--accbg); }
+.hits-pic svg:has([data-pair=wheel]:hover) [data-pair=wheel] .hits-badge { background: var(--accbg); color: #fff; box-shadow: 0 0 0 6px var(--accbg), 0 18px 40px rgba(0,0,0,.35); }
+.hits-pic svg:has([data-pair=wheel]:hover) [data-pair=wheel] .hits-badge * { color: #fff !important; opacity: 1 !important; }
+.hits-pic svg:has([data-pair=wheel]:hover) [data-pair=wheel] line { stroke: var(--accbg); stroke-width: 9; opacity: 1; }
+.hits-pic svg:has([data-pair=wheel]:hover) .hb[data-pair=wheel] > :first-child { fill: color-mix(in srgb, var(--accbg) 60%, transparent); stroke: var(--accbg); }
+.hits-pic .dpi-mark circle { transition: r .15s, fill .15s; }
+.hits-pic svg:has([data-pair=left]:hover) .dpi-mark[data-pair=left] circle, .hits-pic svg:has([data-pair=right]:hover) .dpi-mark[data-pair=right] circle { r: 62; fill: var(--accbg); }
+.hits-pic .hits-badge { transition: background .15s, box-shadow .15s; }
+.hits-pic line { transition: stroke .15s, stroke-width .15s; }
+.confirm-check { display: flex; align-items: center; gap: 8px; margin-top: 14px; border: 0; background: none; color: var(--fg); font: 500 13px var(--font); cursor: pointer; padding: 0; }
+.confirm-check i { font-size: 16px; color: var(--dim); }
+.confirm-check.on i { color: var(--accbg); }
+.wheel-badge .pr.stack { flex-direction: column; align-items: flex-start; gap: 0; line-height: 1.1; }

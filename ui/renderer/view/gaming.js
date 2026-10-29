@@ -57,7 +57,8 @@ function pageDpi(d) {
   const preset = G.presetById(s, s.dpi_preset || 'default'), changed = !!preset && !G.presetMatches(preset, s, st);
   const rateOf = path => s[path] ?? (st.report_rate || {})[path] ?? 1000, wired = d.transport === 'usb';
   const rate = `<span class="pr ${wired ? '' : 'cur'}"><small>${t('Wireless')}</small>${rateOf('report_rate')} Hz</span><span class="pr ${wired ? 'cur' : ''}"><small>${t('Wired')}</small>${rateOf('report_rate_wired')} Hz</span>`;
-  const dpi = sl ? (s.dpi_advanced && sl.x !== sl.y ? `${sl.x} × ${sl.y}` : `${sl.x}`) : '–';
+  const dpi = (sl ? `<span>${s.dpi_advanced && sl.x !== sl.y ? `${sl.x} × ${sl.y}` : sl.x}</span>` : '<span>–</span>') +
+    (sl ? `<span class="pr cur stack"><small>${t('Lift-off distance')}</small>${LOD_NAMES[sl.lod] || LOD_NAMES[2]}</span>` : '');
   // the preset stays above the mouse with the panel open, lit as the thing being set
   const intro = `<div class="hits-intro"><button class="btn sm preset-pill ${S.dpiPanel ? 'on' : ''}" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
   return `<div class="hits-page dpi ${S.dpiPanel ? 'panel' : ''}">${intro}${dpiPicture(dpi, rate, sl ? G.SLOT_COLOURS[G.activeSlot(s)] : '')}</div>` + onboardNote(d);
@@ -68,12 +69,12 @@ const SENSOR = [705, 1480], LINK = [705, 90];
 function dpiPicture(dpi, rate, colour) {
   const W = 780;
   const box = (side, [px, py], top, h, label, value, extra = '') => { const x = side === 'left' ? -810 : 1440, edge = side === 'left' ? x + W : x;
-    return `<g class="hb-box"><line x1="${px + (side === 'left' ? -40 : 28)}" y1="${py + (side === 'left' ? 0 : 28)}" x2="${edge}" y2="${top + h / 2}"/>
+    return `<g class="hb-box" data-pair="${side}"><line x1="${px + (side === 'left' ? -40 : 28)}" y1="${py + (side === 'left' ? 0 : 28)}" x2="${edge}" y2="${top + h / 2}"/>
       <foreignObject x="${x}" y="${top}" width="${W}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge" data-act="dpi-open"><span class="k">${extra}${label}</span>${value}</div></foreignObject></g>`; };
-  const mark = ([x, y]) => `<g class="hb on dpi-mark" data-act="dpi-open"><title>${t('Sensitivity')}</title><circle cx="${x}" cy="${y}" r="40"/></g>`;
+  const mark = ([x, y], pair) => `<g class="hb on dpi-mark" data-pair="${pair}" data-act="dpi-open"><title>${t('Sensitivity')}</title><circle cx="${x}" cy="${y}" r="40"/></g>`;
   return `<div class="hits-pic"><svg viewBox="-830 -20 3070 2840" preserveAspectRatio="xMidYMin meet">
-    <image href="../assets/devices/40be.png" width="1410" height="2800"/>${mark(SENSOR)}${mark(LINK)}
-    ${box('left', SENSOR, 1260, 440, t('DPI'), `<span>${dpi}</span>`, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', LINK, 1190, 580, t('Polling rate'), rate)}</svg></div>`;
+    <image href="../assets/devices/40be.png" width="1410" height="2800"/>${mark(SENSOR, 'left')}${mark(LINK, 'right')}
+    ${box('left', SENSOR, 1190, 580, t('DPI'), dpi, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', LINK, 1190, 580, t('Polling rate'), rate)}</svg></div>`;
 }
 // everything Sensitivity sets, on the right
 function renderDpiPanel(d) {
@@ -153,11 +154,11 @@ const WHEEL = { x: 600, y: 300, w: 210, h: 500 };
 function wheelPicture(v) {
   const W = 640, H = 440, TOP = 330, cy = WHEEL.y + WHEEL.h / 2;
   const box = (side, label, value, dim) => { const x = side === 'left' ? -700 : 1470, edge = side === 'left' ? x + W : x, wx = side === 'left' ? WHEEL.x : WHEEL.x + WHEEL.w;
-    return `<g class="hb-box ${dim ? 'dim' : ''}"><line x1="${wx}" y1="${cy}" x2="${edge}" y2="${TOP + H / 2}"/>
+    return `<g class="hb-box ${dim ? 'dim' : ''}" data-pair="wheel"><line x1="${wx}" y1="${cy}" x2="${edge}" y2="${TOP + H / 2}"/>
       <foreignObject x="${x}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge ${dim ? 'dim' : ''}" data-act="wheel-open"><span class="k">${label}</span><span>${value}</span></div></foreignObject></g>`; };
   return `<div class="hits-pic"><svg viewBox="-720 -20 2850 2840" preserveAspectRatio="xMidYMin meet"><defs><pattern id="hb-stripes" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="26" fill="rgba(255,255,255,.10)"/></pattern></defs>
     <image href="../assets/devices/40be.png" width="1410" height="2800"/>
-    <g class="hb on" data-act="wheel-open"><title>${t('Scroll wheel')}</title><rect x="${WHEEL.x}" y="${WHEEL.y}" width="${WHEEL.w}" height="${WHEEL.h}" rx="${WHEEL.w / 2}"/><rect class="hb-hatch" x="${WHEEL.x}" y="${WHEEL.y}" width="${WHEEL.w}" height="${WHEEL.h}" rx="${WHEEL.w / 2}"/></g>
+    <g class="hb on" data-pair="wheel" data-act="wheel-open"><title>${t('Scroll wheel')}</title><rect x="${WHEEL.x}" y="${WHEEL.y}" width="${WHEEL.w}" height="${WHEEL.h}" rx="${WHEEL.w / 2}"/><rect class="hb-hatch" x="${WHEEL.x}" y="${WHEEL.y}" width="${WHEEL.w}" height="${WHEEL.h}" rx="${WHEEL.w / 2}"/></g>
     ${box('left', t('BHOP mode'), v.on ? t('On') : t('Off'), false)}${box('right', t('BHOP sensitivity'), `${v.ms} ms`, !v.on)}</svg></div>`;
 }
 // BHOP's settings, on the right as HITS has them
@@ -221,13 +222,13 @@ function hitsPicture(L, R) {
   // each button's values in a large box beside the mouse, joined to its check by a line; a click opens that side
   const W = 640, H = 560, BOX = { left: -700, right: 1470 }, TOP = 300;
   const box = (v, side) => { const [mx, my] = HITS_SHAPES[side].mark, x = BOX[side], edge = side === 'left' ? x + W : x;
-    return `<g class="hb-box ${on(side) ? '' : 'dim'}"><line x1="${side === 'left' ? mx - 56 : mx + 56}" y1="${my}" x2="${edge}" y2="${TOP + H / 2}"/>
+    return `<g class="hb-box ${on(side) ? '' : 'dim'}" data-pair="${side}"><line x1="${side === 'left' ? mx - 56 : mx + 56}" y1="${my}" x2="${edge}" y2="${TOP + H / 2}"/>
       <foreignObject x="${x}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge ${on(side) ? '' : 'dim'}" data-act="hits-open" data-key="${side}" title="${side === 'left' ? t('Left button') : t('Right button')}">
       <span class="${lit('actuation')}" title="${t('Actuation point')}"><i class="fa-solid fa-arrow-down-long"></i>${v.actuation}</span>
       <span class="${lit('rapid_trigger')}" title="${t('Rapid trigger')}"><i class="fa-solid fa-arrow-up-long"></i>${v.rapid_trigger_on ? v.rapid_trigger : t('Off')}</span>
       <span class="${lit('haptics')}" title="${t('Click haptics')}"><i class="fa-solid fa-wave-square"></i>${v.haptics}</span></div></foreignObject></g>`; };
   const zone = side => { const z = HITS_SHAPES[side], [mx, my] = z.mark;
-    return `<g class="hb ${on(side) ? 'on' : ''}" data-act="hits-toggle" data-key="${side}"><title>${side === 'left' ? t('Left button') : t('Right button')}</title><path transform="translate(${z.x} 0)" d="${z.d}"/><path class="hb-hatch" transform="translate(${z.x} 0)" d="${z.d}"/>
+    return `<g class="hb ${on(side) ? 'on' : ''}" data-pair="${side}" data-act="hits-toggle" data-key="${side}"><title>${side === 'left' ? t('Left button') : t('Right button')}</title><path transform="translate(${z.x} 0)" d="${z.d}"/><path class="hb-hatch" transform="translate(${z.x} 0)" d="${z.d}"/>
       <circle class="hb-mark" cx="${mx}" cy="${my}" r="54"/>${on(side) ? `<path class="hb-check" d="M${mx - 23} ${my + 2} l16 16 l31 -34"/>` : ''}</g>`; };
   return `<div class="hits-pic"><svg viewBox="-720 -20 2850 2840" preserveAspectRatio="xMidYMin meet"><defs><pattern id="hb-stripes" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="26" fill="rgba(255,255,255,.10)"/></pattern></defs>
     <image href="../assets/devices/40be.png" width="1410" height="2800"/>${zone('left')}${zone('right')}${box(L, 'left')}${box(R, 'right')}</svg></div>`;

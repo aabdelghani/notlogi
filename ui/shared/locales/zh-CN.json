@@ -1266,5 +1266,9 @@
  "Keep": "保留",
  "Discard": "放弃",
  "Keep your settings?": "保留你的设置吗？",
- "User {n} settings": "用户设置 {n}"
+ "User {n} settings": "用户设置 {n}",
+ "A firmware NotLogi was not tested on": "NotLogi 未测试过的固件",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "写入板载内存仅在固件 {tested} 上测试过。您的鼠标固件为 {fw}。写入风险由您自行承担。",
+ "Write at my own risk": "自担风险写入",
+ "Don't show this again": "不再显示"
 }

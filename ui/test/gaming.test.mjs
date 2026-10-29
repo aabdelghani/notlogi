@@ -58,8 +58,8 @@ test('HITS: each button or both, actuation 1..10, rapid trigger and its sensitiv
   assert.match(h, /data-key="actuation" data-out="h-actuation" value="8"/);
   assert.match(h, /data-key="rapid_trigger" data-out="h-rapid_trigger" value="4"/);
   const pic = Gaming.provide.pageHits(x3());
-  assert.match(pic, /class="hb " data-act="hits-toggle" data-key="left"/);     // the left button is not being set
-  assert.match(pic, /class="hb on" data-act="hits-toggle" data-key="right"/);  // the right one is, lit
+  assert.match(pic, /class="hb " data-pair="left" data-act="hits-toggle" data-key="left"/);     // the left button is not being set
+  assert.match(pic, /class="hb on" data-pair="right" data-act="hits-toggle" data-key="right"/);  // the right one is, lit
   assert.match(h, /data-act="hits-code-open"/);
   assert.match(h, /data-act="hits-test-open"/);
   assert.match(h, /data-act="hits-reset"/);

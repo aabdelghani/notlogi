@@ -1266,5 +1266,9 @@
  "Keep": "유지",
  "Discard": "버리기",
  "Keep your settings?": "설정을 유지할까요?",
- "User {n} settings": "사용자 설정 {n}"
+ "User {n} settings": "사용자 설정 {n}",
+ "A firmware NotLogi was not tested on": "NotLogi에서 테스트되지 않은 펌웨어",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "온보드 메모리 쓰기는 펌웨어 {tested}에서만 테스트되었습니다. 사용 중인 마우스의 펌웨어는 {fw}입니다. 쓰기는 사용자 책임하에 진행됩니다.",
+ "Write at my own risk": "내 책임하에 쓰기",
+ "Don't show this again": "다시 표시 안 함"
 }

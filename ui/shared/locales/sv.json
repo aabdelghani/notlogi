@@ -1266,5 +1266,9 @@
  "Keep": "Behåll",
  "Discard": "Kasta",
  "Keep your settings?": "Behålla dina inställningar?",
- "User {n} settings": "Användarinställningar {n}"
+ "User {n} settings": "Användarinställningar {n}",
+ "A firmware NotLogi was not tested on": "En inbyggd programvara som NotLogi inte har testats på",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "Skrivning till det inbyggda minnet har bara testats med inbyggd programvara {tested}. Din mus har inbyggd programvara {fw}. Skrivning till den sker på egen risk.",
+ "Write at my own risk": "Skriv på egen risk",
+ "Don't show this again": "Visa inte detta igen"
 }

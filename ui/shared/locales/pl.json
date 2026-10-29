@@ -1266,5 +1266,9 @@
  "Keep": "Zachowaj",
  "Discard": "Odrzuć",
  "Keep your settings?": "Zachować twoje ustawienia?",
- "User {n} settings": "Ustawienia użytkownika {n}"
+ "User {n} settings": "Ustawienia użytkownika {n}",
+ "A firmware NotLogi was not tested on": "Oprogramowanie sprzętowe, na którym NotLogi nie był testowany",
+ "Writing to the onboard memory was tested on firmware {tested} only. Your mouse has firmware {fw}. Writing to it is at your own risk.": "Zapis do pamięci wbudowanej był testowany tylko z oprogramowaniem sprzętowym {tested}. Twoja mysz ma oprogramowanie sprzętowe {fw}. Zapisujesz na własne ryzyko.",
+ "Write at my own risk": "Zapisz na własne ryzyko",
+ "Don't show this again": "Nie pokazuj tego ponownie"
 }
