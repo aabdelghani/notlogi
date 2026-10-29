@@ -1305,11 +1305,11 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 /* the HITS picture: the buttons lit as G HUB lights them, each one's values in a box beside it */
 .hits-pic .hb.on .hb-hatch { fill: url(#hb-stripes); }
 .hits-pic .hb-hatch { fill: none; pointer-events: none; }
-.hb-box line { stroke: var(--dim); stroke-width: 5; }
-.hb-box.dim { opacity: .4; }
-.hits-badge { box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 0 44px; border-radius: 40px; background: var(--card); box-shadow: 0 0 0 5px var(--brd); font: 600 76px var(--font); color: var(--dim); }
-.hits-badge span { display: flex; align-items: center; gap: 30px; }
-.hits-badge span i { width: 60px; font-size: 56px; text-align: center; }
+.hits-badge { box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 34px; padding: 0 70px; border-radius: 60px; background: var(--card); box-shadow: 0 0 0 6px var(--brd), 0 18px 40px rgba(0,0,0,.35); font: 700 128px var(--font); color: var(--fg); cursor: pointer; transition: box-shadow .15s; }
+.hits-badge:hover { box-shadow: 0 0 0 10px #2f7de1, 0 18px 40px rgba(0,0,0,.35); }
+.hits-badge.dim span { opacity: .45; }
+.hits-badge span { display: flex; align-items: center; gap: 44px; }
+.hits-badge span i { width: 100px; font-size: 92px; text-align: center; color: var(--dim); }
 .hits-badge span.lit { color: #2f7de1; }
 
 /* a keyboard's own photo (vm/keymap.js): the ask above it, the keys placed on it, the owner's buttons below */
@@ -1340,6 +1340,14 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .layer-bar .btn .count { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--accbg); color: #fff; font-size: 11px; }
 .hits-page:not(.panel) { margin-top: -96px; }
 .hits-page.panel { margin-top: -56px; }
-.hits-page .hits-pic { width: 471px; max-width: 100%; margin: 0 auto; }
+/* the mouse stays where it was when the panel opens: the content moves left by half the menu and half the panel */
+.hits-page.panel .hits-pic { translate: 353px 0; }
+.content:has(> .page > .hits-page.panel) { overflow-x: hidden; }
+.hits-page .hits-pic { width: 257px; max-width: 100%; margin: 0 auto; }
 .hits-page .hits-intro { justify-content: center; margin-bottom: 4px; }
-.hits-page + .banner { width: fit-content; max-width: 100%; margin: 0 auto; padding-top: 6px; padding-bottom: 6px; }
+.hits-page + .banner { width: fit-content; max-width: 100%; margin: 0 auto; padding-top: 6px; padding-bottom: 6px; text-align: left; }
+
+/* the mouse on its onboard memory: red, so it is not missed (what is set here waits until NotLogi takes over) */
+.hits-page + .banner.info.onboard-mem { margin-bottom: 0; font-size: 13px; gap: 8px; padding-left: 12px; padding-right: 12px; }
+.banner.info.onboard-mem { background: color-mix(in srgb, #e5484d 18%, var(--card)); color: var(--fg); box-shadow: inset 0 0 0 1px color-mix(in srgb, #e5484d 55%, transparent); }
+.banner.info.onboard-mem i { color: #e5484d; }

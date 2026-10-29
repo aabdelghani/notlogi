@@ -23,7 +23,7 @@ const LOD_NAMES = { 1: t('Low'), 2: t('Medium'), 3: t('High') };
 const settingsOf = d => (d.config || {}).settings || {};
 const stateOf = d => d.state || {};
 // while the mouse runs on its onboard memory, what is set here waits until NotLogi takes over again
-const onboardNote = d => settingsOf(d).onboard_memory ? `<div class="banner info"><i class="fa-solid fa-microchip"></i><span>${t('The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).')}</span></div>` : '';
+const onboardNote = d => settingsOf(d).onboard_memory ? `<div class="banner info onboard-mem"><i class="fa-solid fa-microchip"></i><span>${t('The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).')}</span></div>` : '';
 
 // ----------------------------------------------------------- presets
 // A preset bar, the same for DPI and HITS: the one in use (marked when changed since), a menu of
@@ -142,7 +142,7 @@ function renderHitsPanel(d) {
   const tools = `<div class="hits-tools"><button class="btn" data-act="hits-code-open"><i class="fa-solid fa-link"></i>${t('HITS code')}</button><button class="btn" data-act="hits-test-open"><i class="fa-solid fa-gauge-high"></i>${t('Test HITS')}</button><button class="btn" data-act="hits-reset"><i class="fa-solid fa-rotate-left"></i>${t('Default settings')}</button></div>`;
   const who = { both: t('All (L+R)'), left: t('Left button'), right: t('Right button') }[S.hitsSide];
   return `<div class="drawer-wrap"><div class="dlg drawer bl-panel hits-panel" data-stop>
-    <div class="dlg-head"><span class="dh-key">${t('HITS')}</span><span class="dh-sub">${esc(who)}</span><button class="hbtn close" data-act="hits-close" title="${t('Close')}"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="dlg-head"><span class="dh-key">${t('HITS')}</span><span class="dh-sub">${esc(who)}</span></div>
     <div class="dlg-body">${card(`<div class="row"><span class="grow lbl">${t('Set for')}</span>${side}</div>` + body)}${differ ? `<div class="hint">${t('The buttons differ; a change here sets both to the value shown')}</div>` : ''}
       ${sec(t('Preset'), card(presetBar('hits', preset, changed, G.allHitsPresets(s), id => id === 'default', S.menu === 'hits-presets')))}${tools}</div>
   </div></div>`;
@@ -157,18 +157,17 @@ const HITS_SHAPES = {
 function hitsPicture(L, R) {
   const lit = k => S.hitsField === k ? 'lit' : '';
   const on = side => S.hitsSide === 'both' || S.hitsSide === side;
-  // each button's values in a box beside the mouse, joined to its check by a line (as G HUB draws it)
-  const BOX = { left: { x: -620, y: 420 }, right: { x: 1630, y: 420 } }, W = 400, H = 330;
-  const box = (v, side) => { const b = BOX[side], [mx, my] = HITS_SHAPES[side].mark, edge = side === 'left' ? b.x + W : b.x;
-    return `<g class="hb-box ${on(side) ? '' : 'dim'}"><line x1="${side === 'left' ? mx - 36 : mx + 36}" y1="${my}" x2="${edge}" y2="${b.y + H / 2}"/>
-      <foreignObject x="${b.x}" y="${b.y}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge">
+  // each button's values large on the button itself, under its check; a click opens that button's settings
+  const W = 560, H = 560, TOP = 690;
+  const box = (v, side) => { const [mx] = HITS_SHAPES[side].mark;
+    return `<foreignObject x="${mx - W / 2}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge ${on(side) ? '' : 'dim'}" data-act="hits-open" data-key="${side}" title="${side === 'left' ? t('Left button') : t('Right button')}">
       <span class="${lit('actuation')}" title="${t('Actuation point')}"><i class="fa-solid fa-arrow-down-long"></i>${v.actuation}</span>
       <span class="${lit('rapid_trigger')}" title="${t('Rapid trigger')}"><i class="fa-solid fa-arrow-up-long"></i>${v.rapid_trigger_on ? v.rapid_trigger : t('Off')}</span>
-      <span class="${lit('haptics')}" title="${t('Click haptics')}"><i class="fa-solid fa-wave-square"></i>${v.haptics}</span></div></foreignObject></g>`; };
+      <span class="${lit('haptics')}" title="${t('Click haptics')}"><i class="fa-solid fa-wave-square"></i>${v.haptics}</span></div></foreignObject>`; };
   const zone = side => { const z = HITS_SHAPES[side], [mx, my] = z.mark;
     return `<g class="hb ${on(side) ? 'on' : ''}" data-act="hits-toggle" data-key="${side}"><title>${side === 'left' ? t('Left button') : t('Right button')}</title><path transform="translate(${z.x} 0)" d="${z.d}"/><path class="hb-hatch" transform="translate(${z.x} 0)" d="${z.d}"/>
       <circle class="hb-mark" cx="${mx}" cy="${my}" r="34"/>${on(side) ? `<path class="hb-check" d="M${mx - 14} ${my + 1} l10 10 l19 -21"/>` : ''}</g>`; };
-  return `<div class="hits-pic"><svg viewBox="-660 -20 2730 2840" preserveAspectRatio="xMidYMin meet"><defs><pattern id="hb-stripes" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="26" fill="rgba(255,255,255,.10)"/></pattern></defs>
+  return `<div class="hits-pic"><svg viewBox="-40 -20 1490 2840" preserveAspectRatio="xMidYMin meet"><defs><pattern id="hb-stripes" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="26" fill="rgba(255,255,255,.10)"/></pattern></defs>
     <image href="../assets/devices/40be.png" width="1410" height="2800"/>${zone('left')}${zone('right')}${box(L, 'left')}${box(R, 'right')}</svg></div>`;
 }
 
