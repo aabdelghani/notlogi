@@ -1259,5 +1259,6 @@
  "Click a placed key to put it somewhere else": "Klik op een geplaatste toets om hem ergens anders neer te zetten",
  "Skip": "Overslaan",
  "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "De muis werkt op zijn ingebouwde geheugen: wat hier is ingesteld geldt zodra NotLogi het weer overneemt ({link}).",
- "Settings, Onboard memory": "Instellingen, Ingebouwd geheugen"
+ "Settings, Onboard memory": "Instellingen, Ingebouwd geheugen",
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "Op het ingebouwde geheugen houdt de muis tijdens de test de rapportfrequentie van zijn profiel aan."
 }

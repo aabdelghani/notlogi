@@ -1388,3 +1388,5 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .dpi-panel .dpi-slot input[type=range] { min-width: 50px; }
 .dpi-panel .dpi-slot .marks { width: 30px; }
 .dpi-panel .row:has(> .seg) > .grow { flex-basis: 100%; }
+.gdlg .dlg-head { cursor: move; user-select: none; }
+.gdlg .dlg-head .hbtn { cursor: pointer; }

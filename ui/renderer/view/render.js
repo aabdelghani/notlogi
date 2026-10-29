@@ -12,6 +12,7 @@ export function link(ctx) { ({ PAGES, S, VERSION, appIcon, armRecorder, assignTy
 // Animations run when something new appears, not on every refresh: the page when it is
 // navigated to, the dialog when it opens. A refresh of the same page redraws it in place.
 let lastWiz = false, lastPageKey = null, lastDlg = null, lastNavKey = null, lastDrawer = false;
+const dlgMoved = {};   // where a tool window was dragged to, by its kind (this run of the window only)
 // A field being typed into survives a redraw (a battery tick, the focused app changing): the same
 // text, the same caret, still focused. Fields are known by their data-field or as the folder's name.
 function typingIn() {
@@ -361,6 +362,33 @@ function bind() {
     };
     i.onkeydown = e => { if (e.key === 'Enter' && S.dlg === 'prompt') { e.preventDefault(); onAction('prompt-ok'); } if (e.key === 'Enter' && S.dlg === 'picker' && S.picker && S.picker.drawer && ['cmd', 'text', 'open'].includes(i.dataset.field)) { e.preventDefault(); assignTyped(); } };
   });
+  // a gaming mouse's tool windows move by their title bar, and keep where they were put while they redraw
+  const gd = root.querySelector('.gdlg');
+  if (gd) {
+    const kind = (S.gtool || {}).kind || '', at = dlgMoved[kind];
+    if (at) gd.style.translate = `${at[0]}px ${at[1]}px`;
+    const head = gd.querySelector('.dlg-head');
+    if (head) head.onmousedown = e => {
+      if (e.button !== 0 || e.target.closest('button')) return;
+      e.preventDefault();
+      const [x0, y0] = [e.clientX, e.clientY], [bx, by] = dlgMoved[kind] || [0, 0], r = gd.getBoundingClientRect();
+      let moved = false;
+      const move = ev => {
+        // the title bar stays in the window
+        const dx = Math.max(-r.left - r.width + 120, Math.min(window.innerWidth - r.left - 120, ev.clientX - x0));
+        const dy = Math.max(-r.top, Math.min(window.innerHeight - r.top - 48, ev.clientY - y0));
+        moved = moved || Math.abs(dx) + Math.abs(dy) > 3;
+        dlgMoved[kind] = [bx + dx, by + dy];
+        const cur = root.querySelector('.gdlg'); if (cur) cur.style.translate = `${bx + dx}px ${by + dy}px`;
+      };
+      const up = () => {
+        window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up);
+        // a drag let go over the dimmed page is not a click on it (that would close the window)
+        if (moved) window.addEventListener('click', ev => { ev.stopPropagation(); ev.preventDefault(); }, { capture: true, once: true });
+      };
+      window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+    };
+  }
   // a gaming mouse's tools: the HITS test box takes the press and the release of the button tested,
   // the Sensitivity tool's arena each click with where it landed
   const ha = root.querySelector('[data-hits-area]');

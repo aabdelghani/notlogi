@@ -865,13 +865,19 @@ json ManagedDevice::hitsTest(const std::string& op, const json& p) {
         // asks again before that runs out); a second open only renews it
         hitsOpen_ = true;
         dev_->setAnalogMonitoring(true, 60);
-        // G HUB holds the report rate at 1000 Hz while its test is open, and puts it back after
-        if (auto rr = dev_->reportRate()) {
-            int cur = transportName() == "usb" ? rr->wired : rr->wireless;
-            if (cur >= 0 && cur != 3) {
-                hitsRate_ = cur;
-                dev_->setReportRate(3);
+        // G HUB holds the report rate at 1000 Hz while its test is open, and puts it back after; on
+        // its onboard memory the mouse keeps its profile's rate (it refuses a change), and the test
+        // runs at that rate
+        try {
+            if (auto rr = dev_->reportRate()) {
+                int cur = transportName() == "usb" ? rr->wired : rr->wireless;
+                if (cur >= 0 && cur != 3) {
+                    dev_->setReportRate(3);
+                    hitsRate_ = cur;
+                }
             }
+        } catch (const std::exception& e) {
+            DEBUG("%s: HITS test at the rate the mouse has (%s)", dev_->name().c_str(), e.what());
         }
         return {{"ok", true}};
     }

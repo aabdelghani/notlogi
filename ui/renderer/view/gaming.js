@@ -308,7 +308,7 @@ function hitsTestBody(d, g) {
       <div class="row"><span class="grow lbl">${t('Button')}</span><span class="seg"><button class="${side === 'left' ? 'on' : ''}" data-act="hits-test-side" data-key="left">${t('Left')}</button><button class="${side === 'right' ? 'on' : ''}" data-act="hits-test-side" data-key="right">${t('Right')}</button></span></div>
       <div class="ht-ap"><div class="ht-ap-h"><span class="lbl">${t('Actuation point')}</span><span class="val" data-out="h-tap">${v.actuation}</span></div><div class="ht-slider"><span class="hint">${t('Short click')}</span>${range(`data-act="hits-test-ap" data-out="h-tap"`, v.actuation, 1, 10, 1)}<span class="hint">${t('Long click')}</span></div>
         <div class="ht-travel" data-hits-travel title="${t('How far the button is pressed now')}">${Array.from({ length: 10 }, (_, i) => `<span class="${i + 1 <= (g.travel || 0) ? 'fill' : ''} ${i + 1 === v.actuation ? 'ap' : ''} ${i + 1 === 5 ? 'trad' : ''}"></span>`).join('')}</div></div>
-      <div class="hint">${t('The report rate is set to 1000 Hz while the test is open and put back after.')}</div>
+      <div class="hint">${settingsOf(d).onboard_memory ? t('On its onboard memory the mouse keeps its profile\'s report rate during the test.') : t('The report rate is set to 1000 Hz while the test is open and put back after.')}</div>
     </div><div class="ht-area ${g.phase || 'idle'}" data-hits-area>${result || `<span>${phaseText}</span>${['soon', 'sleep', 'none'].includes(g.phase) ? `<span class="ht-again">${t('Click again to restart')}</span>` : ''}`}</div></div>`;
 }
 

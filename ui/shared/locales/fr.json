@@ -1259,5 +1259,6 @@
  "Click a placed key to put it somewhere else": "Cliquez sur une touche placée pour la déplacer",
  "Skip": "Passer",
  "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "La souris fonctionne sur sa mémoire intégrée : ce qui est réglé ici s’applique dès que NotLogi reprend la main ({link}).",
- "Settings, Onboard memory": "Paramètres, Mémoire intégrée"
+ "Settings, Onboard memory": "Paramètres, Mémoire intégrée",
+ "On its onboard memory the mouse keeps its profile's report rate during the test.": "Sur sa mémoire intégrée, la souris conserve le taux de rapport de son profil pendant le test."
 }
