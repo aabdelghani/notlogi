@@ -1401,3 +1401,7 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .dev-card .onboard-chip:hover { border-color: #2f7de1; color: var(--fg); }
 .dev-card .onboard-chip.on { background: #2f7de1; border-color: #2f7de1; color: #fff; }
 .dev-card .onboard-chip i { font-size: 22px; }
+/* see-through, so the mouse shows behind it; solid on hover */
+.dev-card .onboard-chip { background: color-mix(in srgb, var(--card) 35%, transparent); backdrop-filter: blur(2px); }
+.dev-card .onboard-chip.on { background: color-mix(in srgb, #2f7de1 55%, transparent); border-color: color-mix(in srgb, #2f7de1 80%, transparent); }
+.dev-card .onboard-chip:hover { background: color-mix(in srgb, #2f7de1 85%, transparent); color: #fff; }
