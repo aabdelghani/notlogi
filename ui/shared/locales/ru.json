@@ -1165,7 +1165,6 @@
  "The click felt on each press": "Отдача, ощущаемая при каждом нажатии",
  "The desktop's own pointer speed and acceleration": "Собственная скорость и ускорение указателя рабочего стола",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "Мышь работает по своим профилям; NotLogi не трогает ее настройки и кнопки",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "Мышь работает со встроенной памяти: заданное здесь применится, когда NotLogi снова возьмет управление (Настройки, Встроенная память).",
  "The preset goes; the mouse keeps the settings it has now.": "Предустановка будет удалена; мышь сохранит текущие настройки.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "На время теста частота опроса устанавливается на 1000 Hz, а затем возвращается.",
  "The sensor tells the surface itself and tunes for it": "Датчик сам распознает поверхность и подстраивается под нее",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "Все клавиши размещены",
  "{n} of {total} placed": "Размещено: {n} из {total}",
  "Click a placed key to put it somewhere else": "Нажмите на размещенную клавишу, чтобы переместить ее",
- "Skip": "Пропустить"
+ "Skip": "Пропустить",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Мышь работает со встроенной памяти: заданное здесь применится, когда NotLogi снова возьмет управление ({link}).",
+ "Settings, Onboard memory": "Настройки, Встроенная память"
 }

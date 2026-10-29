@@ -23,7 +23,7 @@ const LOD_NAMES = { 1: t('Low'), 2: t('Medium'), 3: t('High') };
 const settingsOf = d => (d.config || {}).settings || {};
 const stateOf = d => d.state || {};
 // while the mouse runs on its onboard memory, what is set here waits until NotLogi takes over again
-const onboardNote = d => settingsOf(d).onboard_memory ? `<div class="banner info onboard-mem"><i class="fa-solid fa-microchip"></i><span>${t('The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).')}</span></div>` : '';
+const onboardNote = d => settingsOf(d).onboard_memory ? `<div class="banner info onboard-mem"><i class="fa-solid fa-microchip"></i><span>${t('The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).', { link: `<button class="linkbtn" data-act="onboard-goto">${t('Settings, Onboard memory')}</button>` })}</span></div>` : '';
 
 // ----------------------------------------------------------- presets
 // A preset bar, the same for DPI and HITS: the one in use (marked when changed since), a menu of
@@ -200,8 +200,8 @@ function gamingSettings(d) {
       const cur = on && (s.onboard_profile ? s.onboard_profile === p.sector : p.current);
       return `<div class="row onb-row ${on && p.enabled ? '' : 'disabled'}"><button class="radio-pick ${cur ? 'on' : ''}" data-act="onboard-pick" data-key="${p.sector}" ${on && p.enabled ? '' : 'disabled'}><i class="fa-solid ${cur ? 'fa-circle-dot' : 'fa-circle'} rb"></i><div class="grow"><div class="lbl">${t('Profile {n}', { n: p.index })}${p.enabled ? '' : ` <span class="pchg">${t('switched off')}</span>`}</div><div class="sub">${slots ? t('DPI {list} · {rate} Hz', { list: slots, rate: p.report_rate || '–' }) : esc(p.error || '')}</div></div></button><button class="btn sm" data-act="onboard-save" data-key="${p.index}" title="${t('Write the DPI slots, report rates and HITS set in NotLogi into this profile')}"><i class="fa-solid fa-microchip"></i>${t('Save NotLogi\'s settings here')}</button></div>`;
     }).join('') : `<div class="row"><span class="grow hint">${t('Reading the mouse\'s memory…')}</span></div>`;
-    out += sec(t('Onboard memory'), card(row(t('Use the onboard memory'), on ? t('The mouse runs its own profiles; NotLogi leaves its settings and buttons alone') : t('Off: NotLogi sets the mouse while it runs, as G HUB does'), sw(on, 'data-act="onboard-memory"')) + rows +
-      `<div class="row"><span class="grow hint">${t('What a profile held is kept in a backup file before it is written.')}</span><button class="btn sm danger" data-act="onboard-restore"><i class="fa-solid fa-rotate-left"></i>${t('Restore all profiles')}</button></div>`));
+    out += '<div id="onboard-sec">' + sec(t('Onboard memory'), card(row(t('Use the onboard memory'), on ? t('The mouse runs its own profiles; NotLogi leaves its settings and buttons alone') : t('Off: NotLogi sets the mouse while it runs, as G HUB does'), sw(on, 'data-act="onboard-memory"')) + rows +
+      `<div class="row"><span class="grow hint">${t('What a profile held is kept in a backup file before it is written.')}</span><button class="btn sm danger" data-act="onboard-restore"><i class="fa-solid fa-rotate-left"></i>${t('Restore all profiles')}</button></div>`)) + '</div>';
   }
   return out;
 }

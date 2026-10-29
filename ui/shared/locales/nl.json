@@ -1165,7 +1165,6 @@
  "The click felt on each press": "De klik die je bij elke druk voelt",
  "The desktop's own pointer speed and acceleration": "De eigen aanwijzersnelheid en -versnelling van het bureaublad",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "De muis gebruikt zijn eigen profielen; NotLogi laat zijn instellingen en knoppen met rust",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "De muis werkt op zijn ingebouwde geheugen: wat hier is ingesteld geldt zodra NotLogi het weer overneemt (Instellingen, Ingebouwd geheugen).",
  "The preset goes; the mouse keeps the settings it has now.": "De voorinstelling verdwijnt; de muis houdt de instellingen die hij nu heeft.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "De rapportfrequentie wordt op 1000 Hz gezet zolang de test open is en daarna teruggezet.",
  "The sensor tells the surface itself and tunes for it": "De sensor herkent het oppervlak zelf en stemt zich erop af",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "Elke toets heeft zijn plek",
  "{n} of {total} placed": "{n} van {total} geplaatst",
  "Click a placed key to put it somewhere else": "Klik op een geplaatste toets om hem ergens anders neer te zetten",
- "Skip": "Overslaan"
+ "Skip": "Overslaan",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "De muis werkt op zijn ingebouwde geheugen: wat hier is ingesteld geldt zodra NotLogi het weer overneemt ({link}).",
+ "Settings, Onboard memory": "Instellingen, Ingebouwd geheugen"
 }

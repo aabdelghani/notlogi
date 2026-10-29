@@ -1165,7 +1165,6 @@
  "The click felt on each press": "El clic que se nota en cada pulsación",
  "The desktop's own pointer speed and acceleration": "Velocidad y aceleración propias del puntero del escritorio",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "El ratón usa sus propios perfiles; NotLogi no toca sus ajustes ni sus botones",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "El ratón funciona con su memoria integrada: lo que se ajuste aquí se aplicará cuando NotLogi vuelva a tomar el control (Configuración, Memoria integrada).",
  "The preset goes; the mouse keeps the settings it has now.": "El ajuste preestablecido se elimina; el ratón conserva los ajustes que tiene ahora.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "La tasa de sondeo se fija en 1000 Hz mientras la prueba está abierta y se restablece después.",
  "The sensor tells the surface itself and tunes for it": "El sensor reconoce la superficie por sí mismo y se adapta a ella",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "Cada tecla tiene su sitio",
  "{n} of {total} placed": "{n} de {total} colocadas",
  "Click a placed key to put it somewhere else": "Haz clic en una tecla colocada para moverla a otro sitio",
- "Skip": "Omitir"
+ "Skip": "Omitir",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "El ratón funciona con su memoria integrada: lo que se ajuste aquí se aplicará cuando NotLogi vuelva a tomar el control ({link}).",
+ "Settings, Onboard memory": "Configuración, Memoria integrada"
 }

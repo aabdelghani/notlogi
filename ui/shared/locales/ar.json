@@ -1165,7 +1165,6 @@
  "The click felt on each press": "النقرة التي تشعر بها مع كل ضغطة",
  "The desktop's own pointer speed and acceleration": "سرعة المؤشر وتسارعه الخاصان بسطح المكتب",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "يشغّل الماوس ملفات تعريفه الخاصة؛ ولا يمس NotLogi إعداداته ولا أزراره",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "يعمل الماوس من ذاكرته المدمجة: ما يُضبط هنا يُطبَّق عندما يتولى NotLogi التحكم مجددًا (الإعدادات، الذاكرة المدمجة).",
  "The preset goes; the mouse keeps the settings it has now.": "يُحذف الإعداد المسبق؛ ويحتفظ الماوس بإعداداته الحالية.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "يُضبط معدل الإرسال على 1000 Hz أثناء فتح الاختبار ثم يُعاد بعده.",
  "The sensor tells the surface itself and tunes for it": "يتعرّف المستشعر على السطح بنفسه ويتكيّف معه",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "لكل مفتاح مكانه",
  "{n} of {total} placed": "تم وضع {n} من {total}",
  "Click a placed key to put it somewhere else": "انقر على مفتاح موضوع لنقله إلى مكان آخر",
- "Skip": "تخطٍّ"
+ "Skip": "تخطٍّ",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "يعمل الماوس من ذاكرته المدمجة: ما يُضبط هنا يُطبَّق عندما يتولى NotLogi التحكم مجددًا ({link}).",
+ "Settings, Onboard memory": "الإعدادات، الذاكرة المدمجة"
 }

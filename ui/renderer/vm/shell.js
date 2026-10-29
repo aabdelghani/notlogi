@@ -10,7 +10,7 @@ export function link(ctx) { ({ IS_MAC, IS_WIN, S, SLOTS, agentNeedsBuild, api, a
 export const state = {
   theme: 'light', mode: 'app', page: 'home', dev: null, dlg: null, menu: null, appDetail: null, conflictDismissed: false,
   ob: { step: 1, preset: 'gnome' }, ptSel: undefined, esSel: undefined, blClosed: undefined,
-  cfgFrom: undefined, cfgKind: undefined, cfgBack: undefined,
+  cfgFrom: undefined, cfgKind: undefined, cfgBack: undefined, infoFrom: undefined,
   navFwd: [], navAt: null,   // where the mouse's Forward button goes back to, and the place it is valid from
 };
 
@@ -62,6 +62,8 @@ export const commands = {
       else { S.dlg = null; S.picker = null; changed(); }
       return;
     }
+    // Settings opened from a link on another page (the onboard memory notice): back to that page
+    if (S.infoFrom && S.page === 'info') { const p = S.infoFrom; S.infoFrom = null; go(p); return; }
     // with a panel open on the right, the back arrow folds the panel away first
     if (drawerUp() && S.page !== 'ring') { fx.closeDrawer(); return; }
     if (S.page === 'ring') { S.dlg = null; S.picker = null; }

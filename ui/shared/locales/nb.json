@@ -1165,7 +1165,6 @@
  "The click felt on each press": "Klikket som kjennes ved hvert trykk",
  "The desktop's own pointer speed and acceleration": "Skrivebordets egen pekerhastighet og akselerasjon",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "Musen kjører sine egne profiler; NotLogi lar innstillingene og knappene være i fred",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "Musen kjører på det innebygde minnet: det som stilles inn her, gjelder når NotLogi tar over igjen (Innstillinger, Innebygd minne).",
  "The preset goes; the mouse keeps the settings it has now.": "Forhåndsinnstillingen fjernes; musen beholder innstillingene den har nå.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "Rapportfrekvensen settes til 1000 Hz mens testen er åpen, og settes tilbake etterpå.",
  "The sensor tells the surface itself and tunes for it": "Sensoren gjenkjenner underlaget selv og tilpasser seg det",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "Alle taster har sin plass",
  "{n} of {total} placed": "{n} av {total} plassert",
  "Click a placed key to put it somewhere else": "Klikk på en plassert tast for å flytte den",
- "Skip": "Hopp over"
+ "Skip": "Hopp over",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Musen kjører på det innebygde minnet: det som stilles inn her, gjelder når NotLogi tar over igjen ({link}).",
+ "Settings, Onboard memory": "Innstillinger, Innebygd minne"
 }

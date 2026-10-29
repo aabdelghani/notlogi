@@ -1165,7 +1165,6 @@
  "The click felt on each press": "누를 때마다 느껴지는 클릭감",
  "The desktop's own pointer speed and acceleration": "데스크톱 자체의 포인터 속도 및 가속",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "마우스가 자체 프로필로 작동하며, NotLogi는 그 설정과 버튼을 건드리지 않습니다",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "마우스가 온보드 메모리로 작동 중입니다. 여기서 설정한 내용은 NotLogi가 다시 제어하면 적용됩니다 (설정, 온보드 메모리).",
  "The preset goes; the mouse keeps the settings it has now.": "사전 설정은 삭제되지만 마우스는 현재 설정을 유지합니다.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "테스트가 열려 있는 동안 리포트 속도가 1000 Hz로 설정되며 이후 원래대로 돌아갑니다.",
  "The sensor tells the surface itself and tunes for it": "센서가 표면을 스스로 인식하여 맞춰 조정합니다",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "모든 키가 배치되었습니다",
  "{n} of {total} placed": "{total}개 중 {n}개 배치됨",
  "Click a placed key to put it somewhere else": "배치된 키를 클릭하면 다른 곳으로 옮길 수 있습니다",
- "Skip": "건너뛰기"
+ "Skip": "건너뛰기",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "마우스가 온보드 메모리로 작동 중입니다. 여기서 설정한 내용은 NotLogi가 다시 제어하면 적용됩니다 ({link}).",
+ "Settings, Onboard memory": "설정, 온보드 메모리"
 }

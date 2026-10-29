@@ -1352,3 +1352,9 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 
 .hb-box line { stroke: var(--dim); stroke-width: 5; }
 .hb-box.dim line { opacity: .4; }
+/* a link inside a notice, and a section a link led to, flashed once */
+.banner .linkbtn { border: 0; padding: 0; background: none; font: inherit; font-weight: 700; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.banner.info.onboard-mem .linkbtn { color: #e5484d; }
+.banner .linkbtn:hover { filter: brightness(1.2); }
+@keyframes sec-flash { 0%, 60% { box-shadow: 0 0 0 3px #e5484d; } 100% { box-shadow: 0 0 0 3px transparent; } }
+.flash .card { animation: sec-flash 1.8s ease-out; }

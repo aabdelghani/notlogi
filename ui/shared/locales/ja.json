@@ -1165,7 +1165,6 @@
  "The click felt on each press": "押すたびに感じるクリック感",
  "The desktop's own pointer speed and acceleration": "デスクトップ自体のポインタ速度と加速",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "マウスは独自のプロファイルで動作します。NotLogi はその設定やボタンを変更しません",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "マウスはオンボードメモリで動作しています。ここでの設定は、NotLogi が再び制御を始めると適用されます（設定、オンボードメモリ）。",
  "The preset goes; the mouse keeps the settings it has now.": "プリセットは削除されますが、マウスは現在の設定を保持します。",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "テスト中はレポートレートが 1000 Hz に設定され、終了後に元に戻ります。",
  "The sensor tells the surface itself and tunes for it": "センサーが表面を自動で判別して最適化します",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "すべてのキーを配置しました",
  "{n} of {total} placed": "{total} 個中 {n} 個を配置済み",
  "Click a placed key to put it somewhere else": "配置済みのキーをクリックすると別の場所に移動できます",
- "Skip": "スキップ"
+ "Skip": "スキップ",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "マウスはオンボードメモリで動作しています。ここでの設定は、NotLogi が再び制御を始めると適用されます（{link}）。",
+ "Settings, Onboard memory": "設定、オンボードメモリ"
 }

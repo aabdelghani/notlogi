@@ -32,10 +32,17 @@ function scrollHome(dir) {
   const strip = root.querySelector('.home-strip'), card = strip && strip.querySelector('.dev-card');
   if (card) strip.scrollBy({ left: dir * (card.offsetWidth + parseFloat(getComputedStyle(strip).columnGap || 0)), behavior: 'smooth' });
 }
+// a part of the page brought into view and flashed once it is drawn (a link from elsewhere led to it)
+// (and once more a little later: what it shows may still be arriving and draw the page again)
+function reveal(selector, { delay = 0 } = {}) {
+  const show = flash => { const n = root.querySelector(selector); if (!n) return; n.scrollIntoView({ block: 'start' }); if (flash) { n.classList.remove('flash'); void n.offsetWidth; n.classList.add('flash'); } };
+  setTimeout(() => show(true), delay);
+  setTimeout(() => show(true), delay + 700);
+}
 // a side panel (Backlight, Point & scroll, adding apps) is open beside the device
 const panelOpen = () => !!root.querySelector('.devview2.panel-open');
 
 export const provide = { fx: {
-  focus, markPicked, markAddPick, panelOpen, scrollHome, // the side panel slides out, then `after` runs and the window is redrawn
+  focus, markPicked, markAddPick, panelOpen, reveal, scrollHome, // the side panel slides out, then `after` runs and the window is redrawn
   closeDrawer: after => V.closeDrawer(after), // the profile bar and the picker's app list redrawn on their own (the rest of the page stays)
   refreshBar: () => V.refreshBar(), refreshAppList: () => V.renderAppList(), stopRecorder: () => V.stopRecorder() } };

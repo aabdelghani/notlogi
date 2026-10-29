@@ -7,8 +7,8 @@ import * as G from '../../shared/gaming.mjs';
 import { codeToKey } from '../../shared/actions.mjs';
 
 // from the rest of the window, filled in by link()
-let S, api, call, changed, paintTravel, prompt, setAssign, toast;
-export function link(ctx) { ({ S, api, call, changed, paintTravel, prompt, setAssign, toast } = ctx); }
+let S, api, call, changed, fx, go, paintTravel, prompt, setAssign, toast;
+export function link(ctx) { ({ S, api, call, changed, fx, go, paintTravel, prompt, setAssign, toast } = ctx); }
 
 // which button the HITS page sets (both, left, right), which of its settings was touched last (lit
 // on the picture), whether Assignments shows the G-Shift layer, the open tool, the onboard profiles
@@ -293,6 +293,8 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   // ------------------------------------------------- assignments
   'gshift-layer': async (it, e, d, key) => { S.gshiftLayer = key === 'gshift'; changed(); },
   // ------------------------------------------------- macros
+  // the onboard memory notice's link: Settings, at the onboard memory, and the back arrow returns here
+  'onboard-goto': async () => { const from = S.page; go('info'); S.infoFrom = from; fx.reveal('#onboard-sec', { delay: 150 }); },
   'macros-open': async () => { S.gtool = { kind: 'macros' }; S.dlg = 'gaming'; changed(); },
   'macro-new': async (it, e, d) => { openMacro(d, null, null); },
   'macro-edit': async (it, e, d, key) => { openMacro(d, key, null); },

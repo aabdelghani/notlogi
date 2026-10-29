@@ -1165,7 +1165,6 @@
  "The click felt on each press": "每次按下時感受到的點擊感",
  "The desktop's own pointer speed and acceleration": "桌面本身的指標速度和加速度",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "滑鼠執行自己的設定檔；NotLogi 不會變更其設定和按鈕",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "滑鼠正在使用其板載記憶體：此處的設定會在 NotLogi 重新接管後生效（設定，板載記憶體）。",
  "The preset goes; the mouse keeps the settings it has now.": "預設集會被刪除；滑鼠保留目前的設定。",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "測試開啟期間回報率會設為 1000 Hz，之後會還原原值。",
  "The sensor tells the surface itself and tunes for it": "感應器自行辨識表面並進行最佳化",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "所有按鍵都已放置",
  "{n} of {total} placed": "已放置 {n}/{total}",
  "Click a placed key to put it somewhere else": "按一下已放置的按鍵即可移到其他位置",
- "Skip": "略過"
+ "Skip": "略過",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "滑鼠正在使用其板載記憶體：此處的設定會在 NotLogi 重新接管後生效（{link}）。",
+ "Settings, Onboard memory": "設定，板載記憶體"
 }

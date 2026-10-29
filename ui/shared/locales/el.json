@@ -1165,7 +1165,6 @@
  "The click felt on each press": "Το κλικ που νιώθετε σε κάθε πάτημα",
  "The desktop's own pointer speed and acceleration": "Η ταχύτητα και η επιτάχυνση δείκτη της ίδιας της επιφάνειας εργασίας",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "Το ποντίκι εκτελεί τα δικά του προφίλ· το NotLogi δεν αγγίζει τις ρυθμίσεις και τα κουμπιά του",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "Το ποντίκι λειτουργεί από την ενσωματωμένη μνήμη του: ό,τι ορίζεται εδώ ισχύει μόλις το NotLogi αναλάβει ξανά (Ρυθμίσεις, Ενσωματωμένη μνήμη).",
  "The preset goes; the mouse keeps the settings it has now.": "Η προρρύθμιση διαγράφεται· το ποντίκι κρατά τις ρυθμίσεις που έχει τώρα.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "Ο ρυθμός αναφοράς ορίζεται στα 1000 Hz όσο η δοκιμή είναι ανοιχτή και επανέρχεται μετά.",
  "The sensor tells the surface itself and tunes for it": "Ο αισθητήρας αναγνωρίζει μόνος του την επιφάνεια και προσαρμόζεται σε αυτή",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "Κάθε πλήκτρο έχει τη θέση του",
  "{n} of {total} placed": "{n} από {total} τοποθετήθηκαν",
  "Click a placed key to put it somewhere else": "Κάντε κλικ σε ένα τοποθετημένο πλήκτρο για να το μετακινήσετε",
- "Skip": "Παράλειψη"
+ "Skip": "Παράλειψη",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Το ποντίκι λειτουργεί από την ενσωματωμένη μνήμη του: ό,τι ορίζεται εδώ ισχύει μόλις το NotLogi αναλάβει ξανά ({link}).",
+ "Settings, Onboard memory": "Ρυθμίσεις, Ενσωματωμένη μνήμη"
 }

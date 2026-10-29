@@ -1165,7 +1165,6 @@
  "The click felt on each press": "Jokaisella painalluksella tuntuva napsahdus",
  "The desktop's own pointer speed and acceleration": "Työpöydän oma osoittimen nopeus ja kiihdytys",
  "The mouse runs its own profiles; NotLogi leaves its settings and buttons alone": "Hiiri käyttää omia profiilejaan; NotLogi ei koske sen asetuksiin eikä painikkeisiin",
- "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again (Settings, Onboard memory).": "Hiiri käyttää sisäistä muistiaan: tässä asetettu tulee voimaan, kun NotLogi ottaa taas ohjauksen (Asetukset, Laitteen sisäinen muisti).",
  "The preset goes; the mouse keeps the settings it has now.": "Esiasetus poistetaan; hiiri säilyttää nykyiset asetuksensa.",
  "The report rate is set to 1000 Hz while the test is open and put back after.": "Raportointitaajuudeksi asetetaan 1000 Hz testin ajaksi, ja se palautetaan sen jälkeen.",
  "The sensor tells the surface itself and tunes for it": "Anturi tunnistaa alustan itse ja säätyy sen mukaan",
@@ -1258,5 +1257,7 @@
  "Every key has its place": "Jokaisella näppäimellä on paikkansa",
  "{n} of {total} placed": "{n}/{total} sijoitettu",
  "Click a placed key to put it somewhere else": "Siirrä sijoitettua näppäintä napsauttamalla sitä",
- "Skip": "Ohita"
+ "Skip": "Ohita",
+ "The mouse runs on its onboard memory: what is set here applies once NotLogi takes over again ({link}).": "Hiiri käyttää sisäistä muistiaan: tässä asetettu tulee voimaan, kun NotLogi ottaa taas ohjauksen ({link}).",
+ "Settings, Onboard memory": "Asetukset, Laitteen sisäinen muisti"
 }
