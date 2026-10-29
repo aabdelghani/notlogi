@@ -77,7 +77,10 @@ const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mo
       await store.load();
       // repair slots an earlier build saved with the ring's own key, so the ring itself can run them
       if (JSON.stringify((S.general || {}).ring || {}).includes('"ring:profile"')) { const r = ringState(); saveRing({ profiles: r.profiles, apps: r.apps }).catch(() => {}); }
-      if (!S.dev || !S.devices.some(d => d.id === S.dev)) { S.dev = S.devices.length ? S.devices[0].id : null; if (S.dev && !generalPagesAll.includes(S.page) && S.page !== 'home') S.page = devicePages(S.devices[0])[0]; }
+      // the device on screen not back yet (the agent was restarted and finds them one by one): Home
+      // until it is, then its page again, rather than whichever device the agent found first
+      if (S.dev && !S.devices.some(d => d.id === S.dev) && !generalPagesAll.includes(S.page) && S.page !== 'home') { S.waitDev = { id: S.dev, page: S.page }; S.page = 'home'; }
+      if (!S.dev || !S.devices.some(d => d.id === S.dev)) S.dev = S.devices.length ? S.devices[0].id : null;
       render();
       seedProfiles();
       await store.loadRest();
@@ -94,7 +97,7 @@ const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mo
   const ctx = Object.assign({ commands, changed, $, root, api, store, S, VERSION, call, toast, merge, setSetting, setGeneral, setAssign, loadLogs, refresh }, ...MODULES.map(m => m.provide));
   MODULES.forEach(m => m.link(ctx));
   fxView.linkViews(ctx);
-  const { IS_LINUX, IS_MAC, IS_WIN, alignToNav, devicePages, flowEvent, generalPagesAll, go, hitsTravel, onAction, onRecordEvent, recording, pairCheck, render, ringEditorOn, ringState, updateCheckAtStart, saveRing, seedProfiles, schedule, homeFit, unhideIfBack } = ctx;
+  const { IS_LINUX, IS_MAC, IS_WIN, alignToNav, flowEvent, generalPagesAll, go, hitsTravel, onAction, onRecordEvent, recording, pairCheck, render, ringEditorOn, ringState, updateCheckAtStart, saveRing, seedProfiles, schedule, homeFit, unhideIfBack } = ctx;
   document.addEventListener('click', () => { if (S.menu) { S.menu = null; changed(); } });
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && !recording() && ringEditorOn() && (S.ringPath || []).length && S.dlg !== 'prompt' && !/input/i.test((e.target || {}).tagName || '')) { e.stopImmediatePropagation(); onAction('go-home', { dataset: {} }); }
@@ -147,7 +150,11 @@ const MODULES = [htmlView, fxView, coreVM, recorderView, renderView, dndView, mo
     // the Model takes the event; what is on screen decides whether it needs redrawing
     const hit = store.applyEvent(event, data);
     if (hit) {
-      if (event === 'device' || event === 'device_added') { if (!S.dev) S.dev = data.id; unhideIfBack(store.device(data.id)); changed(); pairCheck(); }
+      if (event === 'device' || event === 'device_added') {
+        if (!S.dev) S.dev = data.id;
+        const w = S.waitDev; if (w && w.id === data.id && S.page === 'home' && !S.dlg) go(w.page, w.id);
+        unhideIfBack(store.device(data.id)); changed(); pairCheck();
+      }
       else if (event === 'device_removed') { if (S.dev === data.id && S.page !== 'home') { const pairing = S.dlg === 'pair'; go('home'); if (pairing) S.dlg = 'pair'; } changed(); }   // a device leaving does not close Pair a device
       else if (event === 'battery' || event === 'general') changed();
       else if (event === 'profile') { if (S.dev === data.id && S.page !== 'home') changed(); }

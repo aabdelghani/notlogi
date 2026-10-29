@@ -10,7 +10,7 @@ export function link(ctx) { ({ IS_MAC, IS_WIN, S, SLOTS, agentNeedsBuild, api, a
 export const state = {
   theme: 'light', mode: 'app', page: 'home', dev: null, dlg: null, menu: null, appDetail: null, conflictDismissed: false,
   ob: { step: 1, preset: 'gnome' }, ptSel: undefined, esSel: undefined, blClosed: undefined,
-  cfgFrom: undefined, cfgKind: undefined, cfgBack: undefined, infoFrom: undefined,
+  cfgFrom: undefined, cfgKind: undefined, cfgBack: undefined, infoFrom: undefined, waitDev: null,
   navFwd: [], navAt: null,   // where the mouse's Forward button goes back to, and the place it is valid from
 };
 
