@@ -826,6 +826,27 @@ json ManagedDevice::onboardEnable(int index, bool on) {
     return {{"ok", true}, {"profile", index}, {"enabled", on}};
 }
 
+// Everything the onboard memory holds, read only and kept in onboard-backups: the directory, each
+// sector the mouse has, and its factory profile, with whether each one reads back whole
+json ManagedDevice::onboardDump() {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    auto info = dev_->onboardInfo();
+    if (!info) throw std::runtime_error("this mouse has no onboard memory");
+    const int size = info->sectorSize;
+    std::map<int, hidpp::Bytes> all;
+    json report = json::array();
+    for (int sec = 0; sec < info->sectors; ++sec) {
+        try { all[sec] = readWhole(*dev_, sec, size); report.push_back({{"sector", sec}, {"whole", sectorOk(all[sec])}}); }
+        catch (const std::exception& e) { report.push_back({{"sector", sec}, {"error", e.what()}}); }
+    }
+    try { all[0x0101] = dev_->readSector(0x0101, size); report.push_back({{"sector", 0x0101}, {"whole", sectorOk(all[0x0101]) || looksLikeProfile(all[0x0101])}}); }
+    catch (const std::exception& e) { report.push_back({{"sector", 0x0101}, {"error", e.what()}}); }
+    const std::string dir = std::filesystem::path(daemon_.config().path()).parent_path().string();
+    backupSectors(dir, id() + "-full", all);
+    INFO("%s: onboard memory read whole into onboard-backups (%zu sectors)", dev_->name().c_str(), all.size());
+    return {{"ok", true}, {"folder", dir + "/onboard-backups"}, {"sectors", report}, {"firmware", dev_->firmware()}};
+}
+
 json ManagedDevice::onboardRestore() {
     std::lock_guard<std::recursive_mutex> lk(m_);
     auto info = dev_->onboardInfo();
@@ -2340,6 +2361,10 @@ json Daemon::rpc(const std::string& method, const json& p) {
     if (method == "onboard_enable") {
         auto md = need(p);
         return md->onboardEnable(p.value("profile", 1), p.value("on", true));
+    }
+    if (method == "onboard_dump") {
+        auto md = need(p);
+        return md->onboardDump();
     }
     if (method == "onboard_restore") {
         auto md = need(p);
