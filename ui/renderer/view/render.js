@@ -61,7 +61,10 @@ function render() {
   const from = moving ? moving.getBoundingClientRect() : null;
   // the folder's name being typed survives a redraw (a battery or focus update): same text, same caret
   const typing = typingIn();
+  // the same page drawn again (what it shows arrived, a battery update) stays scrolled where it was
+  const SCROLLERS = '.content, .dlg-body', kept = pageChanged ? [] : [...root.querySelectorAll(SCROLLERS)].map(e => e.scrollTop);
   root.innerHTML = html;
+  if (kept.some(Boolean)) root.querySelectorAll(SCROLLERS).forEach((e, i) => { if (kept[i]) e.scrollTop = kept[i]; });
   // the Flow sheet's close button sits exactly over the window's own, which the sheet covers
   const fwClose = root.querySelector('.fw-close'), winClose = fwClose && root.querySelector('.hbtn.close:not(.fw-close)');
   if (winClose) { const r = winClose.getBoundingClientRect(); fwClose.style.top = r.top + 'px'; fwClose.style.right = (window.innerWidth - r.right) + 'px'; }
