@@ -1202,8 +1202,6 @@ html.rounded #root::after { content: ""; position: absolute; inset: 0; border-ra
 .cal-ctl { display: flex; align-items: center; gap: 8px; }
 .cal-details .sub { font-size: 13px; }
 /* Scroll wheel: the mouse beside its one setting */
-.wheel-page { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; }
-.wheel-photo { width: 100%; max-height: 360px; object-fit: contain; object-position: top; }
 /* HITS: the mouse with each main button's values, the settings beside it */
 .hits-page { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .hits-page .hits-pic { width: min(100%, 560px); }
@@ -1358,3 +1356,12 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .banner .linkbtn:hover { filter: brightness(1.2); }
 @keyframes sec-flash { 0%, 60% { box-shadow: 0 0 0 3px #e5484d; } 100% { box-shadow: 0 0 0 3px transparent; } }
 .flash .card { animation: sec-flash 1.8s ease-out; }
+
+/* Scroll wheel as HITS: no hint above, the mouse at the same height; its boxes a name over a value */
+.hits-page.wheel { margin-top: -56px; }
+.hits-page.wheel .hits-pic { margin-top: 0; }
+.wheel-badge { gap: 18px; }
+.wheel-badge .k { font-size: 70px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: .04em; }
+.hits-pic .hb > rect:first-of-type { fill: color-mix(in srgb, #2f7de1 42%, transparent); stroke: #2f7de1; stroke-width: 10; transition: fill .15s; }
+.hits-pic .hb:hover > rect:first-of-type { fill: color-mix(in srgb, #2f7de1 60%, transparent); }
+.hits-pic .hb > rect.hb-hatch { fill: url(#hb-stripes); stroke: none; pointer-events: none; }

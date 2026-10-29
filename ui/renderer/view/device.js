@@ -133,5 +133,5 @@ function pageDeviceSettings(d) {
 }
 
 const easyView = d => !!(d && (d.state || {}).hosts && (isMouse(d) ? MOUSE_BOTTOMS[d.id] : (photoOf(d.id) || {}).hosts));
-const backlightPanel = d => !!(d && !S.blClosed && !S.appDetail && !S.previewProfile && ((S.page === 'backlight' && !isMouse(d) && (d.state || {}).backlight && photoOf(d.id)) || (S.page === 'pointer' && isMouse(d) && MOUSE_PHOTOS[d.id]) || (S.page === 'easy' && easyView(d)) || (S.page === 'hits' && isGaming(d) && S.hitsPanel)));
+const backlightPanel = d => !!(d && !S.blClosed && !S.appDetail && !S.previewProfile && ((S.page === 'backlight' && !isMouse(d) && (d.state || {}).backlight && photoOf(d.id)) || (S.page === 'pointer' && isMouse(d) && MOUSE_PHOTOS[d.id]) || (S.page === 'easy' && easyView(d)) || (S.page === 'hits' && isGaming(d) && S.hitsPanel) || (S.page === 'wheel' && isGaming(d) && S.wheelPanel)));
 export const provide = { hostInfo, easyPhoto, keyboardEasyPhoto, renderEasyPanel, pageEasy, pageInfo, devicePhotoSrc, TOP_VIEWS, homePhotoSrc, navBattery, batteryState, DISABLE_KEYS, pageDeviceSettings, easyView, backlightPanel };

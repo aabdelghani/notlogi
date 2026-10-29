@@ -104,12 +104,34 @@ function calibrationRows(d) {
 // BHOP as G HUB has it: a bumped wheel does not scroll; a first notch only counts when a second one
 // follows within the time set
 function pageWheel(d) {
-  const st = stateOf(d), s = settingsOf(d);
+  const st = stateOf(d);
   if (!st.bunny_hop) return st.hires || st.smartshift ? wheelSettings(d) : sec(t('Scroll wheel'), card(row(t('Nothing to set'), t('This mouse has no wheel settings of its own'), '')));
-  const b = s.bunny_hop || {}, on = b.enabled ?? st.bunny_hop.enabled, ms = b.timeout ?? st.bunny_hop.timeout ?? 100;
-  const body = row(t('BHOP mode'), t('Keeps a bumped wheel from scrolling: the mouse ignores a first notch unless a second one follows within the time set'), sw(!!on, 'data-act="setting" data-path="bunny_hop.enabled"')) +
-    (on ? `<div class="row"><div class="grow"><div class="lbl">${t('BHOP sensitivity')}</div><div class="sub">${t('How long the mouse waits for the second notch')}</div></div><span class="hint">100 ms</span>${range('data-act="setting-range" data-path="bunny_hop.timeout" data-out="bhop"', ms, 100, 1000, 100)}<span class="hint">1000 ms</span><span class="val" data-out="bhop" style="width:64px;text-align:right">${ms} ms</span></div>` : '');
-  return onboardNote(d) + `<div class="wheel-page"><img class="wheel-photo" src="../assets/devices/40be.png" alt="">${sec(t('Scroll wheel'), card(body))}</div>`;
+  // the whole mouse in the middle as on HITS, its wheel pointing to BHOP; a click opens it on the right
+  return `<div class="hits-page wheel ${S.wheelPanel ? 'panel' : ''}">${wheelPicture(bhopOf(d))}</div>` + onboardNote(d);
+}
+const bhopOf = d => { const st = stateOf(d), b = settingsOf(d).bunny_hop || {}; return { on: !!(b.enabled ?? st.bunny_hop.enabled), ms: b.timeout ?? st.bunny_hop.timeout ?? 100 }; };
+// the wheel lit, BHOP mode on its left and BHOP sensitivity on its right, joined to it by lines
+const WHEEL = { x: 600, y: 300, w: 210, h: 500 };
+function wheelPicture(v) {
+  const W = 640, H = 440, TOP = 330, cy = WHEEL.y + WHEEL.h / 2;
+  const box = (side, label, value, dim) => { const x = side === 'left' ? -700 : 1470, edge = side === 'left' ? x + W : x, wx = side === 'left' ? WHEEL.x : WHEEL.x + WHEEL.w;
+    return `<g class="hb-box ${dim ? 'dim' : ''}"><line x1="${wx}" y1="${cy}" x2="${edge}" y2="${TOP + H / 2}"/>
+      <foreignObject x="${x}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge ${dim ? 'dim' : ''}" data-act="wheel-open"><span class="k">${label}</span><span>${value}</span></div></foreignObject></g>`; };
+  return `<div class="hits-pic"><svg viewBox="-720 -20 2850 2840" preserveAspectRatio="xMidYMin meet"><defs><pattern id="hb-stripes" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="26" fill="rgba(255,255,255,.10)"/></pattern></defs>
+    <image href="../assets/devices/40be.png" width="1410" height="2800"/>
+    <g class="hb on" data-act="wheel-open"><title>${t('Scroll wheel')}</title><rect x="${WHEEL.x}" y="${WHEEL.y}" width="${WHEEL.w}" height="${WHEEL.h}" rx="${WHEEL.w / 2}"/><rect class="hb-hatch" x="${WHEEL.x}" y="${WHEEL.y}" width="${WHEEL.w}" height="${WHEEL.h}" rx="${WHEEL.w / 2}"/></g>
+    ${box('left', t('BHOP mode'), v.on ? t('On') : t('Off'), false)}${box('right', t('BHOP sensitivity'), `${v.ms} ms`, !v.on)}</svg></div>`;
+}
+// BHOP's settings, on the right as HITS has them
+function renderWheelPanel(d) {
+  const v = bhopOf(d);
+  const body = row(t('BHOP mode'), t('Keeps a bumped wheel from scrolling: the mouse ignores a first notch unless a second one follows within the time set'), sw(v.on, 'data-act="setting" data-path="bunny_hop.enabled"')) +
+    `<div class="hits-row ${v.on ? '' : 'disabled'}"><div class="hr-head"><div><div class="lbl">${t('BHOP sensitivity')}</div><div class="sub">${t('How long the mouse waits for the second notch')}</div></div><span class="val" data-out="bhop">${v.ms} ms</span></div>
+    <div class="hr-slider">${range(`data-act="setting-range" data-path="bunny_hop.timeout" data-out="bhop"${v.on ? '' : ' disabled'}`, v.ms, 100, 1000, 100)}</div><div class="hr-ends"><span>100 ms</span><span>1000 ms</span></div></div>`;
+  return `<div class="drawer-wrap"><div class="dlg drawer bl-panel hits-panel" data-stop>
+    <div class="dlg-head"><span class="dh-key">${t('Scroll wheel')}</span></div>
+    <div class="dlg-body">${card(body)}</div>
+  </div></div>`;
 }
 
 // ----------------------------------------------------------- HITS
@@ -349,4 +371,4 @@ function paintTravel(level) {
   [...bar.children].forEach((c, i) => c.classList.toggle('fill', i + 1 <= level));
 }
 
-export const provide = { macrosButton, renderHitsPanel, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };
+export const provide = { macrosButton, renderHitsPanel, renderWheelPanel, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };

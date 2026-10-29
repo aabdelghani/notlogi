@@ -63,15 +63,21 @@ test('HITS: each button or both, actuation 1..10, rapid trigger and its sensitiv
   S.hitsSide = 'both';
 });
 
-test('Scroll wheel: BHOP with its time in 100 ms steps when the mouse has it, a plain note when it has nothing', () => {
+test('Scroll wheel: the wheel pointing to BHOP, set in its panel in 100 ms steps; a plain note when the mouse has nothing', () => {
   assert.match(Gaming.provide.pageWheel(x3()), /Nothing to set/);
   const off = x3(); off.state = { bunny_hop: { enabled: false, timeout: null } };
   let h = Gaming.provide.pageWheel(off);
-  assert.match(h, /data-path="bunny_hop\.enabled" >/);
-  assert.doesNotMatch(h, /bunny_hop\.timeout/);
+  assert.match(h, /data-act="wheel-open"/);
+  assert.match(h, /BHOP mode<\/span><span>Off</);
+  let p = Gaming.provide.renderWheelPanel(off);
+  assert.match(p, /data-path="bunny_hop\.enabled" >/);
+  assert.match(p, /data-path="bunny_hop\.timeout" data-out="bhop" disabled/);
   const on = x3({ bunny_hop: { enabled: true, timeout: 300 } }); on.state = { bunny_hop: { enabled: false } };
   h = Gaming.provide.pageWheel(on);
-  assert.match(h, /data-path="bunny_hop\.timeout" data-out="bhop" value="300" min="100" max="1000" step="100"/);
+  assert.match(h, /BHOP mode<\/span><span>On</);
+  assert.match(h, />300 ms</);
+  p = Gaming.provide.renderWheelPanel(on);
+  assert.match(p, /data-path="bunny_hop\.timeout" data-out="bhop" value="300" min="100" max="1000" step="100"/);
   const mx = x3(); mx.state = { hires: {} };
   assert.equal(Gaming.provide.pageWheel(mx), '<wheel>');
 });
