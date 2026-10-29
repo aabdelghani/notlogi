@@ -230,14 +230,15 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   },
   // ------------------------------------------------- HITS
   'hits-side': async (it, e, d, key) => { S.hitsSide = key; changed(); },
-  'hits-open': async (it, e, d, key) => { S.hitsSide = key || 'both'; S.hitsPanel = true; changed(); },
+  // a value box or Set both: the panel opens; only Set both changes which buttons are set
+  'hits-open': async (it, e, d, key) => { if (key === 'both') S.hitsSide = 'both'; S.hitsPanel = true; changed(); },
   'hits-close': async () => { S.hitsPanel = false; S.menu = null; changed(); },
   'wheel-open': async () => { S.wheelPanel = true; changed(); },
   'dpi-open': async () => { S.dpiPanel = true; changed(); },
   // a button clicked on the picture joins or leaves what is set (both is G HUB's All (L+R)); one stays
   'hits-toggle': async (it, e, d, key) => {
-    // the panel closed: this button alone, its settings open on the right
-    if (!S.hitsPanel) { S.hitsSide = key; S.hitsPanel = true; changed(); return; }
+    // the panel closed: the first click only opens it, the buttons set stay as they are
+    if (!S.hitsPanel) { S.hitsPanel = true; changed(); return; }
     const set = new Set(S.hitsSide === 'both' ? ['left', 'right'] : [S.hitsSide]);
     if (set.has(key) && set.size > 1) set.delete(key); else set.add(key);
     S.hitsSide = set.size === 2 ? 'both' : [...set][0]; changed();

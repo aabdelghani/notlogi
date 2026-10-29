@@ -212,14 +212,14 @@ function hitsPicture(L, R) {
   // each button's values in a large box beside the mouse, joined to its check by a line; a click opens that side
   const W = 640, H = 560, BOX = { left: -700, right: 1470 }, TOP = 300;
   const box = (v, side) => { const [mx, my] = HITS_SHAPES[side].mark, x = BOX[side], edge = side === 'left' ? x + W : x;
-    return `<g class="hb-box ${on(side) ? '' : 'dim'}"><line x1="${side === 'left' ? mx - 36 : mx + 36}" y1="${my}" x2="${edge}" y2="${TOP + H / 2}"/>
+    return `<g class="hb-box ${on(side) ? '' : 'dim'}"><line x1="${side === 'left' ? mx - 56 : mx + 56}" y1="${my}" x2="${edge}" y2="${TOP + H / 2}"/>
       <foreignObject x="${x}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge ${on(side) ? '' : 'dim'}" data-act="hits-open" data-key="${side}" title="${side === 'left' ? t('Left button') : t('Right button')}">
       <span class="${lit('actuation')}" title="${t('Actuation point')}"><i class="fa-solid fa-arrow-down-long"></i>${v.actuation}</span>
       <span class="${lit('rapid_trigger')}" title="${t('Rapid trigger')}"><i class="fa-solid fa-arrow-up-long"></i>${v.rapid_trigger_on ? v.rapid_trigger : t('Off')}</span>
       <span class="${lit('haptics')}" title="${t('Click haptics')}"><i class="fa-solid fa-wave-square"></i>${v.haptics}</span></div></foreignObject></g>`; };
   const zone = side => { const z = HITS_SHAPES[side], [mx, my] = z.mark;
     return `<g class="hb ${on(side) ? 'on' : ''}" data-act="hits-toggle" data-key="${side}"><title>${side === 'left' ? t('Left button') : t('Right button')}</title><path transform="translate(${z.x} 0)" d="${z.d}"/><path class="hb-hatch" transform="translate(${z.x} 0)" d="${z.d}"/>
-      <circle class="hb-mark" cx="${mx}" cy="${my}" r="34"/>${on(side) ? `<path class="hb-check" d="M${mx - 14} ${my + 1} l10 10 l19 -21"/>` : ''}</g>`; };
+      <circle class="hb-mark" cx="${mx}" cy="${my}" r="54"/>${on(side) ? `<path class="hb-check" d="M${mx - 23} ${my + 2} l16 16 l31 -34"/>` : ''}</g>`; };
   return `<div class="hits-pic"><svg viewBox="-720 -20 2850 2840" preserveAspectRatio="xMidYMin meet"><defs><pattern id="hb-stripes" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="26" fill="rgba(255,255,255,.10)"/></pattern></defs>
     <image href="../assets/devices/40be.png" width="1410" height="2800"/>${zone('left')}${zone('right')}${box(L, 'left')}${box(R, 'right')}</svg></div>`;
 }

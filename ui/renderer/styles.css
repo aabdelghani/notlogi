@@ -1221,7 +1221,7 @@ html.rounded #root::after { content: ""; position: absolute; inset: 0; border-ra
 .hits-pic .hb.on > path:first-of-type { fill: color-mix(in srgb, #2f7de1 42%, transparent); stroke: #2f7de1; }
 .hits-pic .hb-mark { fill: rgba(255,255,255,.12); stroke: rgba(255,255,255,.75); stroke-width: 5; }
 .hits-pic .hb.on .hb-mark { fill: #2f7de1; stroke: #fff; }
-.hits-pic .hb-check { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.hits-pic .hb-check { fill: none; stroke: #fff; stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .hits-row .end { font-size: 11px; width: 54px; text-align: center; flex: none; }
 .hits-row.disabled .lbl, .hits-row.disabled input { opacity: .45; }
 .hits-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
