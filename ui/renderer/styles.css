@@ -1336,8 +1336,7 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .dev-config .layer-bar:has(+ .ms-photo.gaming) { margin-top: -96px; margin-bottom: 0; }
 .dev-config .layer-bar + .ms-photo.gaming { translate: 0 0; margin-top: -12px; }
 .layer-bar .btn .count { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--accbg); color: #fff; font-size: 11px; }
-.hits-page:not(.panel) { margin-top: -96px; }
-.hits-page.panel { margin-top: -56px; }
+.hits-page:not(.wheel) { margin-top: -96px; }
 .content:has(> .page > .hits-page.panel) { overflow-x: hidden; }
 .hits-page .hits-pic { width: 492px; max-width: none; margin: 0 auto; }
 .hits-page .hits-intro { justify-content: center; margin-bottom: 4px; }
@@ -1367,8 +1366,6 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .hits-pic .hb > rect.hb-hatch { fill: url(#hb-stripes); stroke: none; pointer-events: none; }
 
 /* Sensitivity as HITS: the preset above the mouse, the sensor marked, its panel wider for the five slots */
-.hits-page.dpi:not(.panel) { margin-top: -96px; }
-.hits-page.dpi.panel { margin-top: -56px; }
 .hits-pic .dpi-mark circle { fill: color-mix(in srgb, #2f7de1 55%, transparent); stroke: #2f7de1; stroke-width: 10; cursor: pointer; }
 .wheel-badge .k .dot { display: inline-block; width: 44px; height: 44px; border-radius: 50%; margin-right: 22px; vertical-align: middle; }
 .hits-intro .btn .pchg { margin-left: 8px; }
@@ -1390,3 +1387,4 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .dpi-panel .row:has(> .seg) > .grow { flex-basis: 100%; }
 .gdlg .dlg-head { cursor: move; user-select: none; }
 .gdlg .dlg-head .hbtn { cursor: pointer; }
+.hits-intro.ghost { visibility: hidden; }

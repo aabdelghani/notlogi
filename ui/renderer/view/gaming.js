@@ -53,7 +53,7 @@ function pageDpi(d) {
   const preset = G.presetById(s, s.dpi_preset || 'default'), changed = !!preset && !G.presetMatches(preset, s, st);
   const path = d.transport === 'usb' ? 'report_rate_wired' : 'report_rate', rate = s[path] ?? (st.report_rate || {})[path] ?? 1000;
   const dpi = sl ? (s.dpi_advanced && sl.x !== sl.y ? `${sl.x} × ${sl.y}` : `${sl.x}`) : '–';
-  const intro = S.dpiPanel ? '' : `<div class="hits-intro"><button class="btn sm" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
+  const intro = `<div class="hits-intro ${S.dpiPanel ? 'ghost' : ''}"><button class="btn sm" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
   return `<div class="hits-page dpi ${S.dpiPanel ? 'panel' : ''}">${intro}${dpiPicture(dpi, `${rate} Hz`, sl ? G.SLOT_COLOURS[G.activeSlot(s)] : '')}</div>` + onboardNote(d);
 }
 // the sensor marked under the mouse, the DPI on its left and the report rate on its right
@@ -171,7 +171,8 @@ function hitsSides() { return S.hitsSide === 'left' ? ['left'] : S.hitsSide === 
 function pageHits(d) {
   const s = settingsOf(d), st = stateOf(d);
   // the whole mouse in the middle; a click on a button opens its settings on the right (renderHitsPanel)
-  const intro = S.hitsPanel ? '' : `<div class="hits-intro"><span class="hint">${t('Click a button to set its switch')}</span><button class="btn sm" data-act="hits-open" data-key="both"><i class="fa-solid fa-sliders"></i>${t('Set both buttons')}</button></div>`;
+  // kept (unseen) while the panel is open, so the mouse stays at the same height
+  const intro = `<div class="hits-intro ${S.hitsPanel ? 'ghost' : ''}"><span class="hint">${t('Click a button to set its switch')}</span><button class="btn sm" data-act="hits-open" data-key="both"><i class="fa-solid fa-sliders"></i>${t('Set both buttons')}</button></div>`;
   return `<div class="hits-page ${S.hitsPanel ? 'panel' : ''}">${intro}${hitsPicture(G.hitsOf(s, st, 'left'), G.hitsOf(s, st, 'right'))}</div>` + onboardNote(d);
 }
 // The panel on the right while a button is being set (the window's nav folds away, as for a button's
