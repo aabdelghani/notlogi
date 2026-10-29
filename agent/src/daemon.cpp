@@ -778,6 +778,54 @@ json ManagedDevice::onboardSave(int index) {
     return {{"ok", true}, {"profile", index}, {"sector", sector}};
 }
 
+// A profile switched on or off in the directory, as G HUB's Enable does: its settings stay as they
+// are. One that holds no whole profile is given the factory one first; the profile in use and the
+// last one on cannot be switched off (the mouse would have nothing to run).
+json ManagedDevice::onboardEnable(int index, bool on) {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    auto info = dev_->onboardInfo();
+    if (!info || info->format != 8) throw std::runtime_error("this mouse's onboard memory is not one NotLogi can write");
+    if (index < 1 || index > info->profiles) throw std::runtime_error("no onboard profile " + std::to_string(index));
+    const int size = info->sectorSize, i = index - 1;
+    const hidpp::Bytes raw = readWhole(*dev_, 0, size);
+    const bool fresh = !sectorOk(raw);
+    hidpp::Bytes dir = fresh ? freshDirectory(*dev_, info->profiles, size) : raw;
+    int sector = dir[i * 4] << 8 | dir[i * 4 + 1];
+    if (sector == 0xFFFF || sector == 0) sector = index;
+    if (!on) {
+        int cur = 0;
+        try { cur = dev_->onboardProfile(); } catch (...) {}
+        if (cur == sector) throw std::runtime_error("profile " + std::to_string(index) + " is the one the mouse is using: pick another first");
+        int others = 0;
+        for (int k = 0; k < info->profiles; ++k) {
+            const int sk = dir[k * 4] << 8 | dir[k * 4 + 1];
+            if (k != i && sk != 0xFFFF && dir[k * 4 + 2]) ++others;
+        }
+        if (!others) throw std::runtime_error("profile " + std::to_string(index) + " is the only one switched on");
+    }
+    std::map<int, hidpp::Bytes> before = {{0, raw}};
+    hidpp::Bytes prof;
+    if (on) {
+        prof = readWhole(*dev_, sector, size);
+        if (!sectorOk(prof)) { before[sector] = prof; prof = factoryProfile(*dev_, size); if (prof.empty()) throw std::runtime_error("no profile to start from reads back whole; nothing was written"); sealSector(prof); }
+        else prof.clear();
+    }
+    backupSectors(std::filesystem::path(daemon_.config().path()).parent_path().string(), id(), before);
+    if (!prof.empty()) {
+        dev_->writeSector(sector, prof);
+        if (!sectorOk(readWhole(*dev_, sector, size))) throw std::runtime_error("profile " + std::to_string(index) + " did not read back as written (a backup of it is in onboard-backups)");
+    }
+    dir[i * 4] = static_cast<uint8_t>(sector >> 8);
+    dir[i * 4 + 1] = static_cast<uint8_t>(sector);
+    dir[i * 4 + 2] = on ? 1 : 0;
+    dir[i * 4 + 3] = 0xFF;
+    sealSector(dir);
+    dev_->writeSector(0, dir);
+    if (!sectorOk(readWhole(*dev_, 0, size))) throw std::runtime_error("the onboard directory did not read back whole (a backup of it is in onboard-backups)");
+    INFO("%s: onboard profile %d switched %s", dev_->name().c_str(), index, on ? "on" : "off");
+    return {{"ok", true}, {"profile", index}, {"enabled", on}};
+}
+
 json ManagedDevice::onboardRestore() {
     std::lock_guard<std::recursive_mutex> lk(m_);
     auto info = dev_->onboardInfo();
@@ -2282,6 +2330,10 @@ json Daemon::rpc(const std::string& method, const json& p) {
     if (method == "onboard_save") {
         auto md = need(p);
         return md->onboardSave(p.value("profile", 1));
+    }
+    if (method == "onboard_enable") {
+        auto md = need(p);
+        return md->onboardEnable(p.value("profile", 1), p.value("on", true));
     }
     if (method == "onboard_restore") {
         auto md = need(p);

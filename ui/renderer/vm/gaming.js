@@ -264,6 +264,16 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   'hits-test-ap': async (it, e, d) => { await hitsSet(d, G.hitsItems({ actuation: Number(it.value) }, [S.gtool.side || 'left'])); },
   // ------------------------------------------------- settings
   'onboard-memory': async (it, e, d) => { await setMany(d, [{ path: ['onboard_memory'], value: !it.on }]); loadOnboard(d); },
+  // a profile switched on or off in the mouse's directory, its settings left as they are (G HUB's Enable)
+  // (shown at once: the mouse answers with its old directory for a moment after a write, so it is read again later)
+  'onboard-enable': async (it, e, d, key) => {
+    try {
+      await call('onboard_enable', { id: d.id, profile: Number(key), on: !it.on });
+      const p = ((S.onboard || {})[d.id] || []).find(x => x.index === Number(key)); if (p) p.enabled = !it.on;
+      changed();
+    } catch (err) { loadOnboard(d); return; }
+    setTimeout(() => loadOnboard(d), 1500);
+  },
   'onboard-pick': async (it, e, d, key) => { await setMany(d, [{ path: ['onboard_profile'], value: Number(key) }]); loadOnboard(d); },
   // writing the mouse's memory: asked first, backed up by the agent, read back before it says done
   'onboard-save': async (it, e, d, key) => {
