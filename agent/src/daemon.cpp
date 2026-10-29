@@ -596,6 +596,57 @@ void ManagedDevice::dpiOp(const std::string& op) {
     }
 }
 
+static bool sectorOk(const hidpp::Bytes& b) {
+    return b.size() > 2 && hidpp::Device::crcCcitt(b, b.size() - 2) == static_cast<uint16_t>(b[b.size() - 2] << 8 | b[b.size() - 1]);
+}
+static void sealSector(hidpp::Bytes& b) {
+    uint16_t c = hidpp::Device::crcCcitt(b, b.size() - 2);
+    b[b.size() - 2] = static_cast<uint8_t>(c >> 8);
+    b[b.size() - 1] = static_cast<uint8_t>(c);
+}
+// A sector read whole. Each 16-byte read gets the same kind of reply, so one that goes astray
+// (another program talking to the mouse, a busy link) shifts what is read: a sector whose CRC
+// does not match is read again
+static hidpp::Bytes readWhole(hidpp::Device& d, int sector, int size) {
+    hidpp::Bytes b;
+    for (int k = 0; k < 3; ++k) {
+        b = d.readSector(sector, size);
+        if (sectorOk(b)) break;
+    }
+    return b;
+}
+// The factory profile (sector 0x0101) is kept without a CRC of its own (it ends FF FF): it is
+// taken when it reads as a format 8 profile, report rates and slots in range and the buttons at 0x30
+static bool looksLikeProfile(const hidpp::Bytes& b) {
+    return b.size() > 0x34 && b[0] <= 6 && b[1] <= 6 && b[2] < 5 && b[3] < 5 && b[0x30] == 0x80;
+}
+static hidpp::Bytes factoryProfile(hidpp::Device& d, int size) {
+    for (int k = 0; k < 3; ++k) {
+        hidpp::Bytes b = d.readSector(0x0101, size);
+        if (sectorOk(b) || looksLikeProfile(b)) return b;
+    }
+    return {};
+}
+// A directory made afresh, for a mouse whose own was never written (one G HUB never set up) or does
+// not read back whole: each profile in its own sector, switched on when that sector holds a whole profile
+static hidpp::Bytes freshDirectory(hidpp::Device& d, int profiles, int size) {
+    hidpp::Bytes dir(static_cast<size_t>(size), 0xFF);
+    for (int k = 0; k < profiles; ++k) {
+        dir[k * 4] = 0;
+        dir[k * 4 + 1] = static_cast<uint8_t>(k + 1);
+        dir[k * 4 + 2] = sectorOk(readWhole(d, k + 1, size)) ? 1 : 0;
+        dir[k * 4 + 3] = 0xFF;
+    }
+    sealSector(dir);
+    return dir;
+}
+static std::string hexOf(const hidpp::Bytes& b) {
+    std::string s;
+    char h[3];
+    for (auto x : b) { snprintf(h, sizeof(h), "%02x", x); s += h; }
+    return s;
+}
+
 // The onboard profiles as the PRO X3 SUPERSTRIKE keeps them (format 8): a directory in sector 0
 // (sector, switched on, 0xFF per profile), then one sector each: the wireless and wired report
 // rate (125 << index), the default and shift slots, five DPI slots of X, Y (16 bit, low byte first)
@@ -605,7 +656,8 @@ json ManagedDevice::onboardProfiles() {
     json out = json::array();
     auto info = dev_->onboardInfo();
     if (!info) return out;
-    hidpp::Bytes dir = dev_->readSector(0, std::min(info->sectorSize, 4 * info->profiles + 4));
+    hidpp::Bytes dir = readWhole(*dev_, 0, info->sectorSize);
+    if (!sectorOk(dir)) dir = freshDirectory(*dev_, info->profiles, info->sectorSize);   // never written: what Save would start from
     int cur = 0;
     try { cur = dev_->onboardProfile(); } catch (...) {}
     static const int rates[] = {125, 250, 500, 1000, 2000, 4000, 8000};
@@ -636,21 +688,6 @@ json ManagedDevice::onboardProfiles() {
 }
 
 // a sector whose CRC holds (the last two bytes, high first)
-static bool sectorOk(const hidpp::Bytes& b) {
-    return b.size() > 2 && hidpp::Device::crcCcitt(b, b.size() - 2) == static_cast<uint16_t>(b[b.size() - 2] << 8 | b[b.size() - 1]);
-}
-static void sealSector(hidpp::Bytes& b) {
-    uint16_t c = hidpp::Device::crcCcitt(b, b.size() - 2);
-    b[b.size() - 2] = static_cast<uint8_t>(c >> 8);
-    b[b.size() - 1] = static_cast<uint8_t>(c);
-}
-static std::string hexOf(const hidpp::Bytes& b) {
-    std::string s;
-    char h[3];
-    for (auto x : b) { snprintf(h, sizeof(h), "%02x", x); s += h; }
-    return s;
-}
-
 // the sectors about to be written, kept in NotLogi's folder (onboard-backups/<id>-<time>.json)
 static void backupSectors(const std::string& dir, const std::string& id, const std::map<int, hidpp::Bytes>& sectors) {
     try {
@@ -670,15 +707,17 @@ json ManagedDevice::onboardSave(int index) {
     if (!info || info->format != 8) throw std::runtime_error("this mouse's onboard memory is not one NotLogi can write");
     if (index < 1 || index > info->profiles) throw std::runtime_error("no onboard profile " + std::to_string(index));
     const int size = info->sectorSize;
-    hidpp::Bytes dir = dev_->readSector(0, size);
-    if (!sectorOk(dir)) throw std::runtime_error("the onboard directory does not read back whole; nothing was written");
+    const hidpp::Bytes raw = readWhole(*dev_, 0, size);
+    const bool fresh = !sectorOk(raw);
+    if (fresh) INFO("%s: the onboard directory reads %s, not a whole one: starting it afresh", dev_->name().c_str(), hexOf(hidpp::Bytes(raw.begin(), raw.begin() + std::min<size_t>(raw.size(), 24))).c_str());
+    hidpp::Bytes dir = fresh ? freshDirectory(*dev_, info->profiles, size) : raw;
     const int i = index - 1;
     int sector = dir[i * 4] << 8 | dir[i * 4 + 1];
     if (sector == 0xFFFF || sector == 0) sector = index;
-    hidpp::Bytes prof = dev_->readSector(sector, size);
-    if (!sectorOk(prof)) prof = dev_->readSector(0x0101, size);   // a broken profile starts from the factory one
-    if (!sectorOk(prof)) throw std::runtime_error("no profile to start from reads back whole; nothing was written");
-    backupSectors(std::filesystem::path(daemon_.config().path()).parent_path().string(), id(), {{0, dir}, {sector, prof}});
+    hidpp::Bytes prof = readWhole(*dev_, sector, size), old = prof;
+    if (!sectorOk(prof)) prof = factoryProfile(*dev_, size);   // a profile never written starts from the factory one
+    if (prof.empty()) throw std::runtime_error("no profile to start from reads back whole; nothing was written");
+    backupSectors(std::filesystem::path(daemon_.config().path()).parent_path().string(), id(), {{0, raw}, {sector, old}});
 
     const json s = cfg_.value("settings", json::object());
     static const int rates[] = {125, 250, 500, 1000, 2000, 4000, 8000};
@@ -727,7 +766,7 @@ json ManagedDevice::onboardSave(int index) {
     dev_->writeSector(sector, prof);
     if (dev_->sectorCrc(sector) != want || dev_->readSector(sector, size) != prof) throw std::runtime_error("the profile did not read back as written (a backup of it is in onboard-backups)");
     // switched on in the directory
-    if (dir[i * 4] != (sector >> 8) || dir[i * 4 + 1] != (sector & 0xFF) || !dir[i * 4 + 2]) {
+    if (fresh || dir[i * 4] != (sector >> 8) || dir[i * 4 + 1] != (sector & 0xFF) || !dir[i * 4 + 2]) {
         dir[i * 4] = static_cast<uint8_t>(sector >> 8);
         dir[i * 4 + 1] = static_cast<uint8_t>(sector);
         dir[i * 4 + 2] = 1;
@@ -744,8 +783,9 @@ json ManagedDevice::onboardRestore() {
     auto info = dev_->onboardInfo();
     if (!info || info->format != 8) throw std::runtime_error("this mouse's onboard memory is not one NotLogi can write");
     const int size = info->sectorSize;
-    hidpp::Bytes oob = dev_->readSector(0x0101, size), dir = dev_->readSector(0, size);
-    if (!sectorOk(oob)) throw std::runtime_error("the factory profile does not read back whole; nothing was written");
+    hidpp::Bytes oob = factoryProfile(*dev_, size), dir = dev_->readSector(0, size);
+    if (oob.empty()) throw std::runtime_error("the factory profile does not read back whole; nothing was written");
+    sealSector(oob);
     std::map<int, hidpp::Bytes> before = {{0, dir}};
     for (int k = 1; k <= info->profiles; ++k) before[k] = dev_->readSector(k, size);
     backupSectors(std::filesystem::path(daemon_.config().path()).parent_path().string(), id(), before);

@@ -3,6 +3,10 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
+## [0.14.1](https://github.com/aabdelghani/notlogi/releases/tag/v0.14.1) - 2026-10-29
+
+- PRO X3 SUPERSTRIKE onboard memory: **Save NotLogi's settings here** works on a mouse whose onboard directory was never written (one G HUB never set up) instead of stopping with "the onboard directory does not read back whole": the directory is started afresh, as G HUB does, keeping every profile already on the mouse. A sector that reads back torn is read again, and **Restore all** and a new profile start from the factory profile, which the mouse keeps without a CRC of its own ([#22](https://github.com/aabdelghani/notlogi/issues/22)).
+
 ## [0.14.0](https://github.com/aabdelghani/notlogi/releases/tag/v0.14.0) - 2026-10-27
 
 - A keyboard NotLogi has no photo of gets every key it reports in a list, each with its action, and a photo of its owner's: choose a photo, click each key on it as NotLogi names them (the Easy-Switch keys too), and it is drawn like the keyboards NotLogi comes with. **Share** saves it as one device file with the photo inside, and **Import a device file** takes one in ([#19](https://github.com/aabdelghani/notlogi/discussions/19)).
