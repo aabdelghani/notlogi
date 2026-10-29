@@ -212,6 +212,7 @@ class Device {
 
     Transport& t_;
     uint8_t index_;
+    int featureCount_ = -1;   // what the feature set reported (kept in the cache, checked on reconnect)
     std::map<uint16_t, FeatureInfo> features_;
     std::map<uint16_t, ControlInfo> controls_;
     std::string name_, friendlyName_, kind_ = "unknown", firmware_, serial_;

@@ -46,6 +46,7 @@ bool Device::enumerate() {
     // requests, then its feature table, controls and names from the cache
     if (loadCache()) return true;
     int count = t_.request(index_, fs, 0, {}, std::nullopt)[0];
+    featureCount_ = count;
     for (int i = 1; i <= count; ++i) {
         Bytes fr = t_.request(index_, fs, 1, {static_cast<uint8_t>(i)}, std::nullopt);
         if (fr.size() < 4) continue;
@@ -63,10 +64,12 @@ bool Device::enumerate() {
 // One file per device (by serial) in the state folder: its feature table, controls and names, kept
 // while its firmware is the same. Reading a device costs a hundred requests, slow over Bluetooth;
 // a reconnect then takes a few.
-static std::string cachePath(const std::string& serial) {
+// A device numbers its features differently on its cable (or Bluetooth) than through a receiver,
+// so each way it is reached has a file of its own; the feature count is checked as well.
+static std::string cachePath(const std::string& serial, bool direct) {
     std::string safe;
     for (char c : serial) if (isalnum(static_cast<unsigned char>(c))) safe += c;
-    return platform::stateDir() + "/devices/" + safe + ".json";
+    return platform::stateDir() + "/devices/" + safe + (direct ? "-direct" : "") + ".json";
 }
 bool Device::loadCache() {
     try {
@@ -75,10 +78,13 @@ bool Device::loadCache() {
         features_[DEVICE_FW] = {DEVICE_FW, r[0], r[2], r[1]};
         readFirmware();
         if (serial_.empty() || firmware_.empty()) return false;
-        std::ifstream f(cachePath(serial_));
+        std::ifstream f(cachePath(serial_, index_ == 0xFF));
         if (!f) return false;
         json c = json::parse(f);
         if (c.value("firmware", "") != firmware_ || c.value("v", 0) != 1) return false;
+        Bytes cnt = t_.request(index_, features_[FEATURE_SET].index, 0, {}, std::nullopt);
+        if (cnt.empty() || c.value("count", -1) != cnt[0]) return false;
+        featureCount_ = cnt[0];
         for (auto& x : c["features"]) {
             uint16_t id = x["id"].get<uint16_t>();
             features_[id] = {id, x["index"].get<uint8_t>(), x["version"].get<uint8_t>(), x["type"].get<uint8_t>()};
@@ -99,11 +105,11 @@ bool Device::loadCache() {
 void Device::saveCache() {
     if (serial_.empty() || firmware_.empty() || name_.empty()) return;
     try {
-        json c = {{"v", 1}, {"firmware", firmware_}, {"name", name_}, {"friendly", friendlyName_}, {"kind", kind_}, {"features", json::array()}, {"controls", json::array()}};
+        json c = {{"v", 1}, {"firmware", firmware_}, {"count", featureCount_}, {"name", name_}, {"friendly", friendlyName_}, {"kind", kind_}, {"features", json::array()}, {"controls", json::array()}};
         for (auto& [id, fi] : features_) c["features"].push_back({{"id", id}, {"index", fi.index}, {"version", fi.version}, {"type", fi.type}});
         for (auto& [cid, k] : controls_)
             c["controls"].push_back({{"cid", k.cid}, {"task", k.taskId}, {"flags", k.flags}, {"position", k.position}, {"group", k.group}, {"mask", k.groupMask}, {"extra", k.extraFlags}});
-        std::string p = cachePath(serial_);
+        std::string p = cachePath(serial_, index_ == 0xFF);
         std::filesystem::create_directories(std::filesystem::path(p).parent_path());
         std::ofstream(p) << c.dump();
     } catch (const std::exception&) {
