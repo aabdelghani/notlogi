@@ -1376,8 +1376,6 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 /* Sensitivity's panel is as wide as the others: each slot on two lines (the slot and its DPI, then
    its lift-off), a report rate's choices under its name */
 .dpi-panel .dpi-slot { flex-wrap: wrap; gap: 8px; row-gap: 6px; }
-.dpi-panel .dpi-slot .seg.lod { order: 10; margin-left: 74px; }
-.dpi-panel .dpi-slot .seg.lod + * , .dpi-panel .dpi-slot.adv .switch { margin-left: auto; }
 .dpi-panel .dpi-num { width: 68px; padding: 5px 6px; }
 .dpi-panel .dpi-xy { flex: 0 1 auto; }
 .dpi-panel .row:has(> .seg) { flex-wrap: wrap; row-gap: 8px; }
@@ -1416,3 +1414,10 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .hb-box polyline { fill: none; stroke: var(--dim); stroke-width: 5; }
 .hits-intro .preset-pill.on { background: #2f7de1; color: #fff; box-shadow: 0 0 0 3px color-mix(in srgb, #2f7de1 35%, transparent); }
 .hits-intro .preset-pill.on .pchg { background: rgba(255,255,255,.2); color: #fff; }
+.wheel-badge .pr { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; font-size: 88px; color: var(--dim); white-space: nowrap; }
+.wheel-badge .pr small { font-size: 54px; font-weight: 600; text-transform: none; }
+.wheel-badge .pr.cur { color: var(--fg); }
+.slot-menu .menu-lod { display: flex; margin: 2px 10px 6px; }
+.slot-menu .menu-lod button { flex: 1; }
+.slot-menu .mhead { padding: 6px 12px 2px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
+.dpi-panel .dpi-slot.adv .switch { margin-left: auto; }

@@ -55,24 +55,25 @@ const item = (kind, p, cur) => `<button data-act="${kind}-preset-pick" data-key=
 function pageDpi(d) {
   const s = settingsOf(d), st = stateOf(d), slots = G.currentSlots(s, st), sl = slots[G.activeSlot(s)] || slots[0];
   const preset = G.presetById(s, s.dpi_preset || 'default'), changed = !!preset && !G.presetMatches(preset, s, st);
-  const path = d.transport === 'usb' ? 'report_rate_wired' : 'report_rate', rate = s[path] ?? (st.report_rate || {})[path] ?? 1000;
+  const rateOf = path => s[path] ?? (st.report_rate || {})[path] ?? 1000, wired = d.transport === 'usb';
+  const rate = `<span class="pr ${wired ? '' : 'cur'}"><small>${t('Wireless')}</small>${rateOf('report_rate')} Hz</span><span class="pr ${wired ? 'cur' : ''}"><small>${t('Wired')}</small>${rateOf('report_rate_wired')} Hz</span>`;
   const dpi = sl ? (s.dpi_advanced && sl.x !== sl.y ? `${sl.x} × ${sl.y}` : `${sl.x}`) : '–';
   // the preset stays above the mouse with the panel open, lit as the thing being set
   const intro = `<div class="hits-intro"><button class="btn sm preset-pill ${S.dpiPanel ? 'on' : ''}" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
-  return `<div class="hits-page dpi ${S.dpiPanel ? 'panel' : ''}">${intro}${dpiPicture(dpi, `${rate} Hz`, sl ? G.SLOT_COLOURS[G.activeSlot(s)] : '')}</div>` + onboardNote(d);
+  return `<div class="hits-page dpi ${S.dpiPanel ? 'panel' : ''}">${intro}${dpiPicture(dpi, rate, sl ? G.SLOT_COLOURS[G.activeSlot(s)] : '')}</div>` + onboardNote(d);
 }
-// the DPI on the left pointing at the sensor, the polling rate on the right pointing at the front,
-// where the mouse's link (cable or receiver) is: two marks, each box its own
+// the DPI on the left pointing at the sensor; the polling rate (wireless and wired, the link in use
+// lit) on the right at the same height, pointing at the mouse's front where its link is
 const SENSOR = [705, 1480], LINK = [705, 90];
 function dpiPicture(dpi, rate, colour) {
-  const W = 780, H = 440;
-  const box = (side, [px, py], top, label, value, extra = '') => { const x = side === 'left' ? -810 : 1440, edge = side === 'left' ? x + W : x;
-    return `<g class="hb-box"><polyline points="${px + (side === 'left' ? -40 : 40)},${py} ${side === 'left' ? px - 260 : px + 260},${top + H / 2} ${edge},${top + H / 2}"/>
-      <foreignObject x="${x}" y="${top}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge" data-act="dpi-open"><span class="k">${extra}${label}</span><span>${value}</span></div></foreignObject></g>`; };
+  const W = 780;
+  const box = (side, [px, py], top, h, label, value, extra = '') => { const x = side === 'left' ? -810 : 1440, edge = side === 'left' ? x + W : x;
+    return `<g class="hb-box"><line x1="${px + (side === 'left' ? -40 : 28)}" y1="${py + (side === 'left' ? 0 : 28)}" x2="${edge}" y2="${top + h / 2}"/>
+      <foreignObject x="${x}" y="${top}" width="${W}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge" data-act="dpi-open"><span class="k">${extra}${label}</span>${value}</div></foreignObject></g>`; };
   const mark = ([x, y]) => `<g class="hb on dpi-mark" data-act="dpi-open"><title>${t('Sensitivity')}</title><circle cx="${x}" cy="${y}" r="40"/></g>`;
   return `<div class="hits-pic"><svg viewBox="-830 -20 3070 2840" preserveAspectRatio="xMidYMin meet">
     <image href="../assets/devices/40be.png" width="1410" height="2800"/>${mark(SENSOR)}${mark(LINK)}
-    ${box('left', SENSOR, 1260, t('DPI'), dpi, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', LINK, 260, t('Polling rate'), rate)}</svg></div>`;
+    ${box('left', SENSOR, 1260, 440, t('DPI'), `<span>${dpi}</span>`, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', LINK, 1190, 580, t('Polling rate'), rate)}</svg></div>`;
 }
 // everything Sensitivity sets, on the right
 function renderDpiPanel(d) {
@@ -93,13 +94,14 @@ function dpiSettings(d) {
     const marks = `${i === def ? `<i class="fa-solid fa-crosshairs mk def" title="${t('Default DPI')}"></i>` : ''}${i === shift ? `<i class="fa-solid fa-diamond mk shf" title="${t('DPI shift')}"></i>` : ''}`;
     const num = (axis, v) => `<input class="dpi-num" type="number" min="${min}" max="${max}" step="1" value="${v}" data-act="dpi-input" data-key="${i}" data-axis="${axis}" ${sl.on ? '' : 'disabled'} aria-label="${axis === 'y' ? t('Y DPI') : axis === 'x' ? t('X DPI') : t('DPI')}">`;
     const body = adv
-      ? `<span class="dpi-xy">${num('x', sl.x)}<button class="hbtn icon dpi-link" data-act="dpi-link" data-key="${i}" title="${t('Y the same as X')}" ${sl.on ? '' : 'disabled'}><i class="fa-solid ${sl.x === sl.y ? 'fa-link' : 'fa-link-slash'}"></i></button>${num('y', sl.y)}</span>
-         <span class="seg lod ${lodOff ? 'off' : ''}" title="${lodOff ? t('Lift-off distance applies while Gaming surface mode is on or automatic (Settings)') : t('Lift-off distance')}">${G.LODS.map(l => `<button class="${sl.lod === l ? 'on' : ''}" data-act="dpi-lod" data-key="${i}" data-val="${l}" ${sl.on && !lodOff ? '' : 'disabled'}>${LOD_NAMES[l]}</button>`).join('')}</span>`
+      ? `<span class="dpi-xy">${num('x', sl.x)}<button class="hbtn icon dpi-link" data-act="dpi-link" data-key="${i}" title="${t('Y the same as X')}" ${sl.on ? '' : 'disabled'}><i class="fa-solid ${sl.x === sl.y ? 'fa-link' : 'fa-link-slash'}"></i></button>${num('y', sl.y)}</span>`
       : `${range(`data-act="dpi-slot" data-path="dpi_slots.${i}" data-out="dpi${i}"${sl.on ? '' : ' disabled'}`, posFromDpi(sl.x, min, max), 0, DPI_STEPS, 1)}${num('x', sl.x)}`;
     const menu = S.menu === 'dpi-slot:' + i ? `<div class="menu slot-menu" data-menu>
         <button data-act="dpi-slot-active" data-key="${i}" ${sl.on ? '' : 'disabled'}><i class="fa-solid fa-computer-mouse"></i><span>${t('Set as active DPI')}</span></button>
         <button data-act="dpi-slot-default" data-key="${i}" ${sl.on ? '' : 'disabled'}><i class="fa-solid fa-crosshairs"></i><span>${t('Make it the default DPI')}</span></button>
         <button data-act="dpi-slot-shift" data-key="${i}" ${sl.on ? '' : 'disabled'}><i class="fa-solid fa-diamond" style="color:#f28c28"></i><span>${t('Make it the DPI shift')}</span></button>
+        <div class="sep"></div><div class="mhead" title="${lodOff ? t('Lift-off distance applies while Gaming surface mode is on or automatic (Settings)') : ''}">${t('Lift-off distance')}</div>
+        <div class="seg lod menu-lod ${lodOff ? 'off' : ''}">${G.LODS.map(l => `<button class="${sl.lod === l ? 'on' : ''}" data-act="dpi-lod" data-key="${i}" data-val="${l}" ${sl.on && !lodOff ? '' : 'disabled'}>${LOD_NAMES[l]}</button>`).join('')}</div>
         <div class="sep"></div><button data-act="dpi-slot-reset" data-key="${i}"><i class="fa-solid fa-rotate-left"></i><span>${t('Reset this slot')}</span></button></div>` : '';
     return `<div class="row dpi-slot ${i === active ? 'on' : ''} ${sl.on ? '' : 'disabled'} ${adv ? 'adv' : ''}"><span class="slot-bar" style="background:${G.SLOT_COLOURS[i]}"></span>
       <button class="hbtn icon slot-pick" data-act="dpi-slot-active" data-key="${i}" title="${t('Use this slot')}" ${sl.on ? '' : 'disabled'}><i class="fa-solid ${i === active ? 'fa-circle-dot' : 'fa-circle'}"></i></button>

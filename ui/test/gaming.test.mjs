@@ -34,10 +34,13 @@ test('Sensitivity: five DPI slots with their values, the active one marked, both
   assert.match(h, /data-act="dpi-test-open"/);
 });
 
-test('Sensitivity in X and Y: two values per slot and the lift-off distance, a preset of G HUB\'s shown by name', () => {
-  const h = Gaming.provide.dpiSettings(x3({ dpi_advanced: true, dpi_slots: { 0: 400 }, dpi_slots_y: { 0: 200 }, dpi_lod: { 0: 3 }, dpi_preset: 'first_person_xy' }));
+test('Sensitivity in X and Y: two values per slot, the lift-off distance in its menu, a preset of G HUB\'s shown by name', () => {
+  const d = x3({ dpi_advanced: true, dpi_slots: { 0: 400 }, dpi_slots_y: { 0: 200 }, dpi_lod: { 0: 3 }, dpi_preset: 'first_person_xy' });
+  let h = Gaming.provide.dpiSettings(d);
   assert.match(h, /data-key="0" data-axis="x"/);
   assert.match(h, /value="200" data-act="dpi-input" data-key="0" data-axis="y"/);
+  assert.doesNotMatch(h, /data-act="dpi-lod"/);   // not in the row
+  S.menu = 'dpi-slot:0'; h = Gaming.provide.dpiSettings(d); S.menu = null;
   assert.match(h, /class="on" data-act="dpi-lod" data-key="0" data-val="3"/);
   assert.match(h, /First person XY split/);
   assert.match(h, /pchg/);   // the slots differ from the preset's
