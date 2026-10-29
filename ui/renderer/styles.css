@@ -1340,13 +1340,8 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .layer-bar .btn .count { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--accbg); color: #fff; font-size: 11px; }
 .hits-page:not(.panel) { margin-top: -96px; }
 .hits-page.panel { margin-top: -56px; }
-/* the mouse stays where it was when the panel opens: the content moves left by half the menu and half the panel */
-.hits-page.panel .hits-pic { translate: calc(50vw - 485px) 0; }
 .content:has(> .page > .hits-page.panel) { overflow-x: hidden; }
 .hits-page .hits-pic { width: 492px; max-width: none; margin: 0 auto; }
-/* one place for the mouse with the panel open or not: its right box ends just short of the panel
-   (the page's centre is half the menu right of the window's with the panel closed, half the panel left with it open) */
-.hits-page:not(.panel) .hits-pic, .hits-page:not(.panel) .hits-intro { translate: calc(50vw - 838px) 0; }
 .hits-page .hits-intro { justify-content: center; margin-bottom: 4px; }
 .hits-page + .banner { width: fit-content; max-width: 100%; margin: 0 auto; padding-top: 6px; padding-bottom: 6px; text-align: left; }
 
