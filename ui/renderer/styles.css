@@ -1331,3 +1331,15 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .km-own .hint i, .km-intro > i { margin-right: 6px; }
 .km-intro > i { font-size: 20px; color: var(--accbg); width: 28px; text-align: center; }
 .km-intro-acts { gap: 8px; }
+
+/* a gaming mouse where an MX mouse sits: the same height and place (the MX photo's 483 px from
+   y 211), its layer bar or HITS hint just above it, nothing below to scroll to */
+.ms-photo.gaming { max-width: 243px; margin-top: 10px; }
+.dev-config .layer-bar:has(+ .ms-photo.gaming) { margin-top: -96px; margin-bottom: 0; }
+.dev-config .layer-bar + .ms-photo.gaming { translate: 0 0; margin-top: -12px; }
+.layer-bar .btn .count { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--accbg); color: #fff; font-size: 11px; }
+.hits-page:not(.panel) { margin-top: -96px; }
+.hits-page.panel { margin-top: -56px; }
+.hits-page .hits-pic { width: 471px; max-width: 100%; margin: 0 auto; }
+.hits-page .hits-intro { justify-content: center; margin-bottom: 4px; }
+.hits-page + .banner { width: fit-content; max-width: 100%; margin: 0 auto; padding-top: 6px; padding-bottom: 6px; }

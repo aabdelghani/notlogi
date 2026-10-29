@@ -120,7 +120,7 @@ function pageHits(d) {
   const s = settingsOf(d), st = stateOf(d);
   // the whole mouse in the middle; a click on a button opens its settings on the right (renderHitsPanel)
   const intro = S.hitsPanel ? '' : `<div class="hits-intro"><span class="hint">${t('Click a button to set its switch')}</span><button class="btn sm" data-act="hits-open" data-key="both"><i class="fa-solid fa-sliders"></i>${t('Set both buttons')}</button></div>`;
-  return onboardNote(d) + `<div class="hits-page ${S.hitsPanel ? 'panel' : ''}">${hitsPicture(G.hitsOf(s, st, 'left'), G.hitsOf(s, st, 'right'))}${intro}</div>`;
+  return `<div class="hits-page ${S.hitsPanel ? 'panel' : ''}">${intro}${hitsPicture(G.hitsOf(s, st, 'left'), G.hitsOf(s, st, 'right'))}</div>` + onboardNote(d);
 }
 // The panel on the right while a button is being set (the window's nav folds away, as for a button's
 // actions): which button, its actuation point, rapid trigger and click haptics, the presets, the tools
@@ -216,6 +216,7 @@ function renderGamingDialog(d) {
   if (g.kind === 'calibrate') return dialog(t('HERO sensor calibration'), calibrateBody(d, g), 620);
   if (g.kind === 'dpi-test') return dialog(t('Sensitivity tool'), dpiTestBody(d, g), 900);
   if (g.kind === 'macro') return dialog(g.id ? t('Edit macro') : t('New macro'), macroBody(g), 640);
+  if (g.kind === 'macros') return dialog(t('Macros'), `<div class="dlg-body">${macrosCard(d)}</div>`, 560);
   return '';
 }
 const dialog = (title, body, w) => `<div class="scrim" data-act="close-dlg"><div class="dlg gdlg" style="width:${w}px" data-stop>
@@ -325,7 +326,12 @@ function macroBody(g) {
 function macrosCard(d) {
   const list = Array.isArray(settingsOf(d).macros) ? settingsOf(d).macros : [];
   const rows = list.map(m => row(esc(m.name), t('{n} steps · {how}', { n: m.steps.length, how: { once: t('once'), while_held: t('while held'), toggle: t('toggle') }[m.repeat] || '' }), `<button class="btn sm" data-act="macro-edit" data-key="${esc(m.id)}"><i class="fa-solid fa-pen"></i>${t('Edit')}</button>`)).join('');
-  return sec(t('Macros'), card((rows || row(t('No macros yet'), t('Record keys once, then give the macro to any button from its menu'), '')) + `<div class="row"><span class="grow"></span><button class="btn" data-act="macro-new"><i class="fa-solid fa-plus"></i>${t('New macro')}</button></div>`));
+  return card((rows || row(t('No macros yet'), t('Record keys once, then give the macro to any button from its menu'), '')) + `<div class="row"><span class="grow"></span><button class="btn" data-act="macro-new"><i class="fa-solid fa-plus"></i>${t('New macro')}</button></div>`);
+}
+// beside the layers on the Assignments page: the macros, with how many there are
+function macrosButton(d) {
+  const n = Array.isArray(settingsOf(d).macros) ? settingsOf(d).macros.length : 0;
+  return `<button class="btn sm" data-act="macros-open"><i class="fa-solid fa-keyboard"></i>${t('Macros')}${n ? `<span class="count">${n}</span>` : ''}</button>`;
 }
 
 // an app profile's sensitivity: the global one (the Sensitivity page), or a preset of its own while that app is in front
@@ -343,4 +349,4 @@ function paintTravel(level) {
   [...bar.children].forEach((c, i) => c.classList.toggle('fill', i + 1 <= level));
 }
 
-export const provide = { renderHitsPanel, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, macrosCard, sensitivityRow };
+export const provide = { macrosButton, renderHitsPanel, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };

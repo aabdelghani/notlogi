@@ -293,6 +293,7 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   // ------------------------------------------------- assignments
   'gshift-layer': async (it, e, d, key) => { S.gshiftLayer = key === 'gshift'; changed(); },
   // ------------------------------------------------- macros
+  'macros-open': async () => { S.gtool = { kind: 'macros' }; S.dlg = 'gaming'; changed(); },
   'macro-new': async (it, e, d) => { openMacro(d, null, null); },
   'macro-edit': async (it, e, d, key) => { openMacro(d, key, null); },
   'macro-name': async (it) => { S.gtool.name = it.value; },

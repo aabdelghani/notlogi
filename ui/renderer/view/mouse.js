@@ -3,8 +3,8 @@ import { isNative } from '../../shared/profiles.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let S, SLOTS, assignment, backlightPanel, card, deviceProfiles, drawerUp, drop, esc, fmtOut, gestureCapable, gestureControl, gestureObject, isRingAction, overridden, presetLabel, range, ringStage, row, sec, sw, isGaming, macrosCard;
-export function link(ctx) { ({ S, SLOTS, assignment, backlightPanel, card, deviceProfiles, drawerUp, drop, esc, fmtOut, gestureCapable, gestureControl, gestureObject, isRingAction, overridden, presetLabel, range, ringStage, row, sec, sw, isGaming, macrosCard } = ctx); }
+let S, SLOTS, assignment, backlightPanel, card, deviceProfiles, drawerUp, drop, esc, fmtOut, gestureCapable, gestureControl, gestureObject, isRingAction, overridden, presetLabel, range, ringStage, row, sec, sw, isGaming, macrosButton;
+export function link(ctx) { ({ S, SLOTS, assignment, backlightPanel, card, deviceProfiles, drawerUp, drop, esc, fmtOut, gestureCapable, gestureControl, gestureObject, isRingAction, overridden, presetLabel, range, ringStage, row, sec, sw, isGaming, macrosButton } = ctx); }
 
 // ----------------------------------------------------------- photos
 // One photo per mouse model, keyed by device id like the keyboards. A spot is a control id (or
@@ -79,8 +79,9 @@ function pageButtons(d) {
   const twRow = d.controls.length ? `<div class="row"><span class="num">${buttonRows(d).length + 1}</span><span class="grow lbl">${t('Thumb wheel')}</span>${drop(tw, `data-act="pick" data-section="thumbwheel" data-cid="thumb" data-label="${esc(t('Thumb wheel'))}"`)}</div>` : '';
   const photo = mousePhoto(d);
   // a gaming mouse: the buttons' own layer, or what they do while a G-Shift button is held
-  const layer = isGaming(d) ? `<div class="layer-bar"><span class="seg"><button class="${S.gshiftLayer ? '' : 'on'}" data-act="gshift-layer" data-key="default">${t('Default')}</button><button class="${S.gshiftLayer ? 'on' : ''}" data-act="gshift-layer" data-key="gshift">${t('G-Shift')}</button></span><span class="hint">${S.gshiftLayer ? t('While a button set to G-Shift is held, the others do this') : t('Give a button G-Shift (System) to use a second layer')}</span></div>` : '';
-  if (photo) return `${layer}<div class="photo-card ms-photo ${isGaming(d) && S.gshiftLayer ? 'gshift' : ''}">${photo}</div>${isGaming(d) ? `<div class="macros-below">${macrosCard(d)}</div>` : ''}`;
+  const layer = isGaming(d) ? `<div class="layer-bar"><span class="seg"><button class="${S.gshiftLayer ? '' : 'on'}" data-act="gshift-layer" data-key="default">${t('Default')}</button><button class="${S.gshiftLayer ? 'on' : ''}" data-act="gshift-layer" data-key="gshift">${t('G-Shift')}</button></span><span class="hint">${S.gshiftLayer ? t('While a button set to G-Shift is held, the others do this') : t('Give a button G-Shift (System) to use a second layer')}</span>${macrosButton(d)}</div>` : '';
+  // a gaming mouse sits where an MX mouse does, its layers above it and its macros a dialog away
+  if (photo) return `${layer}<div class="photo-card ms-photo ${isGaming(d) ? 'gaming' : ''} ${isGaming(d) && S.gshiftLayer ? 'gshift' : ''}">${photo}</div>`;
   return `<div class="${photo ? 'photo-col' : ''}">${photo ? `<div class="photo-card">${photo}<div class="kb-tip" hidden></div></div>` : ''}
     <div style="display:flex;flex-direction:column;gap:18px">${sec(t('Buttons'), card(rows + twRow) + `<div style="display:flex;gap:8px;margin-top:8px"><button class="btn" data-act="reset-buttons"><i class="fa-solid fa-rotate-left"></i>${t('Restore defaults')}</button></div><div class="hint">${t('Left and right click cannot be reassigned. Overrides for the focused app are set in <a href="#" data-act="page" data-page="apps">Profiles</a>.')}</div>`)}${twRow ? sec(t('Thumb wheel'), card(
       row(t('Invert direction'), '', sw(twInvert, 'data-act="setting" data-path="thumbwheel.invert"')) +
