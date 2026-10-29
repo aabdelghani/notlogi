@@ -20,7 +20,7 @@ test('a PRO X3 SUPERSTRIKE is a gaming mouse with G HUB\'s pages, an MX mouse is
 });
 
 test('Sensitivity: five DPI slots with their values, the active one marked, both report rates', () => {
-  const h = Gaming.provide.pageDpi(x3({ dpi_slots: { 0: 400, 1: 800, 2: 1600 }, dpi_active: 2, dpi_default: 1, dpi_shift: 0, report_rate: 4000 }));
+  const h = Gaming.provide.dpiSettings(x3({ dpi_slots: { 0: 400, 1: 800, 2: 1600 }, dpi_active: 2, dpi_default: 1, dpi_shift: 0, report_rate: 4000 }));
   assert.equal((h.match(/data-path="dpi_slots\.\d"/g) || []).length, 5);
   assert.match(h, new RegExp(`data-path="dpi_slots\\.2" data-out="dpi2" value="${posFromDpi(1600)}" min="0" max="1000"`));
   assert.match(h, /dpi-slot on [^>]*>[^]*?data-act="dpi-slot-active" data-key="2"/);   // slot 3 is the one in use
@@ -35,7 +35,7 @@ test('Sensitivity: five DPI slots with their values, the active one marked, both
 });
 
 test('Sensitivity in X and Y: two values per slot and the lift-off distance, a preset of G HUB\'s shown by name', () => {
-  const h = Gaming.provide.pageDpi(x3({ dpi_advanced: true, dpi_slots: { 0: 400 }, dpi_slots_y: { 0: 200 }, dpi_lod: { 0: 3 }, dpi_preset: 'first_person_xy' }));
+  const h = Gaming.provide.dpiSettings(x3({ dpi_advanced: true, dpi_slots: { 0: 400 }, dpi_slots_y: { 0: 200 }, dpi_lod: { 0: 3 }, dpi_preset: 'first_person_xy' }));
   assert.match(h, /data-key="0" data-axis="x"/);
   assert.match(h, /value="200" data-act="dpi-input" data-key="0" data-axis="y"/);
   assert.match(h, /class="on" data-act="dpi-lod" data-key="0" data-val="3"/);
@@ -88,7 +88,7 @@ test('with the mouse connected: its own slot list and sensor DPI, only the rates
     report_rate: { report_rate: 1000, report_rate_wired: 1000, wireless: [125, 250, 500, 1000], wired: [125, 250, 500, 1000, 2000, 4000, 8000] },
     hits: { buttons: [{ actuation: 2, rapid_trigger: 3, rapid_trigger_on: true, haptics: 3 }] } };
   d.transport = 'lightspeed';
-  let h = Gaming.provide.pageDpi(d);
+  let h = Gaming.provide.dpiSettings(d);
   assert.match(h, new RegExp(`data-path="dpi_slots\\.1" data-out="dpi1" value="${posFromDpi(1200)}" min="0" max="1000"`));
   assert.match(h, /The sensor is at 800 DPI/);
   assert.doesNotMatch(h, /data-path="report_rate" data-val="2000"/);   // not offered wirelessly

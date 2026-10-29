@@ -46,7 +46,37 @@ const item = (kind, p, cur) => `<button data-act="${kind}-preset-pick" data-key=
 // Five slots as G HUB lists them: the colour bar, the slot's number with the default (crosshair)
 // and DPI shift (diamond) marks, the DPI on a slider (or X and Y with the lift-off distance in the
 // X/Y view), the switch, and a menu. The slot in use is lit; a click on its dot picks it.
+// Sensitivity as the other pages have it: the whole mouse in the middle, the DPI in use and the
+// report rate beside it, the preset above; a click opens all of it on the right (dpiSettings)
 function pageDpi(d) {
+  const s = settingsOf(d), st = stateOf(d), slots = G.currentSlots(s, st), sl = slots[G.activeSlot(s)] || slots[0];
+  const preset = G.presetById(s, s.dpi_preset || 'default'), changed = !!preset && !G.presetMatches(preset, s, st);
+  const path = d.transport === 'usb' ? 'report_rate_wired' : 'report_rate', rate = s[path] ?? (st.report_rate || {})[path] ?? 1000;
+  const dpi = sl ? (s.dpi_advanced && sl.x !== sl.y ? `${sl.x} × ${sl.y}` : `${sl.x}`) : '–';
+  const intro = S.dpiPanel ? '' : `<div class="hits-intro"><button class="btn sm" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
+  return `<div class="hits-page dpi ${S.dpiPanel ? 'panel' : ''}">${intro}${dpiPicture(dpi, `${rate} Hz`, sl ? G.SLOT_COLOURS[G.activeSlot(s)] : '')}</div>` + onboardNote(d);
+}
+// the sensor marked under the mouse, the DPI on its left and the report rate on its right
+const SENSOR = [705, 1480];
+function dpiPicture(dpi, rate, colour) {
+  const W = 780, H = 440, TOP = 1260, [sx, sy] = SENSOR;
+  const box = (side, label, value, extra = '') => { const x = side === 'left' ? -810 : 1440, edge = side === 'left' ? x + W : x;
+    return `<g class="hb-box"><line x1="${side === 'left' ? sx - 40 : sx + 40}" y1="${sy}" x2="${edge}" y2="${TOP + H / 2}"/>
+      <foreignObject x="${x}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge" data-act="dpi-open"><span class="k">${extra}${label}</span><span>${value}</span></div></foreignObject></g>`; };
+  return `<div class="hits-pic"><svg viewBox="-830 -20 3070 2840" preserveAspectRatio="xMidYMin meet">
+    <image href="../assets/devices/40be.png" width="1410" height="2800"/>
+    <g class="hb on dpi-mark" data-act="dpi-open"><title>${t('Sensitivity')}</title><circle cx="${sx}" cy="${sy}" r="40"/></g>
+    ${box('left', t('DPI'), dpi, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', t('Report rate'), rate)}</svg></div>`;
+}
+// everything Sensitivity sets, on the right
+function renderDpiPanel(d) {
+  return `<div class="drawer-wrap"><div class="dlg drawer bl-panel hits-panel dpi-panel" data-stop>
+    <div class="dlg-head"><span class="dh-key">${t('Sensitivity')}</span></div>
+    <div class="dlg-body">${dpiSettings(d)}</div>
+  </div></div>`;
+}
+
+function dpiSettings(d) {
   const s = settingsOf(d), st = stateOf(d), sd = st.dpi || {};
   const slots = G.currentSlots(s, st), active = G.activeSlot(s), def = G.defaultSlot(s), shift = G.shiftSlot(s), adv = !!s.dpi_advanced;
   const [min, max] = sd.slots && sd.levels ? sd.levels : [100, 48000];
@@ -82,7 +112,7 @@ function pageDpi(d) {
     const sub = inUse ? t('In use now') : t('Taken when the mouse is on this link');
     return `<div class="row"><div class="grow"><div class="lbl">${label}</div><div class="sub">${rr ? sub : t('Hz; 2000 and above need the 8K receiver')}</div></div><span class="seg">${rates.map(r => `<button class="${cur === r ? 'on' : ''}" data-act="setting-val" data-path="${path}" data-val="${r}">${r}</button>`).join('')}</span></div>`;
   };
-  return onboardNote(d) + sec(t('Preset'), card(presetBar('dpi', preset, changed, G.allPresets(s), G.isCurated, S.menu === 'dpi-presets'))) +
+  return sec(t('Preset'), card(presetBar('dpi', preset, changed, G.allPresets(s), G.isCurated, S.menu === 'dpi-presets'))) +
     sec(t('Sensitivity'), card(rows) + legend, xy) +
     sec(t('Report rate'), card(rateRow(t('Wireless'), 'report_rate', rr && rr.wireless, !wiredLink) + rateRow(t('Wired'), 'report_rate_wired', rr && rr.wired, wiredLink))) +
     sec(t('HERO sensor calibration'), card(calibrationRows(d))) +
@@ -371,4 +401,4 @@ function paintTravel(level) {
   [...bar.children].forEach((c, i) => c.classList.toggle('fill', i + 1 <= level));
 }
 
-export const provide = { macrosButton, renderHitsPanel, renderWheelPanel, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };
+export const provide = { macrosButton, renderHitsPanel, renderWheelPanel, renderDpiPanel, dpiSettings, paintTravel, pageDpi, pageWheel, pageHits, gamingBattery, gamingSettings, renderGamingDialog, hitsSides, sensitivityRow };

@@ -96,7 +96,7 @@ function pageGuard() {
 function dialogClosed(after) { S.dlg = null; if (after) after(); changed(); }
 // the side panel beside a device closed: adding apps is cancelled, the backlight panel stays shut
 // until BACKLIGHT opens it again
-function sidePanelClosed() { if (S.page === 'flow' && S.flowPanel) S.flowPanel = false; else if (S.page === 'hits' && S.hitsPanel) { S.hitsPanel = false; S.menu = null; } else if (S.page === 'wheel' && S.wheelPanel) S.wheelPanel = false; else if (S.addPanel) { S.addPanel = false; S.addSel = []; } else S.blClosed = true; }
+function sidePanelClosed() { if (S.page === 'flow' && S.flowPanel) S.flowPanel = false; else if (S.page === 'hits' && S.hitsPanel) { S.hitsPanel = false; S.menu = null; } else if (S.page === 'wheel' && S.wheelPanel) S.wheelPanel = false; else if (S.page === 'dpi' && S.dpiPanel) { S.dpiPanel = false; S.menu = null; } else if (S.addPanel) { S.addPanel = false; S.addSel = []; } else S.blClosed = true; }
 // a one-time hint for the next drawing (which way to slide, what to animate): read once, then gone
 function takeCue(name, none = null) { const v = S[name]; S[name] = none; return v; }
 // A field typed into: its value kept where the open dialog keeps it. Answers what of the page

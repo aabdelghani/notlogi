@@ -12,7 +12,7 @@ export function link(ctx) { ({ S, api, call, changed, fx, go, paintTravel, promp
 
 // which button the HITS page sets (both, left, right), which of its settings was touched last (lit
 // on the picture), whether Assignments shows the G-Shift layer, the open tool, the onboard profiles
-export const state = { wheelPanel: false, hitsPanel: false, hitsSide: 'both', hitsField: null, gshiftLayer: false, gtool: null, onboard: {} };
+export const state = { dpiPanel: false, wheelPanel: false, hitsPanel: false, hitsSide: 'both', hitsField: null, gshiftLayer: false, gtool: null, onboard: {} };
 
 const settingsOf = d => (d.config || {}).settings || (d.config.settings = {});
 // Several settings in one request (a preset): kept here at once, so the page does not flicker
@@ -233,6 +233,7 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   'hits-open': async (it, e, d, key) => { S.hitsSide = key || 'both'; S.hitsPanel = true; changed(); },
   'hits-close': async () => { S.hitsPanel = false; S.menu = null; changed(); },
   'wheel-open': async () => { S.wheelPanel = true; changed(); },
+  'dpi-open': async () => { S.dpiPanel = true; changed(); },
   // a button clicked on the picture joins or leaves what is set (both is G HUB's All (L+R)); one stays
   'hits-toggle': async (it, e, d, key) => {
     // the panel closed: this button alone, its settings open on the right

@@ -1365,3 +1365,15 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .hits-pic .hb > rect:first-of-type { fill: color-mix(in srgb, #2f7de1 42%, transparent); stroke: #2f7de1; stroke-width: 10; transition: fill .15s; }
 .hits-pic .hb:hover > rect:first-of-type { fill: color-mix(in srgb, #2f7de1 60%, transparent); }
 .hits-pic .hb > rect.hb-hatch { fill: url(#hb-stripes); stroke: none; pointer-events: none; }
+
+/* Sensitivity as HITS: the preset above the mouse, the sensor marked, its panel wider for the five slots */
+.hits-page.dpi:not(.panel) { margin-top: -96px; }
+.hits-page.dpi.panel { margin-top: -56px; }
+.hits-pic .dpi-mark circle { fill: color-mix(in srgb, #2f7de1 55%, transparent); stroke: #2f7de1; stroke-width: 10; cursor: pointer; }
+.wheel-badge .k .dot { display: inline-block; width: 44px; height: 44px; border-radius: 50%; margin-right: 22px; vertical-align: middle; }
+.hits-intro .btn .pchg { margin-left: 8px; }
+.devview2.drawer-open.wide-panel { grid-template-columns: 1fr 720px; }
+.hits-page.dpi .hits-pic { width: 530px; }
+.hits-page.dpi .wheel-badge span:last-child { white-space: nowrap; }
+.hits-page + .banner.info.onboard-mem { line-height: 1.3; }
+.wide-panel .hits-page + .banner.info.onboard-mem { font-size: 12px; padding-top: 3px; padding-bottom: 3px; line-height: 1.25; }
