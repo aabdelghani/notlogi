@@ -3,6 +3,14 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
+## [0.15.0](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.0) - 2026-10-29
+
+- PRO X3 SUPERSTRIKE, all four pages as the MX mice have them: the whole mouse in the middle with its main values beside it (Sensitivity: DPI and lift-off, polling rate for both links; Scroll wheel: BHOP; HITS: each button's values), a click opening the rest in a panel on the right, hover lighting a box with what it points at. Assignments without scrolling, its macros a button away.
+- Sensitivity: a change to a curated preset becomes User n settings of one's own; leaving asks to keep it (and its name) or discard it. Lift-off distance in each slot's menu, X and Y or not.
+- Onboard memory: an on/off switch per profile as G HUB's Enable; a chip on the PRO X3's Home photo to switch the onboard memory; while it is on, the PRO X3's pages are shown greyed and locked, the notice linking to it and turning it off on the spot; a warning before writing on a firmware NotLogi was not tested on; the HITS latency test runs on it too, and its window moves.
+- On its USB cable the PRO X3 is read whole (its features are numbered differently there).
+- After the agent restarts the window returns to the device it showed, not the first one found; a page drawn again keeps its scroll.
+
 ## [0.14.1](https://github.com/aabdelghani/notlogi/releases/tag/v0.14.1) - 2026-10-29
 
 - PRO X3 SUPERSTRIKE onboard memory: **Save NotLogi's settings here** works on a mouse whose onboard directory was never written (one G HUB never set up) instead of stopping with "the onboard directory does not read back whole": the directory is started afresh, as G HUB does, keeping every profile already on the mouse. A sector that reads back torn is read again, and **Restore all** and a new profile start from the factory profile, which the mouse keeps without a CRC of its own ([#22](https://github.com/aabdelghani/notlogi/issues/22)).
