@@ -1408,3 +1408,8 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .dev-card .onboard-chip { width: 34px; height: 34px; border-radius: 8px; border-width: 1.5px; background: color-mix(in srgb, var(--card) 20%, transparent); }
 .dev-card .onboard-chip i { font-size: 16px; }
 .dev-card .onboard-chip.on { background: color-mix(in srgb, #2f7de1 35%, transparent); border-color: color-mix(in srgb, #2f7de1 65%, transparent); }
+/* locked, its panels still open to be looked at: what opens one stays clickable on the page, and the panel shows greyed */
+.page.onboard-locked [data-act=dpi-open], .page.onboard-locked [data-act=wheel-open], .page.onboard-locked [data-act=hits-open],
+.page.onboard-locked [data-act=hits-toggle], .page.onboard-locked .hotspot.ms, .page.onboard-locked .hits-badge { pointer-events: auto; cursor: pointer; }
+.devview2:has(.page.onboard-locked) .drawer .dlg-body > * { filter: grayscale(1); opacity: .5; pointer-events: none; user-select: none; }
+.devview2:has(.page.onboard-locked) .drawer .dlg-body { cursor: not-allowed; }
