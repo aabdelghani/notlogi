@@ -1261,5 +1261,6 @@
  "Settings, Onboard memory": "Ρυθμίσεις, Ενσωματωμένη μνήμη",
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "Με την ενσωματωμένη μνήμη, το ποντίκι διατηρεί τον ρυθμό αναφοράς του προφίλ του κατά τη δοκιμή.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Το ποντίκι λειτουργεί από την ενσωματωμένη μνήμη του, οπότε αυτές οι ρυθμίσεις είναι κλειδωμένες ({link}).",
- "Turn off onboard memory": "Απενεργοποίηση ενσωματωμένης μνήμης"
+ "Turn off onboard memory": "Απενεργοποίηση ενσωματωμένης μνήμης",
+ "Polling rate": "Ρυθμός δειγματοληψίας"
 }

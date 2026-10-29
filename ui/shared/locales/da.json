@@ -1261,5 +1261,6 @@
  "Settings, Onboard memory": "Indstillinger, Indbygget hukommelse",
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "Med den indbyggede hukommelse beholder musen sin profils rapportfrekvens under testen.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Musen kører på sin indbyggede hukommelse, så disse indstillinger er låst ({link}).",
- "Turn off onboard memory": "Slå den indbyggede hukommelse fra"
+ "Turn off onboard memory": "Slå den indbyggede hukommelse fra",
+ "Polling rate": "Polling-hastighed"
 }

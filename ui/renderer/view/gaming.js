@@ -57,20 +57,22 @@ function pageDpi(d) {
   const preset = G.presetById(s, s.dpi_preset || 'default'), changed = !!preset && !G.presetMatches(preset, s, st);
   const path = d.transport === 'usb' ? 'report_rate_wired' : 'report_rate', rate = s[path] ?? (st.report_rate || {})[path] ?? 1000;
   const dpi = sl ? (s.dpi_advanced && sl.x !== sl.y ? `${sl.x} × ${sl.y}` : `${sl.x}`) : '–';
-  const intro = `<div class="hits-intro ${S.dpiPanel ? 'ghost' : ''}"><button class="btn sm" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
+  // the preset stays above the mouse with the panel open, lit as the thing being set
+  const intro = `<div class="hits-intro"><button class="btn sm preset-pill ${S.dpiPanel ? 'on' : ''}" data-act="dpi-open"><i class="fa-solid fa-crosshairs"></i>${esc(preset ? presetName(preset) : t('Your own settings'))}${changed ? `<span class="pchg">${t('changed')}</span>` : ''}</button></div>`;
   return `<div class="hits-page dpi ${S.dpiPanel ? 'panel' : ''}">${intro}${dpiPicture(dpi, `${rate} Hz`, sl ? G.SLOT_COLOURS[G.activeSlot(s)] : '')}</div>` + onboardNote(d);
 }
-// the sensor marked under the mouse, the DPI on its left and the report rate on its right
-const SENSOR = [705, 1480];
+// the DPI on the left pointing at the sensor, the polling rate on the right pointing at the front,
+// where the mouse's link (cable or receiver) is: two marks, each box its own
+const SENSOR = [705, 1480], LINK = [705, 90];
 function dpiPicture(dpi, rate, colour) {
-  const W = 780, H = 440, TOP = 1260, [sx, sy] = SENSOR;
-  const box = (side, label, value, extra = '') => { const x = side === 'left' ? -810 : 1440, edge = side === 'left' ? x + W : x;
-    return `<g class="hb-box"><line x1="${side === 'left' ? sx - 40 : sx + 40}" y1="${sy}" x2="${edge}" y2="${TOP + H / 2}"/>
-      <foreignObject x="${x}" y="${TOP}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge" data-act="dpi-open"><span class="k">${extra}${label}</span><span>${value}</span></div></foreignObject></g>`; };
+  const W = 780, H = 440;
+  const box = (side, [px, py], top, label, value, extra = '') => { const x = side === 'left' ? -810 : 1440, edge = side === 'left' ? x + W : x;
+    return `<g class="hb-box"><polyline points="${px + (side === 'left' ? -40 : 40)},${py} ${side === 'left' ? px - 260 : px + 260},${top + H / 2} ${edge},${top + H / 2}"/>
+      <foreignObject x="${x}" y="${top}" width="${W}" height="${H}"><div xmlns="http://www.w3.org/1999/xhtml" class="hits-badge wheel-badge" data-act="dpi-open"><span class="k">${extra}${label}</span><span>${value}</span></div></foreignObject></g>`; };
+  const mark = ([x, y]) => `<g class="hb on dpi-mark" data-act="dpi-open"><title>${t('Sensitivity')}</title><circle cx="${x}" cy="${y}" r="40"/></g>`;
   return `<div class="hits-pic"><svg viewBox="-830 -20 3070 2840" preserveAspectRatio="xMidYMin meet">
-    <image href="../assets/devices/40be.png" width="1410" height="2800"/>
-    <g class="hb on dpi-mark" data-act="dpi-open"><title>${t('Sensitivity')}</title><circle cx="${sx}" cy="${sy}" r="40"/></g>
-    ${box('left', t('DPI'), dpi, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', t('Report rate'), rate)}</svg></div>`;
+    <image href="../assets/devices/40be.png" width="1410" height="2800"/>${mark(SENSOR)}${mark(LINK)}
+    ${box('left', SENSOR, 1260, t('DPI'), dpi, colour ? `<i class="dot" style="background:${colour}"></i>` : '')}${box('right', LINK, 260, t('Polling rate'), rate)}</svg></div>`;
 }
 // everything Sensitivity sets, on the right
 function renderDpiPanel(d) {
@@ -118,7 +120,7 @@ function dpiSettings(d) {
   };
   return sec(t('Preset'), card(presetBar('dpi', preset, changed, G.allPresets(s), G.isCurated, S.menu === 'dpi-presets'))) +
     sec(t('Sensitivity'), card(rows) + legend, xy) +
-    sec(t('Report rate'), card(rateRow(t('Wireless'), 'report_rate', rr && rr.wireless, !wiredLink) + rateRow(t('Wired'), 'report_rate_wired', rr && rr.wired, wiredLink))) +
+    sec(t('Polling rate'), card(rateRow(t('Wireless'), 'report_rate', rr && rr.wireless, !wiredLink) + rateRow(t('Wired'), 'report_rate_wired', rr && rr.wired, wiredLink))) +
     sec(t('HERO sensor calibration'), card(calibrationRows(d))) +
     sec(t('Tools'), card(
       row(t('Sensitivity tool'), t('Try the DPI in use in a short aiming game, and keep the one that suits you'), `<button class="btn" data-act="dpi-test-open"><i class="fa-solid fa-crosshairs"></i>${t('Play')}</button>`) +

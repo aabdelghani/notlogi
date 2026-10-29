@@ -1261,5 +1261,6 @@
  "Settings, Onboard memory": "Настройки, Встроенная память",
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "При работе со встроенной памятью мышь сохраняет на время теста частоту опроса из своего профиля.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Мышь работает со встроенной памяти, поэтому эти настройки заблокированы ({link}).",
- "Turn off onboard memory": "Отключить встроенную память"
+ "Turn off onboard memory": "Отключить встроенную память",
+ "Polling rate": "Частота опроса"
 }

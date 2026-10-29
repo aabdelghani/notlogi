@@ -1261,5 +1261,6 @@
  "Settings, Onboard memory": "الإعدادات، الذاكرة المدمجة",
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "عند العمل من الذاكرة المدمجة يحتفظ الماوس بمعدل الإرسال المحدد في ملف التعريف الخاص به أثناء الاختبار.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "يعمل الماوس من ذاكرته المدمجة، لذا هذه الإعدادات مقفلة ({link}).",
- "Turn off onboard memory": "إيقاف الذاكرة المدمجة"
+ "Turn off onboard memory": "إيقاف الذاكرة المدمجة",
+ "Polling rate": "معدل الاستقصاء"
 }

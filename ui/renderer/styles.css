@@ -1413,3 +1413,6 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .page.onboard-locked [data-act=hits-toggle], .page.onboard-locked .hotspot.ms, .page.onboard-locked .hits-badge { pointer-events: auto; cursor: pointer; }
 .devview2:has(.page.onboard-locked) .drawer .dlg-body > * { filter: grayscale(1); opacity: .5; pointer-events: none; user-select: none; }
 .devview2:has(.page.onboard-locked) .drawer .dlg-body { cursor: not-allowed; }
+.hb-box polyline { fill: none; stroke: var(--dim); stroke-width: 5; }
+.hits-intro .preset-pill.on { background: #2f7de1; color: #fff; box-shadow: 0 0 0 3px color-mix(in srgb, #2f7de1 35%, transparent); }
+.hits-intro .preset-pill.on .pchg { background: rgba(255,255,255,.2); color: #fff; }

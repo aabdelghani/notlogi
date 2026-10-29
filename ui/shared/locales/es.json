@@ -1261,5 +1261,6 @@
  "Settings, Onboard memory": "Configuración, Memoria integrada",
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "Con la memoria integrada, el ratón mantiene la tasa de sondeo de su perfil durante la prueba.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "El ratón funciona con su memoria integrada, por lo que estos ajustes están bloqueados ({link}).",
- "Turn off onboard memory": "Desactivar la memoria integrada"
+ "Turn off onboard memory": "Desactivar la memoria integrada",
+ "Polling rate": "Tasa de sondeo"
 }
