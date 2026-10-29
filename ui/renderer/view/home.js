@@ -9,6 +9,12 @@ export function link(ctx) { ({ S, agentNeedsBuild, batteryState, esc, homeDevice
 
 function greeting() { const h = new Date().getHours(); return h < 5 ? t('Good night') : h < 12 ? t('Good morning') : h < 18 ? t('Good afternoon') : t('Good evening'); }
 function pageHome() {
+  // a mouse with onboard memory (the PRO X3): a chip on its photo's bottom right switches it, as on G HUB's card
+  const onboardChip = (d, off) => {
+    if (off || !(d.state || {}).onboard) return '';
+    const on = !!(((d.config || {}).settings || {}).onboard_memory);
+    return `<button class="onboard-chip ${on ? 'on' : ''}" data-act="home-onboard" data-key="${esc(d.id)}" title="${t('Onboard memory')}: ${on ? t('On') : t('Off')}"><i class="fa-solid fa-microchip"></i></button>`;
+  };
   const cards = homeDevices().map(d => {
     const off = isOffline(d);
     const b = d.battery, st = batteryState(b), src = homePhotoSrc(d);
@@ -17,7 +23,7 @@ function pageHome() {
     // photo, battery and state only: the name is in the tooltip, the link is an icon
     const linkIcon = d.transport === 'bluetooth' ? '<i class="fa-brands fa-bluetooth-b"></i>' : '<i class="fa-solid fa-wifi"></i>';
     return `<div class="dev-card ${isMouse(d) ? 'mouse' : 'kbd'} ${off ? 'off' : ''}" data-act="home-open" data-key="${esc(d.id)}" title="${esc(d.name)} · ${off ? t('Not connected') : esc(link)}">
-      <div class="dev-photo">${src ? `<img src="${esc(src)}" alt="${esc(d.name)}">` : `<i class="fa-solid ${isMouse(d) ? 'fa-computer-mouse' : 'fa-keyboard'}"></i>`}</div>
+      <div class="dev-photo">${src ? `<span class="photo-box"><img src="${esc(src)}" alt="${esc(d.name)}">${onboardChip(d, off)}</span>` : `<i class="fa-solid ${isMouse(d) ? 'fa-computer-mouse' : 'fa-keyboard'}"></i>`}</div>
       <div class="dev-body centered">
         ${off ? `<div class="dev-inactive"><span class="inactive-tag" title="${t('Not connected')}">${t('Inactive')}</span><button class="inactive-del" data-act="dev-hide" data-key="${esc(d.id)}" title="${t('Remove from NotLogi')}"><i class="fa-solid fa-trash-can"></i></button></div>` : ''}<div class="dev-state ${st.cls}" ${off ? 'hidden' : ''}>${known(b) ? `<span class="dev-pct">${b.percent}%</span>` : ''}<i class="fa-solid ${b ? batIcon(b) : 'fa-battery-empty'}"></i>${b && b.charging ? '<i class="fa-solid fa-bolt dev-bolt"></i>' : ''}${st.label !== t('On battery') ? `<span class="dev-label">${esc(st.label)}</span>` : ''}${d.transport === 'bluetooth' ? `<span class="dev-link bt" title="${esc(link)}">${linkIcon}</span>` : ''}</div>
       </div></div>`;

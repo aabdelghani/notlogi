@@ -267,6 +267,12 @@ export const commands = Object.assign({}, presetCommands('dpi'), presetCommands(
   // ------------------------------------------------- settings
   // switched on, the gaming pages lock: their panels close
   'onboard-memory': async (it, e, d) => { if (!it.on) { S.hitsPanel = false; S.wheelPanel = false; S.dpiPanel = false; } await setMany(d, [{ path: ['onboard_memory'], value: !it.on }]); loadOnboard(d); },
+  // the chip on a Home card: that mouse's onboard memory on or off, without opening it
+  'home-onboard': async (it, e, d, key) => {
+    const dd = S.devices.find(x => x.id === key); if (!dd) return;
+    const on = !it.on; if (on && S.dev === dd.id) { S.hitsPanel = false; S.wheelPanel = false; S.dpiPanel = false; }
+    await setMany(dd, [{ path: ['onboard_memory'], value: on }]); loadOnboard(dd);
+  },
   // the notice on a locked page: NotLogi takes over again, the page unlocks
   'onboard-off': async (it, e, d) => { await setMany(d, [{ path: ['onboard_memory'], value: false }]); loadOnboard(d); },
   // a profile switched on or off in the mouse's directory, its settings left as they are (G HUB's Enable)
