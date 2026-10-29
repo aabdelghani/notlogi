@@ -1390,7 +1390,7 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .hits-intro.ghost { visibility: hidden; }
 
 /* a gaming page while the mouse runs on its onboard memory: seen, greyed, nothing to click; the notice stays live */
-.page.onboard-locked > :not(.banner) { filter: grayscale(1); opacity: .45; pointer-events: none; user-select: none; }
+.page.onboard-locked > :not(.banner) { filter: grayscale(1) !important; opacity: .45 !important; pointer-events: none; user-select: none; }   /* over the page's enter animation */
 .page.onboard-locked > .banner.onboard-mem { box-shadow: inset 0 0 0 1px #e5484d; }
 .banner.onboard-mem .bact { background: #e5484d; color: #fff; padding: 4px 10px; font-size: 12px; }
 .ms-photo.gaming + .banner.onboard-mem { width: fit-content; max-width: 100%; margin: 6px auto 0; padding-top: 6px; padding-bottom: 6px; font-size: 13px; }
@@ -1405,3 +1405,6 @@ code.hits-code { flex: 1; font: 600 15px ui-monospace, monospace; background: va
 .dev-card .onboard-chip { background: color-mix(in srgb, var(--card) 35%, transparent); backdrop-filter: blur(2px); }
 .dev-card .onboard-chip.on { background: color-mix(in srgb, #2f7de1 55%, transparent); border-color: color-mix(in srgb, #2f7de1 80%, transparent); }
 .dev-card .onboard-chip:hover { background: color-mix(in srgb, #2f7de1 85%, transparent); color: #fff; }
+.dev-card .onboard-chip { width: 34px; height: 34px; border-radius: 8px; border-width: 1.5px; background: color-mix(in srgb, var(--card) 20%, transparent); }
+.dev-card .onboard-chip i { font-size: 16px; }
+.dev-card .onboard-chip.on { background: color-mix(in srgb, #2f7de1 35%, transparent); border-color: color-mix(in srgb, #2f7de1 65%, transparent); }
