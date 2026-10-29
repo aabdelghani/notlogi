@@ -1262,5 +1262,9 @@
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "Op het ingebouwde geheugen houdt de muis tijdens de test de rapportfrequentie van zijn profiel aan.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "De muis werkt op zijn ingebouwde geheugen, dus deze instellingen zijn vergrendeld ({link}).",
  "Turn off onboard memory": "Ingebouwd geheugen uitschakelen",
- "Polling rate": "Pollingrate"
+ "Polling rate": "Pollingrate",
+ "Keep": "Behouden",
+ "Discard": "Verwerpen",
+ "Keep your settings?": "Je instellingen behouden?",
+ "User {n} settings": "Gebruikersinstellingen {n}"
 }

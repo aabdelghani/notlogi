@@ -12,7 +12,7 @@ export function link(ctx) { ({ S, api, call, changed, fx, go, paintTravel, promp
 
 // which button the HITS page sets (both, left, right), which of its settings was touched last (lit
 // on the picture), whether Assignments shows the G-Shift layer, the open tool, the onboard profiles
-export const state = { dpiPanel: false, wheelPanel: false, hitsPanel: false, hitsSide: 'both', hitsField: null, gshiftLayer: false, gtool: null, onboard: {} };
+export const state = { autoPreset: null, dpiPanel: false, wheelPanel: false, hitsPanel: false, hitsSide: 'both', hitsField: null, gshiftLayer: false, gtool: null, onboard: {} };
 
 const settingsOf = d => (d.config || {}).settings || (d.config.settings = {});
 // Several settings in one request (a preset): kept here at once, so the page does not flicker
@@ -28,7 +28,19 @@ async function setMany(d, items) {
 // stays as it is and shows as changed until it is reset or saved as a copy
 async function keepInPreset(d) {
   const s = settingsOf(d), id = s.dpi_preset;
-  if (!id || G.isCurated(id) || !Array.isArray(s.dpi_presets)) return;
+  // the first change to a curated preset (or to none) makes one's own, User n settings, chosen from then
+  // on; the panel closing asks whether to keep it, and under what name (askKeepPreset)
+  if (!id || G.isCurated(id)) {
+    const base = id ? G.presetById(s, id) : null;
+    if (base && G.presetMatches(base, s, d.state || {})) return;
+    const names = (s.dpi_presets || []).map(p => p.name);
+    let n = 1; while (names.includes(t('User {n} settings', { n }))) n++;
+    const p = G.presetFrom(s, d.state || {}, G.newId('p', G.allPresets(s).map(x => x.id)), t('User {n} settings', { n }));
+    await setMany(d, [{ path: ['dpi_presets'], value: (s.dpi_presets || []).concat([p]) }, { path: ['dpi_preset'], value: p.id }]);
+    S.autoPreset = { dev: d.id, id: p.id, from: id || '' };
+    return;
+  }
+  if (!Array.isArray(s.dpi_presets)) return;
   const list = s.dpi_presets.map(p => p.id === id ? G.presetFrom(s, d.state || {}, p.id, p.name) : p);
   await setMany(d, [{ path: ['dpi_presets'], value: list }]);
 }
@@ -40,6 +52,23 @@ async function keepInHitsPreset(d) {
 }
 const dpiSet = async (d, items) => { await setMany(d, items); await keepInPreset(d); };
 const hitsSet = async (d, items) => { await setMany(d, items); await keepInHitsPreset(d); };
+
+// The preset made from a curated one's changes: kept under the name given, or dropped and the curated
+// one put back on the mouse
+function askKeepPreset() {
+  const a = S.autoPreset; S.autoPreset = null;
+  const d = a && S.devices.find(x => x.id === a.dev); if (!d) return;
+  const s = settingsOf(d), p = (s.dpi_presets || []).find(x => x.id === a.id); if (!p) return;
+  S.prompt = { title: t('Keep your settings?'), fields: [{ key: 'name', label: t('Name'), value: p.name }], ok: t('Keep'), back: null,
+    onOk: async v => { const name = (v.name || '').trim() || p.name; await setMany(d, [{ path: ['dpi_presets'], value: (settingsOf(d).dpi_presets || []).map(x => x.id === a.id ? Object.assign({}, x, { name }) : x) }]); },
+    alt: { label: t('Discard'), onAlt: async () => {
+      const ss = settingsOf(d), back = a.from ? G.presetById(ss, a.from) : null;
+      await setMany(d, [{ path: ['dpi_presets'], value: (ss.dpi_presets || []).filter(x => x.id !== a.id) }]);
+      if (back) await setMany(d, G.presetItems(back)); else await setMany(d, [{ path: ['dpi_preset'], value: '' }]);
+    } } };
+  S.dlg = 'prompt'; changed();
+  fx.focus('.dlg input', { delay: 50, select: true });
+}
 
 // DPI presets: G HUB's curated ones and one's own
 function presetCommands(kind) {
@@ -383,4 +412,4 @@ function closeTool() {
   if (g.kind === 'calibrate') call('motion_count', { op: 'stop' }).catch(() => {});
 }
 
-export const provide = { hitsTravel, loadOnboard, closeTool, hitsTestClick, dpiTestClick, openMacro, macroKey };
+export const provide = { askKeepPreset, hitsTravel, loadOnboard, closeTool, hitsTestClick, dpiTestClick, openMacro, macroKey };

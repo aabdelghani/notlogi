@@ -6,8 +6,8 @@ import * as Act from '../../shared/actions.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let S, changed, fx, loadOnboard;
-export function link(ctx) { ({ S, changed, fx, loadOnboard } = ctx); }
+let S, askKeepPreset, changed, fx, loadOnboard;
+export function link(ctx) { ({ S, askKeepPreset, changed, fx, loadOnboard } = ctx); }
 
 const dev = () => S.devices.find(d => d.id === S.dev) || null;
 const profileOf = Prof.profileOf;
@@ -46,7 +46,7 @@ const devicePages = d => isGaming(d) ? ['dpi', 'assignments', 'wheel', 'hits', '
 const navPages = d => isGaming(d) ? ['dpi', 'assignments', 'wheel', 'hits'] : isMouse(d) ? ['buttons', 'pointer', 'easy', 'flow'] : ['keys', 'backlight', 'easy'];
 const generalPagesAll = ['apps', 'ring', 'notif', 'backup', 'settings', 'about', 'flow'];   // Flow opens without a device too
 function go(page, devId) {
-  S.ringPath = []; if (devId !== undefined && devId !== S.dev) { S.editProfile = null; S.previewProfile = null; } if (page !== 'gestures') S.cfgFrom = null; S.infoFrom = null; S.waitDev = null; S.page = page; if (devId !== undefined) S.dev = devId; S.dlg = null; S.menu = null; S.appDetail = null; changed();
+  S.ringPath = []; if (devId !== undefined && devId !== S.dev) { S.editProfile = null; S.previewProfile = null; } if (page !== 'gestures') S.cfgFrom = null; S.infoFrom = null; S.waitDev = null; if (S.autoPreset && page !== 'dpi') setTimeout(askKeepPreset, 0); S.page = page; if (devId !== undefined) S.dev = devId; S.dlg = null; S.menu = null; S.appDetail = null; changed();
   // a gaming mouse's Settings show its onboard profiles, read from its memory as the page opens
   const d = dev(); if (page === 'info' && d && isGaming(d) && (d.state || {}).onboard) loadOnboard(d);
 }
@@ -96,7 +96,7 @@ function pageGuard() {
 function dialogClosed(after) { S.dlg = null; if (after) after(); changed(); }
 // the side panel beside a device closed: adding apps is cancelled, the backlight panel stays shut
 // until BACKLIGHT opens it again
-function sidePanelClosed() { if (S.page === 'flow' && S.flowPanel) S.flowPanel = false; else if (S.page === 'hits' && S.hitsPanel) { S.hitsPanel = false; S.menu = null; } else if (S.page === 'wheel' && S.wheelPanel) S.wheelPanel = false; else if (S.page === 'dpi' && S.dpiPanel) { S.dpiPanel = false; S.menu = null; } else if (S.addPanel) { S.addPanel = false; S.addSel = []; } else S.blClosed = true; }
+function sidePanelClosed() { if (S.page === 'flow' && S.flowPanel) S.flowPanel = false; else if (S.page === 'hits' && S.hitsPanel) { S.hitsPanel = false; S.menu = null; } else if (S.page === 'wheel' && S.wheelPanel) S.wheelPanel = false; else if (S.page === 'dpi' && S.dpiPanel) { S.dpiPanel = false; S.menu = null; if (S.autoPreset) setTimeout(askKeepPreset, 0); } else if (S.addPanel) { S.addPanel = false; S.addSel = []; } else S.blClosed = true; }
 // a one-time hint for the next drawing (which way to slide, what to animate): read once, then gone
 function takeCue(name, none = null) { const v = S[name]; S[name] = none; return v; }
 // A field typed into: its value kept where the open dialog keeps it. Answers what of the page

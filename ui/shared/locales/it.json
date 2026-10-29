@@ -1262,5 +1262,9 @@
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "Con la memoria integrata, il mouse mantiene la frequenza di report del suo profilo durante il test.",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "Il mouse funziona con la sua memoria integrata, quindi queste impostazioni sono bloccate ({link}).",
  "Turn off onboard memory": "Disattiva la memoria integrata",
- "Polling rate": "Frequenza di polling"
+ "Polling rate": "Frequenza di polling",
+ "Keep": "Mantieni",
+ "Discard": "Scarta",
+ "Keep your settings?": "Mantenere le tue impostazioni?",
+ "User {n} settings": "Impostazioni utente {n}"
 }

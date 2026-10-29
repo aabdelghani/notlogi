@@ -25,6 +25,8 @@ function wishBody(w) {
 // what its buttons do: data-act name → command, given the button's data and value (it), the
 // event, the device on screen and the button's data-key
 export const commands = {
+  // a prompt's other answer (Discard), when it has one
+  'prompt-alt': async () => { const p = S.prompt; S.dlg = null; changed(); if (p && p.alt) await p.alt.onAlt(); return; },
   'prompt-ok': async (it, e, d, key) => { const p = S.prompt; const vals = {}; for (const f of p.fields) vals[f.key] = f.value || ''; S.dlg = p.back || null; await p.onOk(vals); return; },
   'report': async (it, e, d, key) => { S.report = { what: '' }; S.dlg = 'report'; changed(); const r = await api.host.diagReport(); S.report = Object.assign({ what: (S.report || {}).what || '' }, r); if (S.dlg === 'report') changed(); return; },
   'wish': async (it, e, d, key) => { S.menu = null; S.wish = { what: '' }; S.dlg = 'wish'; changed(); fx.focus('textarea[data-field=wish]', { delay: 50 }); return; },

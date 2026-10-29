@@ -1262,5 +1262,9 @@
  "On its onboard memory the mouse keeps its profile's report rate during the test.": "オンボードメモリ使用時は、テスト中もマウスはプロファイルのレポートレートを維持します。",
  "The mouse runs on its onboard memory, so these settings are locked ({link}).": "マウスはオンボードメモリで動作しているため、これらの設定はロックされています（{link}）。",
  "Turn off onboard memory": "オンボードメモリをオフにする",
- "Polling rate": "ポーリングレート"
+ "Polling rate": "ポーリングレート",
+ "Keep": "保持",
+ "Discard": "破棄",
+ "Keep your settings?": "設定を保持しますか？",
+ "User {n} settings": "ユーザー設定 {n}"
 }

@@ -89,7 +89,7 @@ function renderPrompt() {
   return `<div class="scrim" data-act="close-dlg"><div class="dlg" style="width:460px" data-stop>
     <div class="dlg-head">${esc(p.title)}<button class="hbtn close" data-act="close-dlg"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="dlg-body">${p.fields.map(f => `<label class="hint">${esc(f.label)}<input class="text" style="display:block;width:100%;margin-top:4px" data-field="${f.key}" value="${esc(f.value || '')}" placeholder="${esc(f.placeholder || '')}" ${f.list ? `list="dl-${f.key}"` : ''}>${f.list ? `<datalist id="dl-${f.key}">${f.list.map(o => `<option value="${esc(o.value)}">${esc(o.label || '')}</option>`).join('')}</datalist>` : ''}</label>`).join('')}${p.note ? `<div class="hint">${p.note}</div>` : ''}</div>
-    <div class="dlg-foot"><span></span><div class="r"><button class="btn" data-act="close-dlg">${t('Cancel')}</button><button class="btn primary" data-act="prompt-ok">${esc(p.ok || t('OK'))}</button></div></div></div></div>`;
+    <div class="dlg-foot">${p.alt ? `<button class="btn" data-act="prompt-alt">${esc(p.alt.label)}</button>` : '<span></span>'}<div class="r">${p.alt ? '' : `<button class="btn" data-act="close-dlg">${t('Cancel')}</button>`}<button class="btn primary" data-act="prompt-ok">${esc(p.ok || t('OK'))}</button></div></div></div></div>`;
 }
 // a yes/no question; the safe answer (Cancel) is the highlighted one
 function renderConfirm() {
