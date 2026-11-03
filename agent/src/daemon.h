@@ -124,6 +124,7 @@ class ManagedDevice : public std::enable_shared_from_this<ManagedDevice> {
 struct PairingSession {
     hidpp::Transport* transport = nullptr;
     bool active = false, discovering = false, lockOpen = false;
+    bool legacy = false;   // Unifying-style pairing lock (LIGHTSPEED): no discovery, the device just links
     int counter = -1;
     uint8_t kind = 0, authentication = 0;
     std::vector<uint8_t> address;
@@ -153,7 +154,8 @@ class Daemon {
     void onApp(const std::string& cls);
     json rpc(const std::string& method, const json& p);
     void onReceiverNotification(hidpp::Transport& t, const hidpp::Notification& n);
-    void pairStart();
+    void pairStart(const std::string& via = "");
+    void legacyLinked(hidpp::Transport& t);
     void pairCancel();
     void pairBroadcast(const std::string& status);
     DevPtr find(const std::string& id);

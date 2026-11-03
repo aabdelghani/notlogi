@@ -7,6 +7,9 @@ export function link(ctx) { ({ IS_LINUX, S, api, call, changed, devicePages, go,
 
 // a receiver is plugged in: only then can a device be paired to one
 const hasReceiver = () => !!(S.status && S.status.receivers);
+// a receiver of one kind ("Bolt", "Lightspeed") is plugged in: only that kind can take a new device
+const hasRecv = kind => !!(S.status && (S.status.receivers || '').split(', ').some(r => r.startsWith(kind + ' ')));
+const firstVia = () => hasRecv('Bolt') ? 'bolt' : hasRecv('Lightspeed') ? 'lightspeed' : 'bt';
 // Bluetooth on macOS and Windows: the system's own settings pair the device, and this dialog waits for
 // it to arrive. The agent is asked to look for new devices every 150 ms meanwhile (it takes up to 15 s
 // a request, so the ask is renewed), and after 30 s the dialog says what usually stands in the way.
@@ -51,14 +54,14 @@ export const state = {
 export const commands = {
   'open-bt': async (it, e, d, key) => { api.host.openBluetooth(); toast(t('Opening Bluetooth settings')); return; },
   // with no receiver plugged in, Bluetooth is the only way, and it is chosen already
-  'pair': async (it, e, d, key) => { sysStop(); S.pair = { step: 1, found: [], via: hasReceiver() ? 'bolt' : 'bt' }; S.dlg = 'pair'; S.menu = null; changed(); return; },
-  'pair-via': async (it, e, d, key) => { if (key === 'bolt' && !hasReceiver()) return; S.pair.via = key; changed(); return; },
+  'pair': async (it, e, d, key) => { sysStop(); S.pair = { step: 1, found: [], via: firstVia() }; S.dlg = 'pair'; S.menu = null; changed(); return; },
+  'pair-via': async (it, e, d, key) => { if ((key === 'bolt' && !hasRecv('Bolt')) || (key === 'lightspeed' && !hasRecv('Lightspeed'))) return; S.pair.via = key; changed(); return; },
   'bt-connect': async (it, e, _d, key) => { const b = S.pair && S.pair.bt; if (!b) return; const d = (b.list || []).find(x => x.address === key); b.busy = { address: key, name: d ? d.name : key, state: 'pairing' }; changed(); api.host.btConnect(key); return; },
   'pair-next': async (it, e, d, key) => {
     // Bluetooth: the dialog's own live search
     if (S.pair.step === 1 && S.pair.via === 'bt' && !IS_LINUX()) { sysWait(); return; }
     if (S.pair.step === 1 && S.pair.via === 'bt') { S.pair.step = 2; S.pair.bt = { list: [] }; changed(); api.host.btOpen().catch(() => {}); return; }
-    if (S.pair.step === 1 || (S.pair.step === 2 && S.pair.error)) { S.pair.step = 2; S.pair.error = null; S.pair.found = []; S.pair.passkey = null; changed(); try { await call('pair_start'); } catch (x) { S.pair.error = x.message || t('Pairing is not available'); changed(); } return; }
+    if (S.pair.step === 1 || (S.pair.step === 2 && S.pair.error)) { S.pair.step = 2; S.pair.error = null; S.pair.found = []; S.pair.passkey = null; changed(); try { await call('pair_start', { via: S.pair.via }); } catch (x) { S.pair.error = x.message || t('Pairing is not available'); changed(); } return; }
     if (S.pair.step === 3 && S.pair.arrived) { sysStop(); openArrived(); return; }
     if (S.pair.step === 3) { if (S.pair.bt) api.host.btClose(); S.dlg = null; changed(); return; }
     return;
@@ -67,4 +70,4 @@ export const commands = {
   'pair-bt-again': async (it, e, d, key) => { api.host.openBluetooth(); return; },
 };
 
-export const provide = { hasReceiver, pairCheck };
+export const provide = { hasReceiver, hasRecv, pairCheck };

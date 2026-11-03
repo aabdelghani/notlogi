@@ -1617,14 +1617,51 @@ void Daemon::pairBroadcast(const std::string& status) {
     }
 }
 
-void Daemon::pairStart() {
-    std::lock_guard<std::mutex> lk(pairMutex_);
+void Daemon::pairStart(const std::string& via) {
     hidpp::Transport* bolt = nullptr;
+    hidpp::Transport* light = nullptr;
     {
         std::lock_guard<std::mutex> ml(mapMutex_);
-        for (auto& [path, t] : transports_)
-            if (t->info().product == 0xC548) { bolt = t.get(); break; }
+        for (auto& [path, t] : transports_) {
+            auto it = hidpp::kReceivers.find(t->info().product);
+            if (it == hidpp::kReceivers.end()) continue;
+            if (it->second == "Bolt" && !bolt) bolt = t.get();
+            if (it->second == "Lightspeed" && !light) light = t.get();
+        }
     }
+    bool useLight = via == "lightspeed" || (via.empty() && !bolt && light);
+    if (useLight) {
+        if (!light) throw std::runtime_error("no LIGHTSPEED receiver connected");
+        {
+            std::lock_guard<std::mutex> lk(pairMutex_);
+            pair_ = PairingSession{};
+            pair_.transport = light;
+            pair_.legacy = true;
+            pair_.active = true;
+            pair_.discovering = true;
+            pairing_.store(true);
+            pair_.started = std::chrono::steady_clock::now();
+        }
+        // HID++ 1.0 register 0xB2 (receiver pairing): 0x01 opens the lock for the timeout; the device
+        // then links on its own and the receiver reports 0x41 (connected) and 0x4A (lock closed).
+        // pairMutex_ is not held here: the 0x4A notice can arrive on the reader thread before the reply.
+        try {
+            light->request10(0xFF, 0x80, 0xB2, {0x01, 0x00, static_cast<uint8_t>(pair_.timeoutSec)});
+        } catch (const hidpp::Timeout&) {
+            // some receivers answer only with the 0x4A lock notification
+        } catch (const std::exception& e) {
+            std::lock_guard<std::mutex> lk(pairMutex_);
+            pair_.active = false;
+            pair_.error = std::string("This receiver does not accept new devices: ") + e.what();
+            pairBroadcast("error");
+            return;
+        }
+        INFO("pairing: lock opened on LIGHTSPEED receiver %s", light->path().c_str());
+        std::lock_guard<std::mutex> lk(pairMutex_);
+        if (pair_.active) pairBroadcast("discovering");
+        return;
+    }
+    std::lock_guard<std::mutex> lk(pairMutex_);
     if (!bolt) throw std::runtime_error("no Bolt receiver connected");
     pair_ = PairingSession{};
     pair_.transport = bolt;
@@ -1640,12 +1677,24 @@ void Daemon::pairStart() {
     pairBroadcast("discovering");
 }
 
+// a device linked to a LIGHTSPEED receiver while its pairing lock was open: that is the new pairing
+void Daemon::legacyLinked(hidpp::Transport& t) {
+    std::lock_guard<std::mutex> lk(pairMutex_);
+    if (!pair_.active || !pair_.legacy || pair_.transport != &t) return;
+    pair_.doneName = "Device";
+    pair_.active = false;
+    pair_.discovering = false;
+    INFO("pairing: a device linked to the LIGHTSPEED receiver");
+    pairBroadcast("done");
+}
+
 void Daemon::pairCancel() {
     std::lock_guard<std::mutex> lk(pairMutex_);
     if (!pair_.active || !pair_.transport) { pairing_.store(false); return; }
     try {
-        if (pair_.lockOpen) pair_.transport->request10(0xFF, 0x82, 0xC1, {0x02}, true);
-        if (pair_.discovering) pair_.transport->request10(0xFF, 0x80, 0xC0, {0x00, 0x02});
+        if (pair_.legacy) pair_.transport->request10(0xFF, 0x80, 0xB2, {0x02, 0x00, 0x00});
+        else if (pair_.lockOpen) pair_.transport->request10(0xFF, 0x82, 0xC1, {0x02}, true);
+        if (pair_.discovering && !pair_.legacy) pair_.transport->request10(0xFF, 0x80, 0xC0, {0x00, 0x02});
     } catch (...) {
     }
     pair_.active = false;
@@ -1658,6 +1707,31 @@ void Daemon::onReceiverNotification(hidpp::Transport& t, const hidpp::Notificati
     if (!pair_.active || pair_.transport != &t) return;
     const auto& d = n.data;
     switch (n.featureIndex) {
+        case 0x4A: {  // pairing lock (Unifying-style receivers: LIGHTSPEED)
+            if (!pair_.legacy) break;
+            pair_.lockOpen = n.address & 0x01;
+            uint8_t err = d.empty() ? 0 : d[0];
+            if (err) {
+                const char* why = err == 1 ? "the device did not answer in time" : err == 2 ? "this device cannot pair with this receiver"
+                                : err == 3 ? "the receiver has no free slot" : err == 6 ? "the pairing sequence timed out" : nullptr;
+                pair_.error = std::string("Pairing failed: ") + (why ? why : "receiver error " + std::to_string(err));
+                INFO("pairing: lock error %d", err);
+                pair_.active = false; pair_.discovering = false;
+                pairBroadcast("error");
+                break;
+            }
+            if (pair_.lockOpen) { pairBroadcast("discovering"); break; }
+            // closed with no error: either the device just linked (its 0x41 may follow) or the time ran out
+            std::thread([this, tp = &t] {
+                std::this_thread::sleep_for(1500ms);
+                std::lock_guard<std::mutex> l(pairMutex_);
+                if (!pair_.active || !pair_.legacy || pair_.transport != tp) return;
+                pair_.active = false; pair_.discovering = false;
+                pair_.error = "No device found before the timeout";
+                pairBroadcast("error");
+            }).detach();
+            break;
+        }
         case 0x53: {  // discovery status
             pair_.discovering = n.address == 0x00;
             if (!d.empty() && d[0]) { pair_.error = d[0] == 1 ? "No device found before the timeout" : "Discovery failed"; pair_.active = false; }
@@ -1734,7 +1808,7 @@ void Daemon::onReceiverNotification(hidpp::Transport& t, const hidpp::Notificati
 
 void Daemon::onNotification(hidpp::Transport& t, const hidpp::Notification& n) {
     // runs on the transport's reader thread: must never wait on locks held during device I/O
-    if (n.deviceIndex == 0xFF && (n.featureIndex == 0x4D || n.featureIndex == 0x4E || n.featureIndex == 0x4F || n.featureIndex == 0x53 || n.featureIndex == 0x54)) {
+    if (n.deviceIndex == 0xFF && (n.featureIndex == 0x4A || n.featureIndex == 0x4D || n.featureIndex == 0x4E || n.featureIndex == 0x4F || n.featureIndex == 0x53 || n.featureIndex == 0x54)) {
         onReceiverNotification(t, n);
         return;
     }
@@ -1748,7 +1822,7 @@ void Daemon::onNotification(hidpp::Transport& t, const hidpp::Notification& n) {
             if (md && md->online()) { md->setOnline(false); std::thread([this, md] { broadcast("device", md->summary()); }).detach(); }
             return;
         }
-        if (pairing_.load()) return;   // the pairing path attaches the new device once the handshake is done
+        if (pairing_.load()) { legacyLinked(t); return; }   // the pairing path attaches the new device once the handshake is done
         if (md) {
             md->setOnline(true);
             std::thread([this, md] { std::this_thread::sleep_for(800ms); md->reapply(); broadcast("device", md->summary()); }).detach();
@@ -2421,7 +2495,7 @@ json Daemon::rpc(const std::string& method, const json& p) {
         }
         return true;
     }
-    if (method == "pair_start") { pairStart(); return true; }
+    if (method == "pair_start") { pairStart(p.is_object() ? p.value("via", std::string()) : std::string()); return true; }
     if (method == "pair_cancel") { pairCancel(); return true; }
     if (method == "pair_status") { std::lock_guard<std::mutex> lk(pairMutex_); return {{"active", pair_.active}, {"discovering", pair_.discovering}, {"name", pair_.name}, {"error", pair_.error}, {"passkey", pair_.passkey}}; }
     if (method == "pause_diversion" || method == "resume_diversion") {
