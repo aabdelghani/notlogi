@@ -38,6 +38,8 @@ jobs:
           f=$(ls NotLogi-*-x86_64.AppImage)
           "./$f" --appimage-extract > /dev/null
           rm "$f"
+          # the extracted tree keeps 0700 directories; appimagetool (since Nov 2026) refuses those
+          chmod -R a+rX squashfs-root
           ARCH=x86_64 /tmp/appimagetool -u "gh-releases-zsync|aabdelghani|notlogi|latest|NotLogi-*-x86_64.AppImage.zsync" squashfs-root "$f"
           rm -rf squashfs-root
           "./$f" --appimage-updateinformation
