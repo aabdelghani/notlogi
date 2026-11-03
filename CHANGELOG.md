@@ -3,6 +3,10 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
+## [0.15.1](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.1) - 2026-11-03
+
+- Pair a device: a LIGHTSPEED receiver can take a new device. While one is plugged in it is offered beside the Bolt receiver and Bluetooth; NotLogi opens the receiver's pairing lock for 60 seconds and the device pairs when it is switched off and on again. A receiver that refuses says so in the dialog.
+
 ## [0.15.0](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.0) - 2026-10-29
 
 - PRO X3 SUPERSTRIKE, all four pages as the MX mice have them: the whole mouse in the middle with its main values beside it (Sensitivity: DPI and lift-off, polling rate for both links; Scroll wheel: BHOP; HITS: each button's values), a click opening the rest in a panel on the right, hover lighting a box with what it points at. Assignments without scrolling, its macros a button away.
