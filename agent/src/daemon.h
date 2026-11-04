@@ -44,6 +44,8 @@ class ManagedDevice : public std::enable_shared_from_this<ManagedDevice> {
     bool hasAppProfile(const std::string& appClass);
     bool isDiverted(int cid) const { return diverted_.count(cid) > 0; }
     void releaseAll();
+    // ends every action a held control started (the device vanished or lost its link mid-press)
+    void releaseHeld();
     void setProfile(const std::string& appClass);
     void handle(const hidpp::Event& ev);
     void reapply();

@@ -1037,8 +1037,21 @@ void ManagedDevice::applyAssignments() {
     }
 }
 
+void ManagedDevice::releaseHeld() {
+    std::lock_guard<std::recursive_mutex> lk(m_);
+    for (int c : down_) {
+        auto it = pressed_.find(c);
+        try {
+            engine_->buttonUp(c, it != pressed_.end() ? it->second : actionFor(c));
+        } catch (...) {}
+    }
+    down_.clear();
+    pressed_.clear();
+}
+
 void ManagedDevice::releaseAll() {
     std::lock_guard<std::recursive_mutex> lk(m_);
+    releaseHeld();
     if (!dev_->has(hidpp::SPECIAL_KEYS) && dev_->has(hidpp::MOUSE_BUTTON_SPY)) {
         try {
             hidpp::Bytes map;
@@ -1205,6 +1218,7 @@ void ManagedDevice::handle(const hidpp::Event& ev) {
     } else if (ev.kind == "wireless") {
         if (ev.data.value("reconnect", false)) {
             INFO("%s: reconnected, re-applying", dev_->name().c_str());
+            releaseHeld();   // its release was lost with the link
             auto self = shared_from_this();
             std::thread([self] { std::this_thread::sleep_for(150ms); self->reapply(); }).detach();
         }
@@ -1408,6 +1422,7 @@ void Daemon::scan() {
             for (auto dit = devices_.begin(); dit != devices_.end();) {
                 if (&dit->second->transport() == it->second.get()) {
                     INFO("device %s gone", dit->first.c_str());
+                    dit->second->releaseHeld();   // a button held as it vanished would stay down for good
                     dyingDevs.push_back(dit->second);
                     dit = devices_.erase(dit);
                 } else {
