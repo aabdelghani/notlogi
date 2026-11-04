@@ -3,6 +3,11 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
+## [0.15.2](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.2) - 2026-11-04
+
+- PRO X3 SUPERSTRIKE: with any button taken over (Forward set to Volume up, say), every click was doubled, a second one coming from NotLogi on top of the mouse's own, and it could stay held, which tangled the clicks of every mouse on the desk. A button the mouse keeps is left to it now.
+- A button held when its device vanishes, reconnects or NotLogi pauses is released, not left down.
+
 ## [0.15.1](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.1) - 2026-11-03
 
 - Pair a device: a LIGHTSPEED receiver can take a new device. While one is plugged in it is offered beside the Bolt receiver and Bluetooth; NotLogi opens the receiver's pairing lock for 60 seconds and the device pairs when it is switched off and on again. A receiver that refuses says so in the dialog.

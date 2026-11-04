@@ -1160,7 +1160,9 @@ void ManagedDevice::handle(const hidpp::Event& ev) {
     if (daemon_.paused()) return;
     if (ev.kind == "buttons") {
         std::set<int> now;
-        for (auto& c : ev.data["down"]) now.insert(c.get<int>());
+        // the button spy (a gaming mouse) reports every button once any is taken over; one that
+        // keeps its own click is the mouse's business, not ours (a second click from us tangled it)
+        for (auto& c : ev.data["down"]) if (!spying_ || diverted_.count(c.get<int>())) now.insert(c.get<int>());
         for (int c : now)
             if (!down_.count(c)) {
                 json a = actionFor(c);
@@ -2118,7 +2120,7 @@ json Daemon::rpc(const std::string& method, const json& p) {
                 if (it != hidpp::kReceivers.end() && seen.insert(t->info().product).second) recv += (recv.empty() ? "" : ", ") + it->second + " receiver";
             }
         }
-        return {{"devices", snapshot().size()}, {"app", appClass_}, {"tracker", tracker_->backend()}, {"version", "0.15.1"},
+        return {{"devices", snapshot().size()}, {"app", appClass_}, {"tracker", tracker_->backend()}, {"version", "0.15.2"},
             {"conflicts", platform::conflictingTools()}, {"input_monitoring", platform::inputMonitoring()}, {"os", platform::name()}, {"general", config_.data()["general"]}, {"config_path", config_.path()}, {"receivers", recv}, {"paused", paused_.load()}};
     }
     if (method == "logs") {
