@@ -896,3 +896,35 @@ std::optional<Event> Device::classify(const Notification& n) const {
 }
 
 }  // namespace hidpp
+
+namespace hidpp {
+json onboardProfileSettings(const hidpp::Bytes& prof) {
+    static const int rates[] = {125, 250, 500, 1000, 2000, 4000, 8000};
+    json s;
+    if (prof.size() < 0x2C) return s;
+    if (prof[0] < 7) s["report_rate"] = rates[prof[0]];
+    if (prof[1] < 7) s["report_rate_wired"] = rates[prof[1]];
+    s["dpi_default"] = std::min(4, int(prof[2]));
+    s["dpi_shift"] = std::min(4, int(prof[3]));
+    s["dpi_active"] = s["dpi_default"];
+    json xs = json::object(), ys = json::object(), ls = json::object(), on = json::object();
+    bool adv = false;
+    for (int k = 0; k < 5; ++k) {
+        const int o = 4 + k * 5;
+        const int x = prof[o] | prof[o + 1] << 8, y = prof[o + 2] | prof[o + 3] << 8;
+        const std::string key = std::to_string(k);
+        xs[key] = x; ys[key] = y; ls[key] = std::max(1, std::min(3, int(prof[o + 4]))); on[key] = true;
+        adv = adv || x != y;
+    }
+    s["dpi_slots"] = xs; s["dpi_slots_y"] = ys; s["dpi_lod"] = ls; s["dpi_enabled"] = on; s["dpi_advanced"] = adv;
+    s["dpi"] = xs[std::to_string(s["dpi_default"].get<int>())];
+    json hits = json::object();
+    for (int b = 0; b < 2; ++b) {
+        const int o = 0x26 + b * 3;
+        hits[b ? "right" : "left"] = {{"actuation", std::max(1, std::min(10, prof[o] / 4))}, {"rapid_trigger", std::max(1, std::min(5, prof[o + 1] >> 2))},
+            {"rapid_trigger_on", (prof[o + 1] & 1) != 0}, {"haptics", std::max(0, std::min(5, prof[o + 2] / 4))}};
+    }
+    s["hits"] = hits;
+    return s;
+}
+}  // namespace hidpp

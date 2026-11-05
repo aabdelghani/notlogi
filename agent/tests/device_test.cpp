@@ -349,3 +349,30 @@ TEST_CASE("Easy-Switch names: a name cut inside a character loses the broken cha
     CHECK(h[0].name == "Ahmed");
     CHECK_NOTHROW(json(h[0].name).dump());
 }
+
+TEST_CASE("an onboard profile's settings read as NotLogi keeps them (a profile G HUB wrote)") {
+    // sector 1 of a PRO X3 SUPERSTRIKE, as G HUB left it: 8000/4000 Hz, slots 1000..100, HITS left 3/3/3 right 5/3/1
+    hidpp::Bytes p(255, 0xFF);
+    const uint8_t head[] = {0x06, 0x05, 0x00, 0x03, 0xe8, 0x03, 0xe8, 0x03, 0x02, 0x4c, 0x04, 0x4c, 0x04, 0x02, 0x40, 0x06, 0xdc, 0x05, 0x02,
+                            0xaa, 0x05, 0xaa, 0x05, 0x02, 0x64, 0x00, 0x64, 0x00, 0x02};
+    std::copy(std::begin(head), std::end(head), p.begin());
+    const uint8_t hits[] = {0x0c, 0x0c, 0x0c, 0x14, 0x0c, 0x04};
+    std::copy(std::begin(hits), std::end(hits), p.begin() + 0x26);
+    json s = hidpp::onboardProfileSettings(p);
+    CHECK(s["report_rate"] == 8000);
+    CHECK(s["report_rate_wired"] == 4000);
+    CHECK(s["dpi_default"] == 0);
+    CHECK(s["dpi_shift"] == 3);
+    CHECK(s["dpi_slots"]["0"] == 1000);
+    CHECK(s["dpi_slots"]["2"] == 1600);
+    CHECK(s["dpi_slots_y"]["2"] == 1500);
+    CHECK(s["dpi_advanced"] == true);
+    CHECK(s["dpi_lod"]["4"] == 2);
+    CHECK(s["dpi"] == 1000);
+    CHECK(s["hits"]["left"]["actuation"] == 3);
+    CHECK(s["hits"]["left"]["rapid_trigger"] == 3);
+    CHECK(s["hits"]["left"]["rapid_trigger_on"] == false);
+    CHECK(s["hits"]["left"]["haptics"] == 3);
+    CHECK(s["hits"]["right"]["actuation"] == 5);
+    CHECK(s["hits"]["right"]["haptics"] == 1);
+}

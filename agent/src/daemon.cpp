@@ -359,8 +359,11 @@ void ManagedDevice::applySettings(const std::string& only) {
             auto m = dev_->onboardMode();
             int wantMode = onboard ? 1 : 2;
             if (m && *m != wantMode) {
+                bool took = false;
+                if (!onboard) { try { took = onboardTakeOver(); } catch (const std::exception& e) { WARN("%s: onboard profile not read: %s", dev_->name().c_str(), e.what()); } }
                 dev_->setOnboardMode(wantMode);
                 INFO("%s: onboard profiles -> %s mode", dev_->name().c_str(), onboard ? "onboard" : "host");
+                if (took) { applySettings(); daemon_.broadcast("device", summary()); return; }
             }
             if (onboard && s.contains("onboard_profile") && s["onboard_profile"].is_number()) dev_->setOnboardProfile(s["onboard_profile"].get<int>());
             if (!onboard && only == "onboard_memory") {
@@ -687,6 +690,78 @@ json ManagedDevice::onboardProfiles() {
     return out;
 }
 
+// The profile the mouse ran from its onboard memory, taken over when NotLogi switches it to host
+// mode and someone else (G HUB on another computer, say) wrote it since NotLogi last looked: its
+// report rates, DPI slots and HITS values become NotLogi's, kept as a preset of their own, so the
+// mouse feels the same as it did on its memory. A profile seen before, or one NotLogi wrote, is left
+// alone (the settings here may have moved on since). The first look at a mouse NotLogi already had
+// settings for only remembers the profile: those settings were made here on purpose.
+bool ManagedDevice::onboardTakeOver() {
+    auto info = dev_->onboardInfo();
+    if (!info || info->format != 8) return false;
+    int sector = 0;
+    try { sector = dev_->onboardProfile(); } catch (...) { return false; }
+    const hidpp::Bytes dir = readWhole(*dev_, 0, info->sectorSize);
+    if (!sectorOk(dir)) return false;   // never written: the factory profiles, nothing anyone chose
+    int index = 0;
+    for (int i = 0; i < info->profiles; ++i) if ((dir[i * 4] << 8 | dir[i * 4 + 1]) == sector) index = i + 1;
+    if (!index) return false;
+    const hidpp::Bytes prof = readWhole(*dev_, sector, info->sectorSize);
+    if (!sectorOk(prof)) return false;
+    const std::string crc = hexOf(hidpp::Bytes(prof.end() - 2, prof.end())), key = std::to_string(index);
+    json& raw = daemon_.config().device(pid_, kind_)["settings"];
+    json seen = raw.contains("onboard_seen") && raw["onboard_seen"].is_object() ? raw["onboard_seen"] : json::object();
+    if (seen.value(key, "") == crc) return false;
+    // settings of these made here (not the ones a device starts from) are kept at the first look
+    const json defs = Config::defaultSettings(pid_);
+    bool own = false;
+    for (const char* k : {"dpi", "dpi_slots", "dpi_slots_y", "dpi_lod", "dpi_default", "dpi_active", "report_rate", "report_rate_wired", "hits"})
+        own = own || (raw.contains(k) && (!defs.contains(k) || defs[k] != raw[k]));
+    const bool first = seen.empty();
+    seen[key] = crc;
+    raw["onboard_seen"] = seen;
+    if (first && own) {
+        INFO("%s: onboard profile %d noted; NotLogi's own settings kept", dev_->name().c_str(), index);
+        daemon_.config().save();
+        refreshConfig();
+        return false;
+    }
+    json s = hidpp::onboardProfileSettings(prof);
+    // the sensor calibration in NotLogi's settings scales what the sensor is given: undone here
+    double f = 1.0;
+    const std::string corr = raw.value("dpi_correction", "");
+    if (!corr.empty() && raw.contains("sensor_corrections") && raw["sensor_corrections"].is_array())
+        for (auto& c : raw["sensor_corrections"]) if (c.is_object() && c.value("id", "") == corr) f = c.value("factor", 1.0);
+    json slots = json::array();
+    for (int k = 0; k < 5; ++k) {
+        const std::string key = std::to_string(k);
+        int x = snapDpi(static_cast<int>(std::lround(s["dpi_slots"][key].get<int>() / f))), y = snapDpi(static_cast<int>(std::lround(s["dpi_slots_y"][key].get<int>() / f)));
+        s["dpi_slots"][key] = x; s["dpi_slots_y"][key] = y;
+        slots.push_back({{"x", x}, {"y", y}, {"lod", s["dpi_lod"][key]}, {"on", true}});
+    }
+    s["dpi"] = s["dpi_slots"][std::to_string(s["dpi_default"].get<int>())];
+    for (auto& [k, v] : s.items()) raw[k] = v;
+    // kept as presets of their own, named after the profile, so the Sensitivity and HITS pages show
+    // where the values came from (a take-over of the same profile replaces them)
+    const std::string id = "onboard-" + key, name = "Onboard profile " + key;
+    auto put = [&](const char* list, json entry) {
+        json out = json::array();
+        if (raw.contains(list) && raw[list].is_array()) for (auto& e : raw[list]) if (!(e.is_object() && e.value("id", "") == id)) out.push_back(e);
+        out.push_back(entry);
+        raw[list] = out;
+    };
+    put("dpi_presets", {{"id", id}, {"name", name}, {"advanced", s["dpi_advanced"]}, {"def", s["dpi_default"]}, {"shift", s["dpi_shift"]}, {"slots", slots}});
+    raw["dpi_preset"] = id;
+    put("hits_presets", {{"id", id}, {"name", name}, {"left", s["hits"]["left"]}, {"right", s["hits"]["right"]}});
+    raw["hits_preset"] = id;
+    daemon_.config().save();
+    refreshConfig();
+    INFO("%s: onboard profile %d taken over: %d/%d Hz, DPI slots %s, HITS left %d/%d right %d/%d", dev_->name().c_str(), index,
+         s.value("report_rate", 0), s.value("report_rate_wired", 0), s["dpi_slots"].dump().c_str(),
+         s["hits"]["left"]["actuation"].get<int>(), s["hits"]["left"]["haptics"].get<int>(), s["hits"]["right"]["actuation"].get<int>(), s["hits"]["right"]["haptics"].get<int>());
+    return true;
+}
+
 // a sector whose CRC holds (the last two bytes, high first)
 // the sectors about to be written, kept in NotLogi's folder (onboard-backups/<id>-<time>.json)
 static void backupSectors(const std::string& dir, const std::string& id, const std::map<int, hidpp::Bytes>& sectors) {
@@ -775,6 +850,10 @@ json ManagedDevice::onboardSave(int index) {
         if (!sectorOk(dev_->readSector(0, size))) throw std::runtime_error("the onboard directory did not read back whole (a backup of it is in onboard-backups)");
     }
     INFO("%s: NotLogi's settings written to onboard profile %d (sector %d)", dev_->name().c_str(), index, sector);
+    // its own writing is not taken over later
+    daemon_.config().device(pid_, kind_)["settings"]["onboard_seen"][std::to_string(index)] = hexOf(hidpp::Bytes(prof.end() - 2, prof.end()));
+    daemon_.config().save();
+    refreshConfig();
     return {{"ok", true}, {"profile", index}, {"sector", sector}};
 }
 

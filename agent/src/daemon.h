@@ -75,6 +75,9 @@ class ManagedDevice : public std::enable_shared_from_this<ManagedDevice> {
     json onboardRestore();
     json onboardEnable(int index, bool on);
     json onboardDump();
+    // the profile the mouse ran from its memory taken over when NotLogi switches it to host mode
+    // (true when the settings changed)
+    bool onboardTakeOver();
     // a gaming mouse's DPI: the slot in use (or the shift slot while DPI shift is held), its X and Y,
     // lift-off distance and the sensor calibration, onto the sensor's own steps; the slots of the
     // app profile in front when it has a sensitivity of its own

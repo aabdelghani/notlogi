@@ -80,6 +80,12 @@ void Config::save() {
     std::filesystem::rename(platform::fsPath(tmp), platform::fsPath(path_), ec);   // replaces the old file on every OS, unlike std::rename on Windows
 }
 
+json Config::defaultSettings(uint16_t pid) {
+    static const json defaults = json::parse(kDefaultsJson);
+    const std::string k = key(pid);
+    return defaults.contains(k) && defaults[k].contains("settings") ? defaults[k]["settings"] : json::object();
+}
+
 json& Config::device(uint16_t pid, const std::string& kind) {
     std::lock_guard<std::recursive_mutex> lk(m_);
     std::string k = key(pid);

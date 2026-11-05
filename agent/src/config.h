@@ -16,6 +16,8 @@ class Config {
     std::string path() const { return path_; }
     json& data() { return data_; }
     json& device(uint16_t pid, const std::string& kind);
+    // the settings a known device starts from (empty for one NotLogi has no table for)
+    static json defaultSettings(uint16_t pid);
     void setSetting(uint16_t pid, const std::vector<std::string>& path, const json& value);
     void setAssignment(uint16_t pid, const std::string& profile, const std::string& section, const std::string& control, const json& action);
     // Pick the profile for the focused app class: (name, profile)

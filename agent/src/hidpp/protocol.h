@@ -218,4 +218,8 @@ class Device {
     std::string name_, friendlyName_, kind_ = "unknown", firmware_, serial_;
 };
 
+// The settings in a format 8 onboard profile (report rates, DPI slots with lift-off, the default
+// and shift slots, HITS) as NotLogi keeps them, DPI values as the profile holds them
+json onboardProfileSettings(const Bytes& prof);
+
 }  // namespace hidpp
