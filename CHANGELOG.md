@@ -3,6 +3,10 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
+## Unreleased
+
+- The .deb stops the agent of the version it replaces and starts the new one for every user with a session, so an upgrade no longer leaves the old agent running (with its held clicks) until the next login. Copies a checkout install left in the home are removed, as they shadowed the package's agent.
+
 ## [0.15.2](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.2) - 2026-11-04
 
 - PRO X3 SUPERSTRIKE: with any button taken over (Forward set to Volume up, say), every click was doubled, a second one coming from NotLogi on top of the mouse's own, and it could stay held, which tangled the clicks of every mouse on the desk. A button the mouse keeps is left to it now.

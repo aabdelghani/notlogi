@@ -63,7 +63,7 @@ Architecture: $ARCH
 Installed-Size: $SIZE_KB
 Maintainer: aabdelghani <73991067+aabdelghani@users.noreply.github.com>
 Homepage: https://github.com/aabdelghani/notlogi
-Depends: libc6, libstdc++6, libx11-6, libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, libgbm1, libasound2 | libasound2t64, udev
+Depends: libc6, libstdc++6, procps, libx11-6, libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, libgbm1, libasound2 | libasound2t64, udev
 Recommends: xdotool, pulseaudio-utils, libfuse2 | libfuse2t64, ddcutil
 Description: NotLogi, unofficial mouse and keyboard tools for Linux
  Button and key assignments, gestures, thumb wheel actions, SmartShift, DPI,
@@ -89,9 +89,33 @@ command -v udevadm >/dev/null 2>&1 && udevadm trigger --subsystem-match=i2c-dev 
 if command -v systemctl >/dev/null 2>&1; then
   systemctl --global enable logimx.service >/dev/null 2>&1 || true
 fi
+# An agent of the version just replaced would keep running, holding the devices and its virtual
+# mouse (a click it holds stays held). For every user with a session it is stopped, the copies a
+# checkout install put in the home are removed (they shadow the package's agent and unit), and
+# the packaged service is started in its place; an open NotLogi window reconnects by itself.
+STARTED=no
+for rt in /run/user/*; do
+  uid="${rt#/run/user/}"; [ -d "$rt/systemd" ] || continue
+  user="$(id -nu "$uid" 2>/dev/null)" || continue
+  home="$(getent passwd "$uid" | cut -d: -f6)"
+  rm -f "$home/.local/bin/logimx-agent" "$home/.local/bin/logimxctl" "$home/.config/systemd/user/logimx.service" 2>/dev/null || true
+  sysu() {
+    if [ "$(id -u)" = "$uid" ]; then env XDG_RUNTIME_DIR="$rt" DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus" systemctl --user "$@"
+    else runuser -u "$user" -- env XDG_RUNTIME_DIR="$rt" DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus" systemctl --user "$@"; fi
+  }
+  sysu daemon-reload >/dev/null 2>&1 || true
+  sysu stop logimx.service >/dev/null 2>&1 || true
+  if pgrep -u "$uid" -x logimx-agent >/dev/null 2>&1; then
+    pkill -u "$uid" -x logimx-agent 2>/dev/null || true
+    i=0; while [ $i -lt 20 ] && pgrep -u "$uid" -x logimx-agent >/dev/null 2>&1; do sleep 0.25; i=$((i+1)); done
+    pkill -9 -u "$uid" -x logimx-agent 2>/dev/null || true
+  fi
+  sysu start logimx.service >/dev/null 2>&1 && STARTED=yes || true
+done
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
 command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
-echo "NotLogi installed. Start the agent for this session with:  systemctl --user enable --now logimx"
+if [ "$STARTED" = yes ]; then echo "NotLogi installed; the agent is running."
+else echo "NotLogi installed. Start the agent for this session with:  systemctl --user enable --now logimx"; fi
 exit 0
 POST
 cat > "$PKG/DEBIAN/prerm" <<'PRERM'
