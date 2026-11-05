@@ -5,6 +5,7 @@ Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each 
 
 ## Unreleased
 
+- An agent going away no longer removes the socket of the agent that took its place (an upgrade), which left the new one unreachable until a restart.
 - PRO X3 SUPERSTRIKE: when NotLogi switches the mouse from its onboard memory to host mode, the profile it was running is taken over if someone else wrote it since NotLogi last looked (G HUB on another computer, say): its polling rates, DPI slots and HITS values become NotLogi's, kept as "Onboard profile n" presets, so the mouse feels the same as it did on its memory. Settings made in NotLogi are not touched.
 - The .deb stops the agent of the version it replaces and starts the new one for every user with a session, so an upgrade no longer leaves the old agent running (with its held clicks) until the next login. Copies a checkout install left in the home are removed, as they shadowed the package's agent.
 

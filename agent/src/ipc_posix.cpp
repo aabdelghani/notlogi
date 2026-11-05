@@ -74,11 +74,16 @@ class SocketListener : public Listener {
         if (::bind(fd_, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0) throw std::runtime_error("bind " + path_ + ": " + strerror(errno));
         chmod(path_.c_str(), 0600);
         ::listen(fd_, 64);
+        struct stat st{};
+        if (::stat(path_.c_str(), &st) == 0) { ino_ = st.st_ino; dev_ = st.st_dev; }
     }
+    // the path is removed only while it is still this socket: an agent that took the place of this
+    // one (an upgrade, a developer's build) has its own there by now
     ~SocketListener() override {
         ::shutdown(fd_, SHUT_RDWR);
         ::close(fd_);
-        ::unlink(path_.c_str());
+        struct stat st{};
+        if (::stat(path_.c_str(), &st) == 0 && st.st_ino == ino_ && st.st_dev == dev_) ::unlink(path_.c_str());
     }
     std::shared_ptr<Conn> accept(int timeoutMs) override {
         pollfd p{fd_, POLLIN, 0};
@@ -93,6 +98,8 @@ class SocketListener : public Listener {
 
   private:
     std::string path_;
+    ino_t ino_ = 0;
+    dev_t dev_ = 0;
     int fd_ = -1;
 };
 
