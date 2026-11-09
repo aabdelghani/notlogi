@@ -3,7 +3,7 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
-## Unreleased
+## [0.15.4](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.4) - 2026-11-09
 
 - Installing over an older version replaces it, on every system and without being asked. The .deb closes the running NotLogi and its agent, starts the new agent and opens NotLogi again as it was (the Windows setup did this already). A newer NotLogi that is started while an older one runs (an AppImage, a bundle dragged over the old one on macOS) ends the older one and starts in its place, and an agent of the older version makes way for the new app's own. On macOS an older NotLogi or LogiMX left in Applications beside the new one is moved to the Trash.
 - Flow: the Add computer sheet opened as a column on the right of the window, the page squeezed beside it with a second set of window buttons, and the computers were not placed where they had been dragged. Both styles had gone in a clean-up; the sheet rises over the whole window again and steps in place, and the computers sit on the side chosen for them.
