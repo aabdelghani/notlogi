@@ -26,10 +26,10 @@
     "@eslint/js": "^10.0.1",
     "acorn": "^8.19.0",
     "acorn-walk": "^8.3.5",
-    "electron": "^44.5.1",
+    "electron": "^45.2.3",
     "electron-builder": "^26.18.0",
     "eslint": "^10.14.0",
-    "globals": "^17.14.0",
+    "globals": "^17.14.0"
   },
   "build": {
     "appId": "io.github.aabdelghani.logimx",
