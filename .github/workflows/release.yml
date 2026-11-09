@@ -96,7 +96,7 @@ jobs:
           files: ui/dist/*-Setup-*.exe
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-15
     env:
       CSC_LINK: ${{ secrets.CSC_LINK }}
     steps:
