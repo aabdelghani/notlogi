@@ -19,6 +19,20 @@ echo "== ui (unpacked)"
 UNPACKED="$ROOT/ui/dist/linux-unpacked"
 [ -x "$UNPACKED/logimx" ] || { echo "unpacked UI missing"; exit 1; }
 
+# The archive must hold the sources as they are now: a file edited while electron-builder packed
+# shifts every file after it (the header keeps the old size) and the app opens to a white window.
+echo "== app.asar check"
+CHK="$(mktemp -d)"
+( cd "$ROOT/ui" && npx asar extract "$UNPACKED/resources/app.asar" "$CHK" )
+BAD=0
+while IFS= read -r -d '' f; do
+  rel="${f#"$CHK"/}"
+  case "$rel" in node_modules/*|package.json) continue ;; esac
+  cmp -s "$f" "$ROOT/ui/$rel" || { echo "app.asar: $rel differs from ui/$rel"; BAD=1; }
+done < <(find "$CHK" -type f -print0)
+rm -rf "$CHK"
+[ "$BAD" = 0 ] || { echo "app.asar does not match ui/; a file changed during packing, run the build again"; exit 1; }
+
 echo "== tree"
 rm -rf "$PKG"
 mkdir -p "$PKG/DEBIAN" "$PKG/opt/logimx" "$PKG/usr/bin" "$PKG/usr/lib/udev/rules.d" "$PKG/usr/lib/modules-load.d" \
