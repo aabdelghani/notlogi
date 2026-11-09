@@ -5,8 +5,8 @@ import { isMouse } from '../../shared/profiles.mjs';
 import { t } from '../../shared/i18n.mjs';
 
 // from the rest of the window, filled in by link()
-let IS_LINUX, IS_MAC, IS_WIN, S, agentNeedsBuild, card, esc, hasReceiver, hasRecv, row;
-export function link(ctx) { ({ IS_LINUX, IS_MAC, IS_WIN, S, agentNeedsBuild, card, esc, hasReceiver, hasRecv, row } = ctx); }
+let IS_LINUX, IS_MAC, IS_WIN, S, agentNeedsBuild, card, esc, hasRecv, row;
+export function link(ctx) { ({ IS_LINUX, IS_MAC, IS_WIN, S, agentNeedsBuild, card, esc, hasRecv, row } = ctx); }
 
 // Bluetooth, the way Windows does it: put the device in pairing mode and it shows up here within
 // seconds; Connect pairs, trusts and connects it, showing a keyboard's passkey to type
