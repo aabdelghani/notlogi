@@ -12,8 +12,8 @@ const ROOT = require('path').join(__dirname, '..');   // the app's own folder
 const t = (s, v) => (state.I18n ? state.I18n.t(s, v) : s);
 
 // from the other parts of the main process, filled in by link()
-let PACKAGED, SOCKET, alerted, checkBattery, moveRing, notify, releaseRing, resPath, run, showEmoji, showOsd, showRing, updateTray;
-exports.link = ctx => { ({ PACKAGED, SOCKET, alerted, checkBattery, moveRing, notify, releaseRing, resPath, run, showEmoji, showOsd, showRing, updateTray } = ctx); };
+let PACKAGED, SOCKET, alerted, checkBattery, moveRing, notify, releaseRing, replaceAgentIfOlder, resPath, run, showEmoji, showOsd, showRing, updateTray;
+exports.link = ctx => { ({ PACKAGED, SOCKET, alerted, checkBattery, moveRing, notify, releaseRing, replaceAgentIfOlder, resPath, run, showEmoji, showOsd, showRing, updateTray } = ctx); };
 
 let sock = null;
 let buffer = '';
@@ -46,6 +46,9 @@ async function refreshDevices() {
     state.general = st.general || {};
     state.paused = !!st.paused;
     state.currentApp = st.app || state.currentApp;
+    // an agent of the version this app replaced (started by the older app, or left by an install
+    // that could not stop it) makes way for this app's own
+    if (st.version) replaceAgentIfOlder(st.version).catch(() => {});
     state.devices = await rpc('devices');
     state.devices.forEach(checkBattery);
   } catch (e) { state.devices = []; }

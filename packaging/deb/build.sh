@@ -103,20 +103,36 @@ command -v udevadm >/dev/null 2>&1 && udevadm trigger --subsystem-match=i2c-dev 
 if command -v systemctl >/dev/null 2>&1; then
   systemctl --global enable logimx.service >/dev/null 2>&1 || true
 fi
-# An agent of the version just replaced would keep running, holding the devices and its virtual
-# mouse (a click it holds stays held). For every user with a session it is stopped, the copies a
-# checkout install put in the home are removed (they shadow the package's agent and unit), and
-# the packaged service is started in its place; an open NotLogi window reconnects by itself.
+# The version just replaced would keep running: its agent holding the devices and its virtual mouse
+# (a click it holds stays held), its window on files that are no longer there. For every user with
+# a session the window is closed, the agent is stopped, the copies a checkout install put in the
+# home are removed (they shadow the package's agent and unit), the packaged service is started in
+# its place and the window opened again as it was (hidden in the tray when it was started so).
 STARTED=no
+REOPENED=no
 for rt in /run/user/*; do
   uid="${rt#/run/user/}"; [ -d "$rt/systemd" ] || continue
   user="$(id -nu "$uid" 2>/dev/null)" || continue
   home="$(getent passwd "$uid" | cut -d: -f6)"
   rm -f "$home/.local/bin/logimx-agent" "$home/.local/bin/logimxctl" "$home/.config/systemd/user/logimx.service" 2>/dev/null || true
-  sysu() {
-    if [ "$(id -u)" = "$uid" ]; then env XDG_RUNTIME_DIR="$rt" DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus" systemctl --user "$@"
-    else runuser -u "$user" -- env XDG_RUNTIME_DIR="$rt" DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus" systemctl --user "$@"; fi
+  asuser() {
+    if [ "$(id -u)" = "$uid" ]; then env XDG_RUNTIME_DIR="$rt" DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus" "$@"
+    else runuser -u "$user" -- env XDG_RUNTIME_DIR="$rt" DBUS_SESSION_BUS_ADDRESS="unix:path=$rt/bus" "$@"; fi
   }
+  sysu() { asuser systemctl --user "$@"; }
+  # the app's main processes (helpers carry --type=) and how they were started
+  reopen=""
+  for pid in $(pgrep -u "$uid" -f '^/opt/logimx/logimx' 2>/dev/null); do
+    args="$(tr '\0' '\n' < "/proc/$pid/cmdline" 2>/dev/null | tail -n +2)"
+    case "$args" in *--type=*) continue ;; esac
+    reopen=open
+    printf '%s\n' "$args" | grep -qx -- --hidden && reopen=hidden
+  done
+  if [ -n "$reopen" ]; then
+    pkill -u "$uid" -f '^/opt/logimx/logimx' 2>/dev/null || true
+    i=0; while [ $i -lt 20 ] && pgrep -u "$uid" -f '^/opt/logimx/logimx' >/dev/null 2>&1; do sleep 0.25; i=$((i+1)); done
+    pkill -9 -u "$uid" -f '^/opt/logimx/logimx' 2>/dev/null || true
+  fi
   sysu daemon-reload >/dev/null 2>&1 || true
   sysu stop logimx.service >/dev/null 2>&1 || true
   if pgrep -u "$uid" -x logimx-agent >/dev/null 2>&1; then
@@ -125,10 +141,16 @@ for rt in /run/user/*; do
     pkill -9 -u "$uid" -x logimx-agent 2>/dev/null || true
   fi
   sysu start logimx.service >/dev/null 2>&1 && STARTED=yes || true
+  if [ -n "$reopen" ]; then
+    hidden=""; [ "$reopen" = hidden ] && hidden="--hidden"
+    # under the user's own service manager, which knows the display; this script's session does not
+    asuser systemd-run --user --collect --quiet --unit "notlogi-$(date +%s)" /opt/logimx/logimx $hidden >/dev/null 2>&1 && REOPENED=yes || true
+  fi
 done
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q /usr/share/applications || true
 command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
-if [ "$STARTED" = yes ]; then echo "NotLogi installed; the agent is running."
+if [ "$STARTED" = yes ] && [ "$REOPENED" = yes ]; then echo "NotLogi installed; the agent is running and NotLogi was opened again."
+elif [ "$STARTED" = yes ]; then echo "NotLogi installed; the agent is running."
 else echo "NotLogi installed. Start the agent for this session with:  systemctl --user enable --now logimx"; fi
 exit 0
 POST

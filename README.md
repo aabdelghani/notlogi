@@ -54,6 +54,9 @@ Download from the [latest release](https://github.com/aabdelghani/notlogi/releas
 - **macOS 12 or newer** (beta): open the .dmg and drag NotLogi to Applications (signed and
   notarized, so it opens like any app), then allow **Accessibility** and **Input Monitoring** when asked.
 
+Installing over an older version replaces it: the running NotLogi and its agent are closed and the new
+ones started, and on macOS an older copy left in Applications goes to the Trash.
+
 Quit Logi Options+, Solaar or logiops while NotLogi runs: they drive the same buttons.
 
 To remove NotLogi: **About → Remove NotLogi** in the app lists what goes and takes it away (settings

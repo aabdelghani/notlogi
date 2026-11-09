@@ -5,6 +5,7 @@ Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each 
 
 ## Unreleased
 
+- Installing over an older version replaces it, on every system and without being asked. The .deb closes the running NotLogi and its agent, starts the new agent and opens NotLogi again as it was (the Windows setup did this already). A newer NotLogi that is started while an older one runs (an AppImage, a bundle dragged over the old one on macOS) ends the older one and starts in its place, and an agent of the older version makes way for the new app's own. On macOS an older NotLogi or LogiMX left in Applications beside the new one is moved to the Trash.
 - Flow: the Add computer sheet opened as a column on the right of the window, the page squeezed beside it with a second set of window buttons, and the computers were not placed where they had been dragged. Both styles had gone in a clean-up; the sheet rises over the whole window again and steps in place, and the computers sit on the side chosen for them.
 - An agent going away no longer removes the socket of the agent that took its place (an upgrade), which left the new one unreachable until a restart.
 - PRO X3 SUPERSTRIKE: when NotLogi switches the mouse from its onboard memory to host mode, the profile it was running is taken over if someone else wrote it since NotLogi last looked (G HUB on another computer, say): its polling rates, DPI slots and HITS values become NotLogi's, kept as "Onboard profile n" presets, so the mouse feels the same as it did on its memory. Settings made in NotLogi are not touched.

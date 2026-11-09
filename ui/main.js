@@ -27,11 +27,11 @@ app.setPath('userData', require('path').join(app.getPath('appData'), 'LogiMX'));
 if (plat.IS_WIN) app.setAppUserModelId('io.github.aabdelghani.logimx');
 // The main process in parts (main/), loaded once the app's name and settings folder are set;
 // each one gets what it uses from the others.
-const parts = ['env', 'settings', 'window', 'tray', 'agent', 'osd', 'battery', 'emoji', 'ring', 'media', 'bluetooth', 'system', 'autostart', 'uninstall', 'i18n', 'devices'].map(n => require('./main/' + n));
+const parts = ['env', 'settings', 'window', 'tray', 'agent', 'replace', 'osd', 'battery', 'emoji', 'ring', 'media', 'bluetooth', 'system', 'autostart', 'uninstall', 'i18n', 'devices'].map(n => require('./main/' + n));
 const state = require('./main/state');
 const ctx = Object.assign({}, ...parts.map(p => p.provide));
 parts.forEach(p => p.link(ctx));
-const { applyLanguage, rpc, btSetMode, btStopScan, connect, createTray, createWindow, ensureAutostart, ensureDesktopEntry, loadUi, registerShortcuts, saveUi, showWindow, startAgent, warmRing } = ctx;
+const { applyLanguage, rpc, btSetMode, btStopScan, connect, createTray, createWindow, ensureAutostart, ensureDesktopEntry, forgetRunning, loadUi, noteRunning, registerShortcuts, saveUi, showWindow, startAgent, takeOver, trashOlderBundles, warmRing } = ctx;
 // the logic shared with the windows (ES modules in shared/, loaded before the app starts)
 const sharedReady = Promise.all([import('./shared/ring.mjs'), import('./shared/battery.mjs'), import('./shared/i18n.mjs'), import('./shared/keymap.mjs')]).then(([r, b, i, k]) => { state.Ring = r; state.Battery = b; state.I18n = i; state.Keymap = k; });
 app.isQuitting = false;
@@ -39,12 +39,16 @@ app.isQuitting = false;
 // (a process restarting on X11 takes neither the lock nor anything else: the new one does)
 const single = !restarting && app.requestSingleInstanceLock();
 if (!single) {
-  app.quit();
+  // another copy runs: an older one is ended and this one starts again in its place (replace.js);
+  // one as new as this, or newer, stays and shows its window
+  if (!restarting) takeOver().then(took => { if (!took) app.quit(); }, () => app.quit());
 } else {
   app.on('second-instance', showWindow);
   app.on('activate', showWindow);   // macOS: the Dock icon was clicked
   app.whenReady().then(async () => {
     plat.inputMonitoring(true);   // macOS, before anything asks about Accessibility: lists NotLogi under Input Monitoring and asks once, for the MX Keys
+    noteRunning();
+    trashOlderBundles().catch(() => {});
     await sharedReady;
     ensureDesktopEntry();
     ensureAutostart();
@@ -61,7 +65,7 @@ if (!single) {
     // opens it like any other, where the pointer is
     setTimeout(() => { try { warmRing(); } catch (e) {} }, 1500);
   });
-  app.on('will-quit', () => { globalShortcut.unregisterAll(); flow.shutdown(); });
+  app.on('will-quit', () => { globalShortcut.unregisterAll(); flow.shutdown(); forgetRunning(); });
   app.on('window-all-closed', () => { /* stay in the tray */ });
   app.on('before-quit', () => { app.isQuitting = true; flow.shutdown(); state.btMode = null; clearTimeout(state.btTimer); btStopScan(); });
 }
