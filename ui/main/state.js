@@ -14,4 +14,5 @@ module.exports = {
   btMode: null,   // bluetooth.js
   I18n: null,   // shared/i18n.mjs: the language in use, t()
   Keymap: null,   // shared/keymap.mjs: keyboard photos made by their owners
+  CursorMap: null,   // shared/cursor-map.mjs: compositor pixels -> this process's screen space
 };
