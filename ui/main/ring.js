@@ -160,21 +160,34 @@ async function showRing(deviceId, raw) {
   ringTravel = rs.travel || 30;
   if (rs.free_pointer) raw = false;   // the pointer stays free: the ring follows it instead of taking the mouse
   ringOpening = true; ringReleasedEarly = false; ringPending = [0, 0];
+  // the compositor knows the pointer exactly even where Electron does not (KDE
+  // Wayland stops refreshing X's pointer once no X11 window has it, and native
+  // Wayland never exposes it); JuhRadial MX's KWin-script route, mapped from
+  // the compositor's logical pixels into this process's screen space
+  let comp = null;
+  if (plat.IS_LINUX && (process.env.XDG_SESSION_TYPE || '').toLowerCase() !== 'x11') {
+    try { comp = await require('./compositor-cursor').queryCursorPos(); } catch (e) {}
+  }
   const [pt, look] = await Promise.all([cursorPoint(), systemLook()]);
+  let at0 = pt;
+  if (comp) {
+    const mapped = state.CursorMap.mapCompositorPoint(comp, comp.monitors, screen.getAllDisplays());
+    if (mapped) at0 = mapped;
+  }
   // The window covers the displays (see ringDisplays) and the page draws the ring where the pointer is. A window
   // cannot be placed at the pointer on Wayland (the compositor puts it where it likes, usually the
   // middle of the screen), and there the pointer's position is not even known until it moves over
   // the window; the page waits for that first movement. On X11 the position is known up front.
   const area = ringArea(pt);
   const X = area.x, Y = area.y, R = area.x + area.width, Bm = area.y + area.height;
-  const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11';
-  const at = known ? { x: pt.x - X, y: pt.y - Y } : null;
+  const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11' || !!comp;
+  const at = known ? { x: at0.x - X, y: at0.y - Y } : null;
   // Wayland has no global pointer position: the best guess is where the ring last saw it, and only
   // a fresh one inside today's layout can be. Better no guess than Electron's stale reading
   // (often 0, 0, a screen's corner): the page centres itself without one.
   const seen = lastPointer && Date.now() - lastPointer.when < 3e4 &&
     lastPointer.x >= X && lastPointer.y >= Y && lastPointer.x < R && lastPointer.y < Bm;
-  const guess = known ? { x: pt.x - X, y: pt.y - Y } : seen ? { x: lastPointer.x - X, y: lastPointer.y - Y } : null;
+  const guess = known ? { x: at0.x - X, y: at0.y - Y } : seen ? { x: lastPointer.x - X, y: lastPointer.y - Y } : null;
   const place = () => { if (w.isDestroyed()) return; const b = w.getBounds(); if (b.x !== X || b.y !== Y || b.width !== R - X || b.height !== Bm - Y) w.setBounds({ x: X, y: Y, width: R - X, height: Bm - Y }); };
   const send = () => {
     clearTimeout(ringHideTimer);
