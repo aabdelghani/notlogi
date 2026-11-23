@@ -33,7 +33,7 @@ const ctx = Object.assign({}, ...parts.map(p => p.provide));
 parts.forEach(p => p.link(ctx));
 const { applyLanguage, rpc, btSetMode, btStopScan, connect, createTray, createWindow, ensureAutostart, ensureDesktopEntry, forgetRunning, loadUi, noteRunning, registerShortcuts, saveUi, showWindow, startAgent, takeOver, trashOlderBundles, warmRing } = ctx;
 // the logic shared with the windows (ES modules in shared/, loaded before the app starts)
-const sharedReady = Promise.all([import('./shared/ring.mjs'), import('./shared/battery.mjs'), import('./shared/i18n.mjs'), import('./shared/keymap.mjs')]).then(([r, b, i, k]) => { state.Ring = r; state.Battery = b; state.I18n = i; state.Keymap = k; });
+const sharedReady = Promise.all([import('./shared/ring.mjs'), import('./shared/battery.mjs'), import('./shared/i18n.mjs'), import('./shared/keymap.mjs'), import('./shared/cursor-map.mjs')]).then(([r, b, i, k, c]) => { state.Ring = r; state.Battery = b; state.I18n = i; state.Keymap = k; state.CursorMap = c; });
 app.isQuitting = false;
 
 // (a process restarting on X11 takes neither the lock nor anything else: the new one does)

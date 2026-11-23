@@ -20,7 +20,8 @@
     "postinstall": "node scripts/install-electron.mjs"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^7.3.1"
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "dbus-next": "^0.10.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

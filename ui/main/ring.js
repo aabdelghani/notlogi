@@ -30,6 +30,7 @@ const RING_ADJUST = { brightness_up: ['brightness_up', 'brightness_down'], brigh
   zoom_in: ['zoom_in', 'zoom_out'], zoom_out: ['zoom_in', 'zoom_out'], next_track: ['next_track', 'prev_track'], prev_track: ['next_track', 'prev_track'] };
 let ringWin = null, ringLoaded = null, ringSlots = [], ringTravel = 30, ringDevice = null, ringOpening = false, ringReleasedEarly = false, ringWarming = false;
 let ringPending = [0, 0];   // movement that arrived while the ring was still being placed
+let lastPointer = null;   // where the pointer was last seen over the ring: Wayland has no global position to ask for
 const ringLog = [];          // how the last openings found the pointer, for the problem report
 const RING_W = 560, RING_H = 460;   // the ring itself; the window grows to the screen when shown
 function ensureRing() {
@@ -159,16 +160,34 @@ async function showRing(deviceId, raw) {
   ringTravel = rs.travel || 30;
   if (rs.free_pointer) raw = false;   // the pointer stays free: the ring follows it instead of taking the mouse
   ringOpening = true; ringReleasedEarly = false; ringPending = [0, 0];
+  // the compositor knows the pointer exactly even where Electron does not (KDE
+  // Wayland stops refreshing X's pointer once no X11 window has it, and native
+  // Wayland never exposes it); JuhRadial MX's KWin-script route, mapped from
+  // the compositor's logical pixels into this process's screen space
+  let comp = null;
+  if (plat.IS_LINUX && (process.env.XDG_SESSION_TYPE || '').toLowerCase() !== 'x11') {
+    try { comp = await require('./compositor-cursor').queryCursorPos(); } catch (e) {}
+  }
   const [pt, look] = await Promise.all([cursorPoint(), systemLook()]);
+  let at0 = pt;
+  if (comp) {
+    const mapped = state.CursorMap.mapCompositorPoint(comp, comp.monitors, screen.getAllDisplays());
+    if (mapped) at0 = mapped;
+  }
   // The window covers the displays (see ringDisplays) and the page draws the ring where the pointer is. A window
   // cannot be placed at the pointer on Wayland (the compositor puts it where it likes, usually the
   // middle of the screen), and there the pointer's position is not even known until it moves over
   // the window; the page waits for that first movement. On X11 the position is known up front.
   const area = ringArea(pt);
   const X = area.x, Y = area.y, R = area.x + area.width, Bm = area.y + area.height;
-  const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11';
-  const at = known ? { x: pt.x - X, y: pt.y - Y } : null;
-  const guess = { x: pt.x - X, y: pt.y - Y };
+  const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11' || !!comp;
+  const at = known ? { x: at0.x - X, y: at0.y - Y } : null;
+  // Wayland has no global pointer position: the best guess is where the ring last saw it, and only
+  // a fresh one inside today's layout can be. Better no guess than Electron's stale reading
+  // (often 0, 0, a screen's corner): the page centres itself without one.
+  const seen = lastPointer && Date.now() - lastPointer.when < 3e4 &&
+    lastPointer.x >= X && lastPointer.y >= Y && lastPointer.x < R && lastPointer.y < Bm;
+  const guess = known ? { x: at0.x - X, y: at0.y - Y } : seen ? { x: lastPointer.x - X, y: lastPointer.y - Y } : null;
   const place = () => { if (w.isDestroyed()) return; const b = w.getBounds(); if (b.x !== X || b.y !== Y || b.width !== R - X || b.height !== Bm - Y) w.setBounds({ x: X, y: Y, width: R - X, height: Bm - Y }); };
   const send = () => {
     clearTimeout(ringHideTimer);
@@ -186,7 +205,14 @@ async function showRing(deviceId, raw) {
   ringLoaded.then(send);
 }
 ipcMain.on('ring-close', hideRing);
-ipcMain.on('ring-diag', (_e, info) => { ringLog.push(Object.assign({ when: new Date().toISOString().slice(11, 19), raw: ringRawMode }, info)); if (ringLog.length > 10) ringLog.shift(); });
+ipcMain.on('ring-diag', (_e, info) => {
+  // the pointer's first sighting over the window: on Wayland this is the only position there is
+  if (info && info.how === 'pointer event' && typeof info.x === 'number' && ringWin && !ringWin.isDestroyed()) {
+    const b = ringWin.getBounds();
+    lastPointer = { x: b.x + info.x, y: b.y + info.y, when: Date.now() };
+  }
+  ringLog.push(Object.assign({ when: new Date().toISOString().slice(11, 19), raw: ringRawMode }, info)); if (ringLog.length > 10) ringLog.shift();
+});
 // haptic feedback on the mouse that opened the ring; mice without it, and rings opened from the
 // page, simply get none
 const ringCue = cue => { if (ringDevice) rpc('haptic_cue', { id: ringDevice, cue }).catch(() => {}); };

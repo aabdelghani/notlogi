@@ -1,5 +1,5 @@
 // The emoji picker window opened by the Emoji key.
-const { BrowserWindow, screen, ipcMain, clipboard, Notification } = require('electron');
+const { BrowserWindow, app, screen, ipcMain, clipboard, Notification } = require('electron');
 const path = require('path');
 const plat = require('../platform');
 const { execFile } = require('child_process');
@@ -33,7 +33,11 @@ function cursorPoint() {
     // macOS: the window server's live position from the agent; Electron's own reading can be stale
     if (plat.IS_MAC && rpc) return rpc('pointer', {}).then(p => p && typeof p.x === 'number' ? resolve({ x: Math.round(p.x), y: Math.round(p.y) }) : fallback()).catch(fallback);
     if (!plat.IS_LINUX) return fallback();
-    if ((process.env.XDG_SESSION_TYPE || '').toLowerCase() !== 'x11' && !process.env.DISPLAY) return fallback();
+    // xdotool asks the X server, and its answer is in the X screen's coordinates: the app's own
+    // only when Electron itself runs on X11. In a Wayland session XWayland is up as well (DISPLAY
+    // set), but its screen is stretched where the displays' scales differ, and a point taken from
+    // it lands away from the pointer a Wayland window is drawn to.
+    if ((process.env.XDG_SESSION_TYPE || '').toLowerCase() !== 'x11' && app.commandLine.getSwitchValue('ozone-platform') !== 'x11') return fallback();
     execFile('xdotool', ['getmouselocation', '--shell'], { timeout: 500 }, (err, out) => {
       if (err) return fallback();
       const m = /X=(-?\d+)\s+Y=(-?\d+)/.exec(String(out));
