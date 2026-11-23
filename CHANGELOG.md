@@ -3,7 +3,7 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
-## Unreleased
+## [0.15.5](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.5) - 2026-11-23
 
 - Action ring on KDE with Wayland (and wherever NotLogi runs through XWayland): the ring opened where the pointer had last been over an X11 window, not where it was, unless the program in front was an X11 one. The position that arrives with the window is a remembered one there; the ring now goes to the pointer at its first movement.
 
