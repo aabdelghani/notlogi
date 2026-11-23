@@ -169,10 +169,13 @@ async function showRing(deviceId, raw) {
     try { comp = await require('./compositor-cursor').queryCursorPos(); } catch (e) {}
   }
   const [pt, look] = await Promise.all([cursorPoint(), systemLook()]);
-  let at0 = pt;
-  if (comp) {
-    const mapped = state.CursorMap.mapCompositorPoint(comp, comp.monitors, screen.getAllDisplays());
-    if (mapped) at0 = mapped;
+  // the compositor's point in this process's screen space: mapped through its monitor layout when it
+  // gave one (KWin), taken as it is when it gave none (Hyprland answers with the point alone). A
+  // layout that cannot be mapped leaves the pointer unknown, and the page waits for it as before.
+  let at0 = pt, compKnown = false;
+  if (comp && typeof comp.x === 'number' && typeof comp.y === 'number') {
+    const mapped = comp.monitors && comp.monitors.length ? state.CursorMap.mapCompositorPoint(comp, comp.monitors, screen.getAllDisplays()) : { x: comp.x, y: comp.y };
+    if (mapped) { at0 = mapped; compKnown = true; }
   }
   // The window covers the displays (see ringDisplays) and the page draws the ring where the pointer is. A window
   // cannot be placed at the pointer on Wayland (the compositor puts it where it likes, usually the
@@ -180,7 +183,7 @@ async function showRing(deviceId, raw) {
   // the window; the page waits for that first movement. On X11 the position is known up front.
   const area = ringArea(pt);
   const X = area.x, Y = area.y, R = area.x + area.width, Bm = area.y + area.height;
-  const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11' || !!comp;
+  const known = !plat.IS_LINUX || (process.env.XDG_SESSION_TYPE || '').toLowerCase() === 'x11' || compKnown;
   const at = known ? { x: at0.x - X, y: at0.y - Y } : null;
   // Wayland has no global pointer position: the best guess is where the ring last saw it, and only
   // a fresh one inside today's layout can be. Better no guess than Electron's stale reading

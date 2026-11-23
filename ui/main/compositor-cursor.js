@@ -8,7 +8,7 @@
 // process, in the compositor's logical pixels plus the logical monitor layout,
 // which shared/cursor-map.mjs maps into Electron's screen space.
 
-const { writeFile, unlink, mkdtemp } = require('fs/promises');
+const { writeFile, rm, mkdtemp } = require('fs/promises');
 const { tmpdir } = require('os');
 const path = require('path');
 
@@ -97,8 +97,7 @@ async function kwinCursor(dbus, timeoutMs) {
     try { await call('/Scripting', 'org.kde.kwin.Scripting', 'unloadScript', 's', [plugin]); } catch (e) {}
     return hit;
   } finally {
-    unlink(file, () => {});
-    require('fs').rmdir(dir, () => {});
+    rm(dir, { recursive: true, force: true }).catch(() => {});
   }
 }
 
