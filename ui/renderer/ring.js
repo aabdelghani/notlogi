@@ -89,6 +89,8 @@ import { t } from '../shared/i18n.mjs';
   // opening, the ring follows the pointer it sees; each correction goes into the problem report.
   const SETTLE_MS = 350;
   let settleUntil = 0, settled = 0;
+  const EARLY_MS = 30, JUMP_PX = 160;
+  let doubt = null;   // the first position, when it came too soon to be a movement
   // how this opening found the pointer, for the problem report
   const tell = (how, x, y) => { if (told) return; told = true; window.ring.diag({ how, ms: Math.round(performance.now() - openedAt), x: Math.round(x), y: Math.round(y), guess }); };
   // centre the ring on a point, kept fully on screen
@@ -201,7 +203,24 @@ import { t } from '../shared/i18n.mjs';
     return G.closestByAngle(Math.atan2(dy, dx), slots.map((s, i) => s ? fanAng(i) : null));
   }
   document.addEventListener('mousemove', e => {
-    if (waiting) { tell('pointer event', e.clientX, e.clientY); centreAt(e.clientX, e.clientY); settleUntil = performance.now() + SETTLE_MS; settled = 0; return; }   // first sight of the pointer: the ring goes there
+    if (waiting) {   // first sight of the pointer: the ring goes there
+      // A position that comes with the window itself (within EARLY_MS) may be a remembered one: through
+      // XWayland a program hears of the pointer only over X11 windows, and is handed the last place
+      // it was seen there (KDE on Wayland: the ring opened where the last click in an X11 window was).
+      doubt = performance.now() - openedAt < EARLY_MS ? [e.clientX, e.clientY] : null;
+      tell('pointer event', e.clientX, e.clientY); centreAt(e.clientX, e.clientY); settleUntil = performance.now() + SETTLE_MS; settled = 0; return;
+    }
+    // the movement after a doubted position: a pointer does not jump, so one that is far from it is
+    // the first true word of where the pointer is, and the ring goes there
+    if (doubt) {
+      const far = Math.hypot(e.clientX - doubt[0], e.clientY - doubt[1]) > JUMP_PX;
+      doubt = null;
+      if (far && hover < 0 && !stack.length) {
+        window.ring.diag({ how: 'moved from a remembered position', ms: Math.round(performance.now() - openedAt), x: Math.round(e.clientX), y: Math.round(e.clientY) });
+        centreAt(e.clientX, e.clientY, true); settleUntil = performance.now() + SETTLE_MS; settled = 0;
+        return;
+      }
+    }
     if (raw) return;
     if (dial && !dial.wheel) { dialMove(e.clientX - dial.lastX); dial.lastX = e.clientX; return; }   // pressed on the Volume slot: right and left set the level
     if (dial && dial.wheel && at(e.clientX, e.clientY) !== dial.i) dialEnd();
@@ -295,7 +314,7 @@ import { t } from '../shared/i18n.mjs';
     else {
       // the pointer's place is not known here (Wayland): draw nothing until it is seen over the
       // window, and fall back to the best guess if it never moves
-      waiting = true; slotsEl.innerHTML = ''; hub.style.display = 'none';
+      waiting = true; doubt = null; slotsEl.innerHTML = ''; hub.style.display = 'none';
       setTimeout(() => { if (waiting) { const gx = guess ? guess.x : size.w / 2, gy = guess ? guess.y : size.h / 2; tell('fallback after 250 ms', gx, gy); centreAt(gx, gy); } }, 250);
     }
   });

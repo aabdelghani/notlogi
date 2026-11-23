@@ -3,6 +3,10 @@
 Every release of NotLogi (formerly LogiMX), newest first. Downloads are on each version's
 [release page](https://github.com/aabdelghani/notlogi/releases).
 
+## Unreleased
+
+- Action ring on KDE with Wayland (and wherever NotLogi runs through XWayland): the ring opened where the pointer had last been over an X11 window, not where it was, unless the program in front was an X11 one. The position that arrives with the window is a remembered one there; the ring now goes to the pointer at its first movement.
+
 ## [0.15.4](https://github.com/aabdelghani/notlogi/releases/tag/v0.15.4) - 2026-11-09
 
 - Installing over an older version replaces it, on every system and without being asked. The .deb closes the running NotLogi and its agent, starts the new agent and opens NotLogi again as it was (the Windows setup did this already). A newer NotLogi that is started while an older one runs (an AppImage, a bundle dragged over the old one on macOS) ends the older one and starts in its place, and an agent of the older version makes way for the new app's own. On macOS an older NotLogi or LogiMX left in Applications beside the new one is moved to the Trash.
